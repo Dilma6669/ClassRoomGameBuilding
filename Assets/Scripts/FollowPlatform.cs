@@ -7,6 +7,7 @@ public class FollowPlatform : MonoBehaviour
     public float heightOffset = 1f;
 
     private Vector3 lastPlatformPosition;
+    private Transform previousPlatform;
 
     private void Start()
     {
@@ -16,34 +17,44 @@ public class FollowPlatform : MonoBehaviour
         }
     }
 
+    private void OnValidate()
+    {
+        // Don't execute snapping logic when entering or running Play Mode
+        if (Application.isPlaying) return;
+
+        // Trigger snap ONLY when a new platform is assigned in the Inspector slot
+        if (targetPlatform != null && targetPlatform != previousPlatform)
+        {
+            previousPlatform = targetPlatform;
+            SnapToPlatformCenter();
+        }
+    }
+
     private void LateUpdate()
     {
         if (targetPlatform == null) return;
 
-        // In Edit mode, keep the enemy anchored cleanly above the platform
+        // In Edit mode, track the platform's editor drag movement without overriding local position changes
         if (!Application.isPlaying)
         {
-            SnapToPlatformCenter();
+            Vector3 editorDelta = targetPlatform.position - lastPlatformPosition;
+            transform.position += editorDelta;
             lastPlatformPosition = targetPlatform.position;
             return;
         }
 
-        // Calculate how much the platform moved this frame
+        // Calculate runtime movement delta
         Vector3 platformDelta = targetPlatform.position - lastPlatformPosition;
-
-        // Apply that exact movement delta to the enemy
         transform.position += platformDelta;
-
-        // Store platform position for next frame
         lastPlatformPosition = targetPlatform.position;
     }
 
-    [ContextMenu("Snap To Platform")]
+    [ContextMenu("Snap To Center")]
     public void SnapToPlatformCenter()
     {
         if (targetPlatform == null) return;
 
-        // Snap enemy directly to platform center + height offset
         transform.position = targetPlatform.position + new Vector3(0f, heightOffset, 0f);
+        lastPlatformPosition = targetPlatform.position;
     }
 }
