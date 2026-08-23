@@ -6,8 +6,10 @@ public class FollowPlatform : MonoBehaviour
     public Transform targetPlatform;
     public float heightOffset = 1f;
 
+    // Persistent target ID saved in the scene so Play mode resets won't trigger a snap
+    [HideInInspector] public string snappedTargetID = "";
+
     private Vector3 lastPlatformPosition;
-    private Transform previousPlatform;
 
     private void Start()
     {
@@ -19,14 +21,24 @@ public class FollowPlatform : MonoBehaviour
 
     private void OnValidate()
     {
-        // Don't execute snapping logic when entering or running Play Mode
+        // Never snap during Play mode or during scene play transitions
         if (Application.isPlaying) return;
 
-        // Trigger snap ONLY when a new platform is assigned in the Inspector slot
-        if (targetPlatform != null && targetPlatform != previousPlatform)
+        if (targetPlatform != null)
         {
-            previousPlatform = targetPlatform;
-            SnapToPlatformCenter();
+            // Get unique Unity Instance ID for the assigned target transform
+            string currentTargetID = targetPlatform.GetInstanceID().ToString();
+
+            // Snap ONLY if a completely new target transform was assigned in the Inspector
+            if (snappedTargetID != currentTargetID)
+            {
+                snappedTargetID = currentTargetID;
+                SnapToPlatformCenter();
+            }
+        }
+        else
+        {
+            snappedTargetID = "";
         }
     }
 
@@ -34,7 +46,7 @@ public class FollowPlatform : MonoBehaviour
     {
         if (targetPlatform == null) return;
 
-        // In Edit mode, track the platform's editor drag movement without overriding local position changes
+        // In Edit mode, track platform movement without overriding local position changes
         if (!Application.isPlaying)
         {
             Vector3 editorDelta = targetPlatform.position - lastPlatformPosition;
