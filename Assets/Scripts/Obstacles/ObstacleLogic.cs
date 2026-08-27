@@ -17,14 +17,17 @@ public class ObstacleLogic : MonoBehaviour
 
     private Vector3 lastPlatformPosition;
     private Rigidbody rb;
+    private Transform childFolder;
 
     private void Awake()
     {
+        FindChildFolder();
         ToggleRigidbody();
     }
 
     private void Start()
     {
+        FindChildFolder();
         ToggleRigidbody();
 
         if (targetPlatform != null)
@@ -33,8 +36,23 @@ public class ObstacleLogic : MonoBehaviour
         }
     }
 
+    private void FindChildFolder()
+    {
+        if (childFolder != null) return;
+
+        // Try to find existing "⚠️ DO NOT TOUCH" child folder
+        childFolder = transform.Find("⚠️ DO NOT TOUCH");
+
+        // Fallback: grab first available child transform if present
+        if (childFolder == null && transform.childCount > 0)
+        {
+            childFolder = transform.GetChild(0);
+        }
+    }
+
     private void OnValidate()
     {
+        FindChildFolder();
         ToggleRigidbody();
 
         // Never snap during Play mode or play transitions
@@ -59,13 +77,16 @@ public class ObstacleLogic : MonoBehaviour
 
     private void ToggleRigidbody()
     {
-        rb = GetComponent<Rigidbody>();
+        // Check for Rigidbody on children (or parent as fallback)
+        rb = GetComponentInChildren<Rigidbody>();
+
+        GameObject targetTargetGo = childFolder != null ? childFolder.gameObject : gameObject;
 
         if (enableRigidbody)
         {
             if (rb == null)
             {
-                rb = gameObject.AddComponent<Rigidbody>();
+                rb = targetTargetGo.AddComponent<Rigidbody>();
             }
             rb.isKinematic = false;
             rb.useGravity = true;

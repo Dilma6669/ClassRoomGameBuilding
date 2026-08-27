@@ -1,6 +1,9 @@
 using UnityEngine;
 using KinematicCharacterController;
 using KinematicCharacterController.Examples;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [ExecuteAlways]
 public class PlatformLogic : MonoBehaviour
@@ -17,11 +20,20 @@ public class PlatformLogic : MonoBehaviour
     [Range(-20f, 20f)] public float offsetY = 0f;
     [Range(-20f, 20f)] public float offsetZ = 0f;
 
-    [Header("Movement Settings")]
-    public bool enableMovement = false;
+    // Movement Settings
     public InitialDirection initialDirection = InitialDirection.Forward;
     [Range(0f, 50f)] public float moveDistance = 5f;
     [Range(0.1f, 10f)] public float moveSpeed = 2f;
+
+    [Header("Enemy Spawning Setup")]
+    [Tooltip("Find this prefab in: Assets/Prefabs/Enemies/EnemyLogic")]
+    public GameObject enemyPrefab;
+    [Range(0f, 5f)] public float enemySpawnHeightOffset = 0.5f;
+
+    [Header("Obstacle Spawning Setup")]
+    [Tooltip("Find this prefab in: Assets/Prefabs/Obstacles/ObstacleLogic")]
+    public GameObject obstaclePrefab;
+    [Range(0f, 5f)] public float obstacleSpawnHeightOffset = 0.5f;
 
     // Movement Toggles (X = Left/Right, Y = Up/Down, Z = Forward/Backward)
     [HideInInspector] public bool moveX = true;
@@ -35,12 +47,14 @@ public class PlatformLogic : MonoBehaviour
     private Vector3 cachedGizmoEnd;
     private bool hasCachedGizmos = false;
 
+    public bool HasActiveAxis => moveX || moveY || moveZ;
+
     public Vector3 MoveDirection
     {
         get
         {
             Vector3 dir = new Vector3(moveX ? 1f : 0f, moveY ? 1f : 0f, moveZ ? 1f : 0f);
-            return dir.sqrMagnitude > 0 ? dir.normalized : Vector3.right;
+            return dir.sqrMagnitude > 0 ? dir.normalized : Vector3.zero;
         }
     }
 
@@ -62,8 +76,13 @@ public class PlatformLogic : MonoBehaviour
 
     private void FindChildComponents()
     {
+        // First try finding ExampleMovingPlatform anywhere in existing children
         if (childMover == null)
-            childMover = GetComponentInChildren<ExampleMovingPlatform>();
+            childMover = GetComponentInChildren<ExampleMovingPlatform>(true);
+
+        // Fallback: If component isn't found by type, grab the first child transform
+        if (childMover == null && transform.childCount > 0)
+            childMover = transform.GetChild(0).GetComponent<ExampleMovingPlatform>();
     }
 
     private void Start()
@@ -88,7 +107,9 @@ public class PlatformLogic : MonoBehaviour
 
     private void ConfigureChildMover()
     {
-        if (!enableMovement)
+        if (childMover == null) return;
+
+        if (!HasActiveAxis)
         {
             childMover.TranslationPeriod = 0f;
             childMover.TranslationSpeed = 0f;
@@ -136,9 +157,64 @@ public class PlatformLogic : MonoBehaviour
         }
     }
 
+    [ContextMenu("Create Enemy On Platform")]
+    public void CreateEnemyOnPlatform()
+    {
+        if (enemyPrefab == null)
+        {
+            Debug.LogWarning("⚠️ Cannot create enemy! Please drag an Enemy Prefab into the 'Enemy Prefab' slot on the Platform script first.");
+            return;
+        }
+
+        FindChildComponents();
+        if (childMover == null) return;
+
+        Vector3 spawnPosition = childMover.transform.position + new Vector3(0f, (height / 2f) + enemySpawnHeightOffset, 0f);
+
+#if UNITY_EDITOR
+        GameObject newEnemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefab);
+        newEnemy.transform.position = spawnPosition;
+        newEnemy.transform.SetParent(transform); // Sibling to MovingPlatform, child to PlatformLogic
+        Undo.RegisterCreatedObjectUndo(newEnemy, "Create Enemy On Platform");
+#else
+        GameObject newEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity, transform);
+#endif
+
+        // Auto-assign platform target to FollowPlatform if present
+        FollowPlatform followLogic = newEnemy.GetComponent<FollowPlatform>();
+        if (followLogic != null)
+        {
+            followLogic.targetPlatform = childMover.transform;
+        }
+    }
+
+    [ContextMenu("Create Obstacle On Platform")]
+    public void CreateObstacleOnPlatform()
+    {
+        if (obstaclePrefab == null)
+        {
+            Debug.LogWarning("⚠️ Cannot create obstacle! Please drag an Obstacle Prefab into the 'Obstacle Prefab' slot on the Platform script first.");
+            return;
+        }
+
+        FindChildComponents();
+        if (childMover == null) return;
+
+        Vector3 spawnPosition = childMover.transform.position + new Vector3(0f, (height / 2f) + obstacleSpawnHeightOffset, 0f);
+
+#if UNITY_EDITOR
+        GameObject newObstacle = (GameObject)PrefabUtility.InstantiatePrefab(obstaclePrefab);
+        newObstacle.transform.position = spawnPosition;
+        newObstacle.transform.SetParent(transform); // Sibling to MovingPlatform, child to PlatformLogic
+        Undo.RegisterCreatedObjectUndo(newObstacle, "Create Obstacle On Platform");
+#else
+        GameObject newObstacle = Instantiate(obstaclePrefab, spawnPosition, Quaternion.identity, transform);
+#endif
+    }
+
     private void OnDrawGizmosSelected()
     {
-        if (enableMovement && childMover != null)
+        if (HasActiveAxis && childMover != null)
         {
             Gizmos.color = Color.cyan;
             Vector3 startPos, endPos;

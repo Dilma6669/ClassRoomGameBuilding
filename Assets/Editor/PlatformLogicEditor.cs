@@ -35,34 +35,78 @@ public class PlatformLogicEditor : Editor
     {
         serializedObject.Update();
 
-        DrawPropertiesExcluding(serializedObject, "moveX", "moveY", "moveZ");
+        SerializedProperty prop = serializedObject.GetIterator();
+        bool enterChildren = true;
 
-        PlatformLogic platform = (PlatformLogic)target;
-
-        if (platform.enableMovement)
+        while (prop.NextVisible(enterChildren))
         {
-            EditorGUILayout.Space(5);
-            EditorGUILayout.LabelField("Movement Axis Controls", EditorStyles.boldLabel);
+            enterChildren = false;
 
-            EditorGUILayout.BeginHorizontal();
-            
-            EditorGUI.BeginChangeCheck();
-            bool x = EditorGUILayout.ToggleLeft("Left/Right", platform.moveX, GUILayout.Width(130));
-            bool y = EditorGUILayout.ToggleLeft("Up/Down", platform.moveY, GUILayout.Width(130));
-            bool z = EditorGUILayout.ToggleLeft("Forward/Backward", platform.moveZ, GUILayout.Width(130));
+            // Skip internal script property and custom axis toggles
+            if (prop.name == "m_Script" || prop.name == "moveX" || prop.name == "moveY" || prop.name == "moveZ")
+                continue;
 
-            if (EditorGUI.EndChangeCheck())
+            // Inject Movement Settings header & toggles right before initialDirection renders
+            if (prop.name == "initialDirection")
             {
-                Undo.RecordObject(platform, "Change Movement Axis");
-                platform.moveX = x;
-                platform.moveY = y;
-                platform.moveZ = z;
-                EditorUtility.SetDirty(platform);
+                EditorGUILayout.Space(10);
+                EditorGUILayout.LabelField("Movement Settings", EditorStyles.boldLabel);
+
+                EditorGUILayout.BeginHorizontal();
+                
+                PlatformLogic platformTarget = (PlatformLogic)target;
+
+                EditorGUI.BeginChangeCheck();
+                bool x = EditorGUILayout.ToggleLeft("Left/Right", platformTarget.moveX, GUILayout.Width(130));
+                bool y = EditorGUILayout.ToggleLeft("Up/Down", platformTarget.moveY, GUILayout.Width(130));
+                bool z = EditorGUILayout.ToggleLeft("Forward/Backward", platformTarget.moveZ, GUILayout.Width(130));
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(platformTarget, "Change Movement Axis");
+                    platformTarget.moveX = x;
+                    platformTarget.moveY = y;
+                    platformTarget.moveZ = z;
+                    EditorUtility.SetDirty(platformTarget);
+                }
+
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.Space(5);
             }
 
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.PropertyField(prop, true);
         }
 
         serializedObject.ApplyModifiedProperties();
+
+        // --- BUTTON WORKFLOW ---
+        EditorGUILayout.Space(15);
+        
+        PlatformLogic platform = (PlatformLogic)target;
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
+        {
+            fontSize = 13,
+            fontStyle = FontStyle.Bold,
+            fixedHeight = 35
+        };
+
+        // Enemy Button
+        GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f); // Friendly green tint
+        if (GUILayout.Button("➕ Create Enemy On Platform", buttonStyle))
+        {
+            platform.CreateEnemyOnPlatform();
+        }
+
+        EditorGUILayout.Space(5);
+
+        // Obstacle Button
+        GUI.backgroundColor = new Color(0.9f, 0.6f, 0.2f); // Orange tint
+        if (GUILayout.Button("📦 Create Obstacle On Platform", buttonStyle))
+        {
+            platform.CreateObstacleOnPlatform();
+        }
+
+        GUI.backgroundColor = Color.white; // Reset color
     }
 }

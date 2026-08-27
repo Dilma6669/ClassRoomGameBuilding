@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4629209331050891589}
   - component: {fileID: 5174181682799186185}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: "\u26A0\uFE0F DO NOT TOUCH"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -111,7 +111,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.79, y: 0.69, z: 0.81}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &5174181682799186185
 Rigidbody:
@@ -149,10 +149,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7389228385384115287}
-  - component: {fileID: 5022202547088896332}
+  - component: {fileID: 5252497559592391782}
   - component: {fileID: 2447971570365861456}
   m_Layer: 0
-  m_Name: EnemyLogic
+  m_Name: EnemyLogicDefault
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -174,7 +174,7 @@ Transform:
   - {fileID: 3101820417137144067}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5022202547088896332
+--- !u!114 &5252497559592391782
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -188,6 +188,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FollowPlatform
   targetPlatform: {fileID: 0}
   heightOffset: 1
+  snappedTargetID: 
 --- !u!114 &2447971570365861456
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,7 +201,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4b9dea039a7841f9885d81c1693e8ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLogic
+  targetPlatform: {fileID: 0}
+  heightOffset: 1
   rotationAngle: 0
   enablePatrol: 1
   moveSpeed: 0.96
   moveDistance: 3
+  snappedTargetID: 
