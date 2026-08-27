@@ -107,6 +107,15 @@ public class PlatformLogicEditor : Editor
             platform.CreateObstacleOnPlatform();
         }
 
+        EditorGUILayout.Space(5);
+
+        // Trampoline Button
+        GUI.backgroundColor = new Color(0.2f, 0.6f, 0.9f); // Cyan/blue tint
+        if (GUILayout.Button("🌀 Create Trampoline On Platform", buttonStyle))
+        {
+            platform.CreateTrampolineOnPlatform();
+        }
+
         GUI.backgroundColor = Color.white; // Reset color
     }
 }

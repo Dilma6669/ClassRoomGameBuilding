@@ -16,9 +16,9 @@ public class PlatformLogic : MonoBehaviour
     [Range(0.5f, 20f)] public float depth = 3f;
 
     [Header("Starting Position Offset")]
-    [Range(-20f, 20f)] public float offsetX = 0f;
-    [Range(-20f, 20f)] public float offsetY = 0f;
-    [Range(-20f, 20f)] public float offsetZ = 0f;
+    [Range(-500f, 500f)] public float offsetX = 0f;
+    [Range(-500f, 500f)] public float offsetY = 0f;
+    [Range(-500f, 500f)] public float offsetZ = 0f;
 
     // Movement Settings
     public InitialDirection initialDirection = InitialDirection.Forward;
@@ -34,6 +34,11 @@ public class PlatformLogic : MonoBehaviour
     [Tooltip("Find this prefab in: Assets/Prefabs/Obstacles/ObstacleLogic")]
     public GameObject obstaclePrefab;
     [Range(0f, 5f)] public float obstacleSpawnHeightOffset = 0.5f;
+
+    [Header("Trampoline Spawning Setup")]
+    [Tooltip("Find this prefab in: Assets/Prefabs/Trampolines/TrampolineLogic")]
+    public GameObject trampolinePrefab;
+    [Range(0f, 5f)] public float trampolineSpawnHeightOffset = 0.5f;
 
     // Movement Toggles (X = Left/Right, Y = Up/Down, Z = Forward/Backward)
     [HideInInspector] public bool moveX = true;
@@ -155,7 +160,7 @@ public class PlatformLogic : MonoBehaviour
         }
     }
 
-    [ContextMenu("Create Enemy On Platform")]
+[ContextMenu("Create Enemy On Platform")]
     public void CreateEnemyOnPlatform()
     {
         if (enemyPrefab == null)
@@ -167,7 +172,7 @@ public class PlatformLogic : MonoBehaviour
         FindChildComponents();
         if (childMover == null) return;
 
-        Vector3 spawnPosition = childMover.transform.position + new Vector3(0f, (height / 2f) + enemySpawnHeightOffset, 0f);
+        Vector3 spawnPosition = childMover.transform.position + Vector3.up * ((height / 2f) + enemySpawnHeightOffset);
 
 #if UNITY_EDITOR
         GameObject newEnemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefab);
@@ -179,10 +184,12 @@ public class PlatformLogic : MonoBehaviour
 #endif
 
         FollowPlatform followLogic = newEnemy.GetComponent<FollowPlatform>();
-        if (followLogic != null)
-        {
-            followLogic.targetPlatform = childMover.transform;
-        }
+        if (followLogic == null) followLogic = newEnemy.AddComponent<FollowPlatform>();
+
+        followLogic.targetPlatform = childMover.transform;
+        followLogic.offsetX = 0f;
+        followLogic.offsetY = (height / 2f) + enemySpawnHeightOffset;
+        followLogic.offsetZ = 0f;
     }
 
     [ContextMenu("Create Obstacle On Platform")]
@@ -197,7 +204,7 @@ public class PlatformLogic : MonoBehaviour
         FindChildComponents();
         if (childMover == null) return;
 
-        Vector3 spawnPosition = childMover.transform.position + new Vector3(0f, (height / 2f) + obstacleSpawnHeightOffset, 0f);
+        Vector3 spawnPosition = childMover.transform.position + Vector3.up * ((height / 2f) + obstacleSpawnHeightOffset);
 
 #if UNITY_EDITOR
         GameObject newObstacle = (GameObject)PrefabUtility.InstantiatePrefab(obstaclePrefab);
@@ -208,11 +215,45 @@ public class PlatformLogic : MonoBehaviour
         GameObject newObstacle = Instantiate(obstaclePrefab, spawnPosition, Quaternion.identity, transform);
 #endif
 
-        ObstacleLogic obstacleLogic = newObstacle.GetComponent<ObstacleLogic>();
-        if (obstacleLogic != null)
+        FollowPlatform followLogic = newObstacle.GetComponent<FollowPlatform>();
+        if (followLogic == null) followLogic = newObstacle.AddComponent<FollowPlatform>();
+
+        followLogic.targetPlatform = childMover.transform;
+        followLogic.offsetX = 0f;
+        followLogic.offsetY = (height / 2f) + obstacleSpawnHeightOffset;
+        followLogic.offsetZ = 0f;
+    }
+
+    [ContextMenu("Create Trampoline On Platform")]
+    public void CreateTrampolineOnPlatform()
+    {
+        if (trampolinePrefab == null)
         {
-            obstacleLogic.targetPlatform = childMover.transform;
+            Debug.LogWarning("⚠️ Cannot create trampoline! Please drag a Trampoline Prefab into the 'Trampoline Prefab' slot on the Platform script first.");
+            return;
         }
+
+        FindChildComponents();
+        if (childMover == null) return;
+
+        Vector3 spawnPosition = childMover.transform.position + Vector3.up * ((height / 2f) + trampolineSpawnHeightOffset);
+
+#if UNITY_EDITOR
+        GameObject newTrampoline = (GameObject)PrefabUtility.InstantiatePrefab(trampolinePrefab);
+        newTrampoline.transform.position = spawnPosition;
+        newTrampoline.transform.SetParent(transform);
+        Undo.RegisterCreatedObjectUndo(newTrampoline, "Create Trampoline On Platform");
+#else
+        GameObject newTrampoline = Instantiate(trampolinePrefab, spawnPosition, Quaternion.identity, transform);
+#endif
+
+        FollowPlatform followLogic = newTrampoline.GetComponent<FollowPlatform>();
+        if (followLogic == null) followLogic = newTrampoline.AddComponent<FollowPlatform>();
+
+        followLogic.targetPlatform = childMover.transform;
+        followLogic.offsetX = 0f;
+        followLogic.offsetY = (height / 2f) + trampolineSpawnHeightOffset;
+        followLogic.offsetZ = 0f;
     }
 
     private void OnDrawGizmosSelected()

@@ -4,41 +4,31 @@ using UnityEngine;
 public class FollowPlatform : MonoBehaviour
 {
     public Transform targetPlatform;
-    public float heightOffset = 1f;
 
-    // Persistent target ID saved in the scene so Play mode resets won't trigger a snap
-    [HideInInspector] public string snappedTargetID = "";
+    [Header("Starting Position Offset")]
+    [Range(-50f, 50f)] public float offsetX = 0f;
+    [Range(-50f, 50f)] public float offsetY = 0.5f;
+    [Range(-50f, 50f)] public float offsetZ = 0f;
 
     private Vector3 lastPlatformPosition;
+    private bool initialized = false;
+
+    private void OnEnable()
+    {
+        InitializeTracking();
+    }
 
     private void Start()
+    {
+        InitializeTracking();
+    }
+
+    private void InitializeTracking()
     {
         if (targetPlatform != null)
         {
             lastPlatformPosition = targetPlatform.position;
-        }
-    }
-
-    private void OnValidate()
-    {
-        // Never snap during Play mode or during scene play transitions
-        if (Application.isPlaying) return;
-
-        if (targetPlatform != null)
-        {
-            // Get unique Unity Instance ID for the assigned target transform
-            string currentTargetID = targetPlatform.GetInstanceID().ToString();
-
-            // Snap ONLY if a completely new target transform was assigned in the Inspector
-            if (snappedTargetID != currentTargetID)
-            {
-                snappedTargetID = currentTargetID;
-                SnapToPlatformCenter();
-            }
-        }
-        else
-        {
-            snappedTargetID = "";
+            initialized = true;
         }
     }
 
@@ -46,19 +36,24 @@ public class FollowPlatform : MonoBehaviour
     {
         if (targetPlatform == null) return;
 
-        // In Edit mode, track platform movement without overriding local position changes
-        if (!Application.isPlaying)
+        if (!initialized)
         {
-            Vector3 editorDelta = targetPlatform.position - lastPlatformPosition;
-            transform.position += editorDelta;
-            lastPlatformPosition = targetPlatform.position;
-            return;
+            InitializeTracking();
         }
 
-        // Calculate runtime movement delta
-        Vector3 platformDelta = targetPlatform.position - lastPlatformPosition;
-        transform.position += platformDelta;
-        lastPlatformPosition = targetPlatform.position;
+        if (Application.isPlaying)
+        {
+            // During Play mode, follow platform motion delta while preserving initial offset
+            Vector3 platformDelta = targetPlatform.position - lastPlatformPosition;
+            transform.position += platformDelta;
+            lastPlatformPosition = targetPlatform.position;
+        }
+        else
+        {
+            // In Edit mode, set world position based directly on slider offsets relative to target platform
+            transform.position = targetPlatform.position + new Vector3(offsetX, offsetY, offsetZ);
+            lastPlatformPosition = targetPlatform.position;
+        }
     }
 
     [ContextMenu("Snap To Center")]
@@ -66,7 +61,9 @@ public class FollowPlatform : MonoBehaviour
     {
         if (targetPlatform == null) return;
 
-        transform.position = targetPlatform.position + new Vector3(0f, heightOffset, 0f);
+        offsetX = 0f;
+        offsetZ = 0f;
+        transform.position = targetPlatform.position + new Vector3(offsetX, offsetY, offsetZ);
         lastPlatformPosition = targetPlatform.position;
     }
 }

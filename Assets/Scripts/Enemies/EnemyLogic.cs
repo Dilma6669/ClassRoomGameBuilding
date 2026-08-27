@@ -25,7 +25,7 @@ public class EnemyLogic : MonoBehaviour
     {
         ApplyRotation();
 
-        if (!Application.isPlaying || !enablePatrol) 
+        if (!Application.isPlaying || !enablePatrol)
         {
             lastPatrolOffset = Vector3.zero;
             return;
