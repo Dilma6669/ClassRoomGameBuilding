@@ -22,7 +22,7 @@ public class PlatformLogic : MonoBehaviour
 
     // Movement Settings
     public InitialDirection initialDirection = InitialDirection.Forward;
-    [Range(0f, 50f)] public float moveDistance = 5f;
+    [Range(0f, 1000f)] public float moveDistance = 0f;
     [Range(0.1f, 10f)] public float moveSpeed = 2f;
 
     [Header("Enemy Spawning Setup")]
@@ -76,11 +76,9 @@ public class PlatformLogic : MonoBehaviour
 
     private void FindChildComponents()
     {
-        // First try finding ExampleMovingPlatform anywhere in existing children
         if (childMover == null)
             childMover = GetComponentInChildren<ExampleMovingPlatform>(true);
 
-        // Fallback: If component isn't found by type, grab the first child transform
         if (childMover == null && transform.childCount > 0)
             childMover = transform.GetChild(0).GetComponent<ExampleMovingPlatform>();
     }
@@ -92,7 +90,6 @@ public class PlatformLogic : MonoBehaviour
 
         if (Application.isPlaying && childMover != null)
         {
-            // Cache fixed Gizmo track relative to initial placement
             Vector3 initialPos = childMover.transform.position;
             Vector3 dir = MoveDirection;
             float halfDist = moveDistance / 2f;
@@ -109,7 +106,7 @@ public class PlatformLogic : MonoBehaviour
     {
         if (childMover == null) return;
 
-        if (!HasActiveAxis)
+        if (!HasActiveAxis || moveDistance <= 0f)
         {
             childMover.TranslationPeriod = 0f;
             childMover.TranslationSpeed = 0f;
@@ -130,10 +127,13 @@ public class PlatformLogic : MonoBehaviour
             dir = -dir;
         }
 
-        // Configure sine movement directly on ExampleMovingPlatform
+        // Calculate time needed to complete full round-trip (start -> end -> start)
+        float totalRoundTripDistance = moveDistance * 2f;
+        float calculatedPeriod = totalRoundTripDistance / Mathf.Max(0.01f, moveSpeed);
+
         childMover.TranslationAxis = dir;
         childMover.TranslationPeriod = moveDistance / 2f;
-        childMover.TranslationSpeed = moveSpeed;
+        childMover.TranslationSpeed = (2f * Mathf.PI) / calculatedPeriod;
     }
 
     private void Update()
@@ -143,13 +143,11 @@ public class PlatformLogic : MonoBehaviour
         FindChildComponents();
         if (childMover == null) return;
 
-        // Apply starting position offset in Edit mode only
         if (!Application.isPlaying)
         {
             childMover.transform.localPosition = new Vector3(offsetX, offsetY, offsetZ);
         }
 
-        // Scale only the child object
         Vector3 targetScale = new Vector3(width, height, depth);
         if (childMover.transform.localScale != targetScale)
         {
@@ -174,13 +172,12 @@ public class PlatformLogic : MonoBehaviour
 #if UNITY_EDITOR
         GameObject newEnemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefab);
         newEnemy.transform.position = spawnPosition;
-        newEnemy.transform.SetParent(transform); // Sibling to MovingPlatform, child to PlatformLogic
+        newEnemy.transform.SetParent(transform);
         Undo.RegisterCreatedObjectUndo(newEnemy, "Create Enemy On Platform");
 #else
         GameObject newEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity, transform);
 #endif
 
-        // Auto-assign platform target to FollowPlatform if present
         FollowPlatform followLogic = newEnemy.GetComponent<FollowPlatform>();
         if (followLogic != null)
         {
@@ -205,11 +202,17 @@ public class PlatformLogic : MonoBehaviour
 #if UNITY_EDITOR
         GameObject newObstacle = (GameObject)PrefabUtility.InstantiatePrefab(obstaclePrefab);
         newObstacle.transform.position = spawnPosition;
-        newObstacle.transform.SetParent(transform); // Sibling to MovingPlatform, child to PlatformLogic
+        newObstacle.transform.SetParent(transform);
         Undo.RegisterCreatedObjectUndo(newObstacle, "Create Obstacle On Platform");
 #else
         GameObject newObstacle = Instantiate(obstaclePrefab, spawnPosition, Quaternion.identity, transform);
 #endif
+
+        ObstacleLogic obstacleLogic = newObstacle.GetComponent<ObstacleLogic>();
+        if (obstacleLogic != null)
+        {
+            obstacleLogic.targetPlatform = childMover.transform;
+        }
     }
 
     private void OnDrawGizmosSelected()
