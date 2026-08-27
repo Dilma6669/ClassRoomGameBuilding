@@ -78,44 +78,5 @@ public class PlatformLogicEditor : Editor
         }
 
         serializedObject.ApplyModifiedProperties();
-
-        // --- BUTTON WORKFLOW ---
-        EditorGUILayout.Space(15);
-        
-        PlatformLogic platform = (PlatformLogic)target;
-
-        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
-        {
-            fontSize = 13,
-            fontStyle = FontStyle.Bold,
-            fixedHeight = 35
-        };
-
-        // Enemy Button
-        GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f); // Friendly green tint
-        if (GUILayout.Button("➕ Create Enemy On Platform", buttonStyle))
-        {
-            platform.CreateEnemyOnPlatform();
-        }
-
-        EditorGUILayout.Space(5);
-
-        // Obstacle Button
-        GUI.backgroundColor = new Color(0.9f, 0.6f, 0.2f); // Orange tint
-        if (GUILayout.Button("📦 Create Obstacle On Platform", buttonStyle))
-        {
-            platform.CreateObstacleOnPlatform();
-        }
-
-        EditorGUILayout.Space(5);
-
-        // Trampoline Button
-        GUI.backgroundColor = new Color(0.2f, 0.6f, 0.9f); // Cyan/blue tint
-        if (GUILayout.Button("🌀 Create Trampoline On Platform", buttonStyle))
-        {
-            platform.CreateTrampolineOnPlatform();
-        }
-
-        GUI.backgroundColor = Color.white; // Reset color
     }
 }

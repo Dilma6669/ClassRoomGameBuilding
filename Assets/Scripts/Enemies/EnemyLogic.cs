@@ -23,7 +23,7 @@ public class EnemyLogic : MonoBehaviour
 
     private void Update()
     {
-        ApplyRotation();
+       // ApplyRotation();
 
         if (!Application.isPlaying || !enablePatrol)
         {
