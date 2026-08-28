@@ -3,43 +3,35 @@ using KinematicCharacterController;
 
 public class TrampolineLogic : MonoBehaviour
 {
-    [Header("Bounce Settings")]
-    [Tooltip("Multiplier applied to the incoming speed (e.g., 1 = maintain speed, 1.5 = boost speed).")]
-    public float bounceMultiplier = 1.2f;
+    [Header("Launch Physics")]
+    [Tooltip("How much force is applied to the player when touching the trampoline.")]
+    public float launchForce = 25f;
 
-    [Tooltip("Minimum horizontal force applied so the player still bounces back if walking slowly.")]
-    public float minimumBounceForce = 10f;
+    [Tooltip("How much of the players running or falling speed gets added to your jump!")]
+    [Range(0f, 1f)] public float momentumTransfer = 0.3f;
 
-    [Tooltip("Extra upward force to launch the character clear of the trampoline pad.")]
-    public float upwardPopForce = 5f;
-
-    private void OnTriggerEnter(Collider other)
+    // Called directly from TrampolineTriggerBridge on the child object
+    public void HandlePlayerEnter(Collider other)
     {
-        KinematicCharacterMotor motor = other.GetComponent<KinematicCharacterMotor>();
+        KinematicCharacterMotor motor = other.GetComponentInParent<KinematicCharacterMotor>();
 
         if (motor != null)
         {
+            // 1. Get player's contact position (feet)
+            Vector3 playerFeet = motor.TransientPosition;
+
+            // 2. Calculate radial outward vector from sphere center to player
+            Vector3 sphereCenter = transform.position;
+            Vector3 surfaceNormal = (playerFeet - sphereCenter).normalized;
+
+            Debug.DrawRay(playerFeet, surfaceNormal * 4f, Color.red, 2.0f);
+
+            // 3. Apply launch velocity along the surface normal
             motor.ForceUnground();
+            float incomingSpeed = motor.BaseVelocity.magnitude;
+            float totalLaunchSpeed = launchForce + (incomingSpeed * momentumTransfer);
 
-            Vector3 incomingVelocity = motor.BaseVelocity;
-
-            // Direct inversion: Flip horizontal velocity completely backwards
-            Vector3 reversedDirection = -incomingVelocity;
-
-            // Calculate return speed based on incoming velocity or minimum floor
-            float currentSpeed = incomingVelocity.magnitude;
-            float targetSpeed = Mathf.Max(currentSpeed * bounceMultiplier, minimumBounceForce);
-
-            // Blend inverted momentum with the trampoline's facing vector (upward pop)
-            Vector3 finalVelocity = (reversedDirection.normalized * targetSpeed) + (transform.up * upwardPopForce);
-
-            motor.BaseVelocity = finalVelocity;
+            motor.BaseVelocity = surfaceNormal * totalLaunchSpeed;
         }
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(transform.position, transform.up * 1.5f);
     }
 }

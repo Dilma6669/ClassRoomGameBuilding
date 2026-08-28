@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2798427287807158122}
+  - component: {fileID: 4496460597869824683}
   - component: {fileID: 5499516567152153511}
-  - component: {fileID: 3620917453084995966}
   - component: {fileID: 841120419401354936}
-  - component: {fileID: 9086122904650020651}
+  - component: {fileID: 5844220321533257441}
   m_Layer: 0
   m_Name: "\u26A0\uFE0F DO NOT TOUCH"
   m_TagString: Untagged
@@ -35,15 +35,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3389752723046845397}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &5499516567152153511
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4317415812715064837}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &3620917453084995966
+--- !u!114 &4496460597869824683
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -52,12 +44,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 4317415812715064837}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f8a9139b44e94b33b52ccb1ea47a9ff, type: 3}
+  m_Script: {fileID: 11500000, guid: b187c8b6c6aeb4ce6b1613930ea40352, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TrampolineLogic
-  bounceMultiplier: 1.2
-  minimumBounceForce: 10
-  upwardPopForce: 5
+  m_EditorClassIdentifier: Assembly-CSharp::TrampolineTriggerBridge
+--- !u!33 &5499516567152153511
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4317415812715064837}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &841120419401354936
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -107,7 +104,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &9086122904650020651
+--- !u!135 &5844220321533257441
 SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -138,6 +135,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3389752723046845397}
   - component: {fileID: 4393104574870745518}
+  - component: {fileID: 4504604686685564102}
   m_Layer: 0
   m_Name: TrampolineLogicDefault
   m_TagString: Untagged
@@ -155,7 +153,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2798427287807158122}
@@ -177,3 +175,18 @@ MonoBehaviour:
   offsetX: 0
   offsetY: 0.5
   offsetZ: 0
+--- !u!114 &4504604686685564102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9198546935310374055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f8a9139b44e94b33b52ccb1ea47a9ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrampolineLogic
+  launchForce: 25
+  momentumTransfer: 0.3
+  sphereCenterTransform: {fileID: 0}
