@@ -469,6 +469,90 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eedd4d237a7494e6baa648131542105d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightingController
+--- !u!1001 &804748522
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2125562361}
+    m_Modifications:
+    - target: {fileID: 2447971570365861456, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: moveSpeed
+      value: 6.34
+      objectReference: {fileID: 0}
+    - target: {fileID: 2447971570365861456, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: movementType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2447971570365861456, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: wanderRadius
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2447971570365861456, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: minWanderDistance
+      value: 2.48
+      objectReference: {fileID: 0}
+    - target: {fileID: 5252497559592391782, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: offsetY
+      value: 0.65999997
+      objectReference: {fileID: 0}
+    - target: {fileID: 5252497559592391782, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: targetPlatform
+      value: 
+      objectReference: {fileID: 595760}
+    - target: {fileID: 6755809666008450591, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_Name
+      value: EnemyLogicDefault
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -9
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -2.3400002
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 691594586847189042, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 1435296518}
+  m_SourcePrefab: {fileID: 100100000, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
 --- !u!1 &935364342
 GameObject:
   m_ObjectHideFlags: 0
@@ -561,6 +645,23 @@ Transform:
   - {fileID: 118923296}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1435296512 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 691594586847189042, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+  m_PrefabInstance: {fileID: 804748522}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1435296518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435296512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b48307d47ad2e47eabdae817a9e85f70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyCollisionHandler
 --- !u!1001 &1556683791
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -739,6 +840,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2862742471814041639, guid: 34722a7b149fe493fbf5ed93aa974cc4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1866387444}
     - targetCorrespondingSourceObject: {fileID: 4228504686090958634, guid: 34722a7b149fe493fbf5ed93aa974cc4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 595760}
@@ -747,6 +851,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2125562363}
   m_SourcePrefab: {fileID: 100100000, guid: 34722a7b149fe493fbf5ed93aa974cc4, type: 3}
+--- !u!4 &1866387444 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7389228385384115287, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
+  m_PrefabInstance: {fileID: 804748522}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2021333313
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -842,7 +951,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e7f85fe492a2451aa8aa426301ef122, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlatformPopulator
-  enemyPrefab: {fileID: 0}
+  enemyPrefab: {fileID: 6755809666008450591, guid: 0490f096ebb4a4f38820ef4fa448fa94, type: 3}
   enemySpawnHeightOffset: 0.5
   obstaclePrefab: {fileID: 0}
   obstacleSpawnHeightOffset: 0.5
