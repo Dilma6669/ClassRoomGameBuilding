@@ -138,6 +138,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a276bc76edd14627bbc3a21dc9ccb4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTerrainWanderer
+  maxDistanceFromHome: 100
   minWanderRadius: 5
   maxWanderRadius: 50
   minSpeed: 5
@@ -157,7 +158,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AgentPerformanceThrottler
   closeDistance: 1
-  mediumDistance: 100
+  mediumDistance: 300
   closeQuality: 4
   mediumQuality: 1
 --- !u!195 &6469740275143868958

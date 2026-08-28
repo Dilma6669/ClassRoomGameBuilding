@@ -4,9 +4,15 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyTerrainWanderer : MonoBehaviour
 {
+    [Header("Home Tether Setup")]
+    [Tooltip("Maximum distance from spawn position the agent is allowed to wander.")]
+    public float maxDistanceFromHome = 30f;
+
     [Header("Wander Range")]
-    public float minWanderRadius = 15f;
-    public float maxWanderRadius = 40f;
+    [Tooltip("Minimum distance for a single trek step.")]
+    public float minWanderRadius = 5f;
+    [Tooltip("Maximum distance for a single trek step.")]
+    public float maxWanderRadius = 15f;
 
     [Header("Movement Speed Range")]
     public float minSpeed = 2f;
@@ -17,10 +23,14 @@ public class EnemyTerrainWanderer : MonoBehaviour
     public float minAngularSpeed = 120f;
 
     private NavMeshAgent agent;
+    private Vector3 homePosition;
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        // Lock in spawn point as the tether center
+        homePosition = transform.position; 
+        
         SetNewRandomDestination();
     }
 
@@ -28,7 +38,6 @@ public class EnemyTerrainWanderer : MonoBehaviour
     {
         if (!agent.isOnNavMesh) return;
 
-        // Immediately pick a new destination the second they reach the target
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             SetNewRandomDestination();
@@ -50,13 +59,29 @@ public class EnemyTerrainWanderer : MonoBehaviour
         {
             float chosenRadius = Random.Range(minWanderRadius, maxWanderRadius);
             Vector3 randomDirection = Random.insideUnitSphere.normalized * chosenRadius;
-            randomDirection += transform.position;
+            
+            // Pick next point relative to CURRENT position
+            Vector3 candidatePoint = transform.position + randomDirection;
 
-            if (NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, 10f, NavMesh.AllAreas))
+            // If candidate point drifts too far from HOME, pull target back toward Home
+            if (Vector3.Distance(candidatePoint, homePosition) > maxDistanceFromHome)
+            {
+                candidatePoint = homePosition + (candidatePoint - homePosition).normalized * Random.Range(0f, maxDistanceFromHome * 0.5f);
+            }
+
+            if (NavMesh.SamplePosition(candidatePoint, out NavMeshHit hit, 10f, NavMesh.AllAreas))
             {
                 agent.SetDestination(hit.position);
                 return;
             }
         }
+    }
+
+    // Visualizes the tether radius in Scene view for easy debugging
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+        Vector3 center = Application.isPlaying ? homePosition : transform.position;
+        Gizmos.DrawWireSphere(center, maxDistanceFromHome);
     }
 }

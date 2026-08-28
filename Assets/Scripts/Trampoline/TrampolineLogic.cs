@@ -1,46 +1,45 @@
 using UnityEngine;
+using KinematicCharacterController;
 
-[ExecuteAlways]
 public class TrampolineLogic : MonoBehaviour
 {
-    [Header("Trampoline Settings")]
-    [Range(1f, 100f)] public float jumpForce = 25f;
+    [Header("Bounce Settings")]
+    [Tooltip("Multiplier applied to the incoming speed (e.g., 1 = maintain speed, 1.5 = boost speed).")]
+    public float bounceMultiplier = 1.2f;
 
-    [Header("Scale Controls")]
-    [Range(0.1f, 10f)] public float uniformScale = 1f;
+    [Tooltip("Minimum horizontal force applied so the player still bounces back if walking slowly.")]
+    public float minimumBounceForce = 10f;
 
-    private Transform childFolder;
+    [Tooltip("Extra upward force to launch the character clear of the trampoline pad.")]
+    public float upwardPopForce = 5f;
 
-    private void Awake()
+    private void OnTriggerEnter(Collider other)
     {
-        FindChildFolder();
-    }
+        KinematicCharacterMotor motor = other.GetComponent<KinematicCharacterMotor>();
 
-    private void Start()
-    {
-        FindChildFolder();
-    }
-
-    private void FindChildFolder()
-    {
-        if (childFolder != null) return;
-
-        childFolder = transform.Find("⚠️ DO NOT TOUCH");
-
-        if (childFolder == null && transform.childCount > 0)
+        if (motor != null)
         {
-            childFolder = transform.GetChild(0);
+            motor.ForceUnground();
+
+            Vector3 incomingVelocity = motor.BaseVelocity;
+
+            // Direct inversion: Flip horizontal velocity completely backwards
+            Vector3 reversedDirection = -incomingVelocity;
+
+            // Calculate return speed based on incoming velocity or minimum floor
+            float currentSpeed = incomingVelocity.magnitude;
+            float targetSpeed = Mathf.Max(currentSpeed * bounceMultiplier, minimumBounceForce);
+
+            // Blend inverted momentum with the trampoline's facing vector (upward pop)
+            Vector3 finalVelocity = (reversedDirection.normalized * targetSpeed) + (transform.up * upwardPopForce);
+
+            motor.BaseVelocity = finalVelocity;
         }
     }
 
-    private void Update()
+    private void OnDrawGizmos()
     {
-        FindChildFolder();
-
-        // Apply scale directly to child folder geometry
-        if (childFolder != null)
-        {
-            childFolder.localScale = Vector3.one * uniformScale;
-        }
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawRay(transform.position, transform.up * 1.5f);
     }
 }
