@@ -1,3 +1,4 @@
+using KinematicCharacterController.Examples;
 using UnityEngine;
 
 [ExecuteAlways]
@@ -52,7 +53,11 @@ public class EnemyPlatformLogic : MonoBehaviour
     private Collider enemyCollider;
     private Collider playerCollider;
     private Transform childPhysicsObject;
-    private Rigidbody rigidbody;
+    private Rigidbody rigidbodyComponent;
+    private Transform platformTransform;
+
+    // Local offset relative to the platform calculated at game start
+    private Vector3 initialPlatformLocalHome;
 
     private void Start()
     {
@@ -60,18 +65,34 @@ public class EnemyPlatformLogic : MonoBehaviour
         currentEnemyOffsetFromHome = Vector3.zero;
         previousMovementType = movementType;
 
+        if (transform.parent != null)
+        {
+            ExampleMovingPlatform movingPlatform = transform.parent.GetComponentInChildren<ExampleMovingPlatform>();
+            if (movingPlatform != null)
+            {
+                platformTransform = movingPlatform.transform;
+            }
+        }
+
+        if (Application.isPlaying)
+        {
+            Transform refTransform = platformTransform != null ? platformTransform : transform.parent;
+            if (refTransform != null)
+            {
+                initialPlatformLocalHome = refTransform.InverseTransformPoint(transform.position);
+            }
+        }
+
         enemyCollider = GetComponent<Collider>();
         if (enemyCollider != null)
         {
             enemyCollider.hideFlags = HideFlags.HideInInspector;
         }
         
-        rigidbody = GetComponent<Rigidbody>();
-        if (rigidbody != null)
+        rigidbodyComponent = GetComponent<Rigidbody>();
+        if (rigidbodyComponent != null)
         {
-            rigidbody.hideFlags = HideFlags.HideInInspector;
-            rigidbody.isKinematic = false;
-            rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
+            rigidbodyComponent.hideFlags = HideFlags.HideInInspector;
         }
 
         Transform childTransform = transform.childCount > 0 ? transform.GetChild(0) : null;
@@ -144,13 +165,17 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     private void SnapToSurfaceHeight()
     {
+        // Cast from higher up to avoid starting inside collider geometry when walking up steep bumps
         Vector3 rayOrigin = transform.position + (Vector3.up * raycastOriginHeight);
-        float rayLength = raycastOriginHeight * 3f;
+        float rayLength = raycastOriginHeight * 4f;
 
         RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, rayLength, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        
+        // Sort hits by distance to ensure we get the highest surface beneath the origin
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
         foreach (RaycastHit hit in hits)
         {
-            // Ignore enemy's own colliders
             if (hit.collider == enemyCollider || hit.transform.IsChildOf(transform)) continue;
 
             float targetY = hit.point.y + surfaceOffset;
@@ -158,15 +183,7 @@ public class EnemyPlatformLogic : MonoBehaviour
 
             currentPos.y = Mathf.Lerp(currentPos.y, targetY, Time.deltaTime * stepUpSpeed);
 
-            if (rigidbody != null && !rigidbody.isKinematic)
-            {
-                rigidbody.MovePosition(new Vector3(transform.position.x, currentPos.y, transform.position.z));
-            }
-            else
-            {
-                transform.position = currentPos;
-            }
-
+            transform.position = currentPos;
             break;
         }
     }
@@ -231,7 +248,9 @@ public class EnemyPlatformLogic : MonoBehaviour
         Vector3 vectorToTarget = currentWanderOffsetFromHome - currentEnemyOffsetFromHome;
         vectorToTarget.y = 0f;
 
-        if (vectorToTarget.magnitude < 0.2f)
+        float distanceToTarget = vectorToTarget.magnitude;
+
+        if (distanceToTarget < 0.2f)
         {
             AlignChildToParent();
             currentEnemyOffsetFromHome = currentWanderOffsetFromHome;
@@ -247,12 +266,12 @@ public class EnemyPlatformLogic : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, dynamicTurnSpeed * Time.deltaTime);
         }
 
-        Vector3 moveStep = Vector3.forward * moveSpeed * Time.deltaTime;
-        Vector3 worldMoveDelta = transform.TransformDirection(moveStep);
-        
-        transform.Translate(moveStep, Space.Self);
+        float stepDistance = Mathf.Min(moveSpeed * Time.deltaTime, distanceToTarget);
+        Vector3 worldMoveDelta = moveDir * stepDistance;
 
         currentEnemyOffsetFromHome += worldMoveDelta;
+
+        transform.position += worldMoveDelta;
     }
 
     private void UpdateReturnToHomeMovement()
@@ -260,7 +279,9 @@ public class EnemyPlatformLogic : MonoBehaviour
         Vector3 vectorToHome = -currentEnemyOffsetFromHome;
         vectorToHome.y = 0f;
 
-        if (vectorToHome.magnitude < 0.25f)
+        float distanceToHome = vectorToHome.magnitude;
+
+        if (distanceToHome < 0.25f)
         {
             ResetReturnHomeState();
             AlignChildToParent();
@@ -287,11 +308,12 @@ public class EnemyPlatformLogic : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, dynamicTurnSpeed * Time.deltaTime);
         }
 
-        Vector3 moveStep = Vector3.forward * moveSpeed * Time.deltaTime;
-        Vector3 worldMoveDelta = transform.TransformDirection(moveStep);
+        float stepDistance = Mathf.Min(moveSpeed * Time.deltaTime, distanceToHome);
+        Vector3 worldMoveDelta = moveDir * stepDistance;
 
-        transform.Translate(moveStep, Space.Self);
         currentEnemyOffsetFromHome += worldMoveDelta;
+
+        transform.position += worldMoveDelta;
     }
 
     private void ResetReturnHomeState()
@@ -327,7 +349,26 @@ public class EnemyPlatformLogic : MonoBehaviour
     {
         if (movementType == MovementType.RandomWander || isReturningHome)
         {
-            Vector3 homeWorldPos = transform.position - currentEnemyOffsetFromHome;
+            Vector3 homeWorldPos;
+
+            if (Application.isPlaying)
+            {
+                Transform refTransform = platformTransform;
+                if (refTransform == null && transform.parent != null)
+                {
+                    ExampleMovingPlatform movingPlatform = transform.parent.GetComponentInChildren<ExampleMovingPlatform>();
+                    if (movingPlatform != null)
+                    {
+                        refTransform = movingPlatform.transform;
+                    }
+                }
+
+                homeWorldPos = (refTransform != null) ? refTransform.TransformPoint(initialPlatformLocalHome) : (transform.position - currentEnemyOffsetFromHome);
+            }
+            else
+            {
+                homeWorldPos = transform.position;
+            }
 
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(homeWorldPos, wanderRadius);
