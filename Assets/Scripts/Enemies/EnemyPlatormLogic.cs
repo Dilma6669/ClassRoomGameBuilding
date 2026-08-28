@@ -25,6 +25,16 @@ public class EnemyPlatformLogic : MonoBehaviour
     [Tooltip("How big of an area the enemy is allowed to explore when wandering.")]
     [Range(1f, 30f)] public float wanderRadius = 3f;
 
+    [Header("Surface Height Snapping")]
+    [Tooltip("Distance above local feet to cast down from.")]
+    [Range(0.1f, 5f)] public float raycastOriginHeight = 1.5f;
+
+    [Tooltip("Height offset above the mesh surface.")]
+    [Range(0f, 2f)] public float surfaceOffset = 0.5f;
+
+    [Tooltip("How fast it steps up/down over bumps.")]
+    [Range(1f, 50f)] public float stepUpSpeed = 15f;
+
     // Advanced / Internal Movement Variables
     [Range(15f, 180f)] private float maxTurnAngle = 90f;
     [Range(60f, 360f)] private float turnSpeedMultiplier = 120f;
@@ -60,6 +70,8 @@ public class EnemyPlatformLogic : MonoBehaviour
         if (rigidbody != null)
         {
             rigidbody.hideFlags = HideFlags.HideInInspector;
+            rigidbody.isKinematic = false;
+            rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
         }
 
         Transform childTransform = transform.childCount > 0 ? transform.GetChild(0) : null;
@@ -108,6 +120,7 @@ public class EnemyPlatformLogic : MonoBehaviour
         if (isReturningHome)
         {
             UpdateReturnToHomeMovement();
+            SnapToSurfaceHeight();
             return;
         }
 
@@ -124,6 +137,37 @@ public class EnemyPlatformLogic : MonoBehaviour
             case MovementType.Idle:
                 lastPatrolOffset = Vector3.zero;
                 break;
+        }
+
+        SnapToSurfaceHeight();
+    }
+
+    private void SnapToSurfaceHeight()
+    {
+        Vector3 rayOrigin = transform.position + (Vector3.up * raycastOriginHeight);
+        float rayLength = raycastOriginHeight * 3f;
+
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, rayLength, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        foreach (RaycastHit hit in hits)
+        {
+            // Ignore enemy's own colliders
+            if (hit.collider == enemyCollider || hit.transform.IsChildOf(transform)) continue;
+
+            float targetY = hit.point.y + surfaceOffset;
+            Vector3 currentPos = transform.position;
+
+            currentPos.y = Mathf.Lerp(currentPos.y, targetY, Time.deltaTime * stepUpSpeed);
+
+            if (rigidbody != null && !rigidbody.isKinematic)
+            {
+                rigidbody.MovePosition(new Vector3(transform.position.x, currentPos.y, transform.position.z));
+            }
+            else
+            {
+                transform.position = currentPos;
+            }
+
+            break;
         }
     }
 
