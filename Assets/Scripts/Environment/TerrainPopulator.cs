@@ -61,24 +61,19 @@ public class TerrainPopulator : MonoBehaviour
             GameObject selectedPrefab = randomPrefabs[Random.Range(0, randomPrefabs.Length)];
             if (selectedPrefab == null) continue;
 
-            // Pick a random X and Z inside terrain bounds with padding
             float randomX = Random.Range(terrainPos.x + edgePadding, terrainPos.x + terrainSize.x - edgePadding);
             float randomZ = Random.Range(terrainPos.z + edgePadding, terrainPos.z + terrainSize.z - edgePadding);
 
-            // Sample the exact height of the terrain at this (X, Z) coordinate
             float surfaceY = targetTerrain.SampleHeight(new Vector3(randomX, 0f, randomZ)) + terrainPos.y;
             Vector3 spawnWorldPos = new Vector3(randomX, surfaceY + heightOffset, randomZ);
 
-            // Calculate rotation
             Quaternion spawnRotation = Quaternion.identity;
 
             if (alignWithTerrainSlope)
             {
-                // Calculate normalized coordinates (0 to 1) across the terrain
                 float normX = (randomX - terrainPos.x) / terrainSize.x;
                 float normZ = (randomZ - terrainPos.z) / terrainSize.z;
 
-                // Convert normalized coordinates (0-1) to integer sample points
                 int sampleX = Mathf.Clamp((int)(normX * targetTerrain.terrainData.heightmapResolution), 0, targetTerrain.terrainData.heightmapResolution - 1);
                 int sampleZ = Mathf.Clamp((int)(normZ * targetTerrain.terrainData.heightmapResolution), 0, targetTerrain.terrainData.heightmapResolution - 1);
 
@@ -92,21 +87,14 @@ public class TerrainPopulator : MonoBehaviour
                 spawnRotation *= Quaternion.Euler(0f, randomAngle, 0f);
             }
 
-            // Spawn object
             GameObject spawned = SpawnObject(selectedPrefab, spawnWorldPos, spawnRotation, "Scatter On Terrain");
 
-            // Handle custom EnemyLogic setup if applicable
             if (spawned != null)
             {
-                EnemyLogic enemy = spawned.GetComponent<EnemyLogic>();
-                if (enemy != null)
+                EnemyTerrainLogic enemyTerrain = spawned.GetComponent<EnemyTerrainLogic>();
+                if (enemyTerrain != null)
                 {
-                    enemy.movementType = EnemyLogic.MovementType.TerrainWander;
-
-                    if (randomYRotation)
-                    {
-                        enemy.rotationAngle = spawned.transform.eulerAngles.y;
-                    }
+                    enemyTerrain.SetInitialRotation(spawnRotation);
                 }
             }
         }
@@ -138,7 +126,7 @@ public class TerrainPopulator : MonoBehaviour
         GameObject newObj = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
         newObj.transform.position = worldPos;
         newObj.transform.rotation = rotation;
-        newObj.transform.SetParent(transform); // Parented to TerrainPopulator GameObject
+        newObj.transform.SetParent(transform);
         Undo.RegisterCreatedObjectUndo(newObj, undoName);
         return newObj;
 #else

@@ -1,40 +1,33 @@
 using UnityEngine;
 
 [ExecuteAlways]
-public class EnemyLogic : MonoBehaviour
+public class EnemyPlatformLogic : MonoBehaviour
 {
-    public enum MovementType { Idle, Patrol, RandomWander, TerrainWander }
+    public enum MovementType { Idle, Patrol, RandomWander }
 
     [Header("Movement Mode")]
+    [Tooltip("How this enemy moves around (like walking back and forth or wandering around).")]
     public MovementType movementType = MovementType.Patrol;
 
-    [Header("Rotation Setup (Patrol/Idle Only)")]
-    [Range(0f, 360f)] public float rotationAngle = 0f;
-
-    [Header("Movement Speed (Units per Second)")]
+    [Header("General Movement Speed")]
+    [Tooltip("How fast the enemy moves (higher numbers mean a faster walk or chase).")]
     [Range(0.1f, 20f)] public float moveSpeed = 3f;
 
-    [Header("Rotation Multiplier")]
-    [Tooltip("Scales rotation speed proportionally to movement speed so fast turns match fast moves.")]
-    [Range(60f, 360f)] public float turnSpeedMultiplier = 120f;
-
-    [Header("Patrol Range")]
+    [Header("Patrol Settings")]
+    [Tooltip("How far back and forth the enemy walks when patrolling.")]
     [Range(0f, 20f)] public float moveDistance = 3f;
 
-    [Header("Wander Setup (Platform Only)")]
+    [Header("Idle Settings")]
+    [Tooltip("Which direction the enemy faces when standing still or starting out (0 to 360 degrees).")]
+    [Range(0f, 360f)] public float rotationAngle = 0f;
+
+    [Header("Wandering Settings")]
+    [Tooltip("How big of an area the enemy is allowed to explore when wandering.")]
     [Range(1f, 30f)] public float wanderRadius = 3f;
 
-    [Header("Terrain Wander Setup")]
-    [Tooltip("How often (in seconds) a new random wander angle is chosen.")]
-    [Range(1f, 10f)] public float directionChangeInterval = 3f;
-    [Tooltip("Maximum angle change (in degrees) when choosing a new heading.")]
-    [Range(15f, 180f)] public float maxTurnAngle = 90f;
-
-    [Header("Slope Detection")]
-    [Tooltip("Maximum allowed ground angle (in degrees). Steeper slopes trigger a direction flip.")]
-    [Range(10f, 60f)] public float maxWalkableSlope = 35f;
-    [Tooltip("How far ahead to check terrain slope.")]
-    [Range(0.2f, 2f)] public float slopeCheckDistance = 0.8f;
+    // Advanced / Internal Movement Variables
+    [Range(15f, 180f)] private float maxTurnAngle = 90f;
+    [Range(60f, 360f)] private float turnSpeedMultiplier = 120f;
 
     private const float MIN_WANDER_DISTANCE = 2.0f;
 
@@ -44,17 +37,12 @@ public class EnemyLogic : MonoBehaviour
     private MovementType previousMovementType;
     private bool isReturningHome = false;
 
-    // Terrain Wander State
-    private Rigidbody parentRb;
-    private float targetYAngle;
-    private float directionTimer;
-    private float slopeFlipCooldownTimer; // Prevents rapid spinning loops
-
     private int patrolDirection = 1;
 
     private Collider enemyCollider;
     private Collider playerCollider;
     private Transform childPhysicsObject;
+    private Rigidbody rigidbody;
 
     private void Start()
     {
@@ -62,16 +50,16 @@ public class EnemyLogic : MonoBehaviour
         currentEnemyOffsetFromHome = Vector3.zero;
         previousMovementType = movementType;
 
-        parentRb = GetComponent<Rigidbody>();
-        if (parentRb != null)
-        {
-            parentRb.hideFlags = HideFlags.HideInInspector;
-        }
-
         enemyCollider = GetComponent<Collider>();
         if (enemyCollider != null)
         {
             enemyCollider.hideFlags = HideFlags.HideInInspector;
+        }
+        
+        rigidbody = GetComponent<Rigidbody>();
+        if (rigidbody != null)
+        {
+            rigidbody.hideFlags = HideFlags.HideInInspector;
         }
 
         Transform childTransform = transform.childCount > 0 ? transform.GetChild(0) : null;
@@ -80,18 +68,13 @@ public class EnemyLogic : MonoBehaviour
             childPhysicsObject = childTransform;
         }
 
-        if (movementType == MovementType.TerrainWander)
-        {
-            PickNewTerrainAngle();
-        }
-        else if (movementType != MovementType.RandomWander)
-        {
-            ApplyRotation();
-        }
-
         if (movementType == MovementType.RandomWander)
         {
             PickNewWanderTarget();
+        }
+        else
+        {
+            ApplyRotation();
         }
     }
 
@@ -100,11 +83,7 @@ public class EnemyLogic : MonoBehaviour
         if (movementType != previousMovementType)
         {
             ResetReturnHomeState();
-            if (movementType == MovementType.TerrainWander)
-            {
-                PickNewTerrainAngle();
-            }
-            else if (movementType == MovementType.RandomWander)
+            if (movementType == MovementType.RandomWander)
             {
                 currentEnemyOffsetFromHome = Vector3.zero;
                 PickNewWanderTarget();
@@ -118,16 +97,11 @@ public class EnemyLogic : MonoBehaviour
 
         if (!Application.isPlaying)
         {
-            if (movementType != MovementType.RandomWander && movementType != MovementType.TerrainWander)
+            if (movementType != MovementType.RandomWander)
             {
                 ApplyRotation();
             }
             lastPatrolOffset = Vector3.zero;
-            return;
-        }
-
-        if (movementType == MovementType.TerrainWander)
-        {
             return;
         }
 
@@ -153,79 +127,9 @@ public class EnemyLogic : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    {
-        if (!Application.isPlaying || movementType != MovementType.TerrainWander) return;
-
-        if (parentRb == null)
-        {
-            parentRb = GetComponent<Rigidbody>();
-            if (parentRb == null) return;
-            parentRb.hideFlags = HideFlags.HideInInspector;
-        }
-
-        // Tick down timers
-        directionTimer -= Time.fixedDeltaTime;
-        if (slopeFlipCooldownTimer > 0f)
-        {
-            slopeFlipCooldownTimer -= Time.fixedDeltaTime;
-        }
-
-        // Only check slope if cooldown has elapsed
-        if (slopeFlipCooldownTimer <= 0f && IsSlopeTooSteepAhead())
-        {
-            // Flip 180 degrees, reset interval timer, and enforce a 1.2s cooldown
-            targetYAngle = Mathf.Repeat(targetYAngle + 180f, 360f);
-            directionTimer = directionChangeInterval;
-            slopeFlipCooldownTimer = 1.2f; 
-        }
-        else if (directionTimer <= 0f)
-        {
-            PickNewTerrainAngle();
-        }
-
-        // Smooth rotation around Y
-        Quaternion targetRotation = Quaternion.Euler(0f, targetYAngle, 0f);
-        Quaternion nextRotation = Quaternion.RotateTowards(parentRb.rotation, targetRotation, turnSpeedMultiplier * Time.fixedDeltaTime);
-        parentRb.MoveRotation(nextRotation);
-
-        // Movement on X/Z plane
-        Vector3 forwardXz = Vector3.ProjectOnPlane(parentRb.transform.forward, Vector3.up).normalized;
-        Vector3 currentPos = parentRb.position;
-        Vector3 nextPos = currentPos + (forwardXz * moveSpeed * Time.fixedDeltaTime);
-        nextPos.y = currentPos.y;
-
-        parentRb.MovePosition(nextPos);
-    }
-
-    private bool IsSlopeTooSteepAhead()
-    {
-        Vector3 forwardXz = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
-        Vector3 checkOrigin = transform.position + (forwardXz * slopeCheckDistance) + (Vector3.up * 1.0f);
-
-        if (Physics.Raycast(checkOrigin, Vector3.down, out RaycastHit hit, 2.5f))
-        {
-            float slopeAngle = Vector3.Angle(hit.normal, Vector3.up);
-            if (slopeAngle > maxWalkableSlope)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void PickNewTerrainAngle()
-    {
-        float currentAngle = (parentRb != null) ? parentRb.transform.eulerAngles.y : transform.eulerAngles.y;
-        float randomOffset = Random.Range(-maxTurnAngle, maxTurnAngle);
-        targetYAngle = Mathf.Repeat(currentAngle + randomOffset, 360f);
-        directionTimer = directionChangeInterval;
-    }
-
     public void HandleCollision(Collision collision)
     {
-        if (!Application.isPlaying || isReturningHome || movementType == MovementType.TerrainWander) return;
+        if (!Application.isPlaying || isReturningHome) return;
 
         if (collision.gameObject.name == "ExampleCharacter")
         {
@@ -377,24 +281,6 @@ public class EnemyLogic : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (movementType == MovementType.TerrainWander)
-        {
-            // Draw Heading Ray
-            Gizmos.color = Color.cyan;
-            Quaternion targetRot = Quaternion.Euler(0f, targetYAngle, 0f);
-            Vector3 forwardDir = targetRot * Vector3.forward;
-            Vector3 startPos = (parentRb != null) ? parentRb.transform.position : transform.position;
-            Gizmos.DrawRay(startPos + Vector3.up * 0.5f, forwardDir * 2f);
-
-            // Draw Slope Check Raycast
-            Vector3 forwardXz = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
-            Vector3 checkOrigin = transform.position + (forwardXz * slopeCheckDistance) + (Vector3.up * 1.0f);
-            Gizmos.color = (slopeFlipCooldownTimer > 0f) ? Color.yellow : Color.red;
-            Gizmos.DrawLine(checkOrigin, checkOrigin + (Vector3.down * 2.5f));
-            Gizmos.DrawWireSphere(checkOrigin, 0.1f);
-            return;
-        }
-
         if (movementType == MovementType.RandomWander || isReturningHome)
         {
             Vector3 homeWorldPos = transform.position - currentEnemyOffsetFromHome;

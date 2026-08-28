@@ -151,10 +151,10 @@ public class PlatformPopulator : MonoBehaviour
                     float randomAngle = Random.Range(0f, 360f);
 
                     // If it's an enemy, update its EnemyLogic script so it doesn't get overridden
-                    EnemyLogic enemy = spawned.GetComponent<EnemyLogic>();
-                    if (enemy != null)
+                    EnemyPlatformLogic enemyPlatorm = spawned.GetComponent<EnemyPlatformLogic>();
+                    if (enemyPlatorm != null)
                     {
-                        enemy.rotationAngle = randomAngle;
+                        enemyPlatorm.rotationAngle = randomAngle;
                     }
                     else
                     {

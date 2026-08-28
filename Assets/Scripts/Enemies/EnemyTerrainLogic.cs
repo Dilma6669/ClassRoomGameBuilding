@@ -1,42 +1,58 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(NavMeshAgent))]
-public class EnemyTerrainWanderer : MonoBehaviour
+public class EnemyTerrainLogic : MonoBehaviour
 {
-    [Header("Home Tether Setup")]
-    [Tooltip("Maximum distance from spawn position the agent is allowed to wander.")]
-    public float maxDistanceFromHome = 30f;
-
     [Header("Wander Range")]
-    [Tooltip("Minimum distance for a single trek step.")]
+    [Tooltip("The shortest distance the agent will walk when wandering.")]
     public float minWanderRadius = 5f;
-    [Tooltip("Maximum distance for a single trek step.")]
+
+    [Tooltip("The farthest distance the agent will walk when wandering.")]
     public float maxWanderRadius = 15f;
 
     [Header("Movement Speed Range")]
+    [Tooltip("The slowest speed the agent will move (like a slow stroll).")]
     public float minSpeed = 2f;
+
+    [Tooltip("The fastest speed the agent will move (like a full sprint).")]
     public float maxSpeed = 6f;
 
-    [Header("Dynamic Rotation Setup")]
-    public float turnSpeedMultiplier = 60f;
-    public float minAngularSpeed = 120f;
+    // "Dynamic Rotation Setup" 
+    private float turnSpeedMultiplier = 60f;
+    private float minAngularSpeed = 120f;
+    
+    // "Maximum distance from spawn position the agent is allowed to wander."
+    private float maxDistanceFromHome = 30f;
 
     private NavMeshAgent agent;
     private Vector3 homePosition;
 
     private void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        // Lock in spawn point as the tether center
+        agent = GetComponentInChildren<NavMeshAgent>();
         homePosition = transform.position; 
-        
+
         SetNewRandomDestination();
+    }
+
+    public void SetInitialRotation(Quaternion rotation)
+    {
+        transform.rotation = rotation;
+
+        if (agent == null)
+        {
+            agent = GetComponentInChildren<NavMeshAgent>();
+        }
+
+        if (agent != null)
+        {
+            agent.transform.rotation = rotation;
+        }
     }
 
     private void Update()
     {
-        if (!agent.isOnNavMesh) return;
+        if (agent == null || !agent.isOnNavMesh) return;
 
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
@@ -46,7 +62,7 @@ public class EnemyTerrainWanderer : MonoBehaviour
 
     private void SetNewRandomDestination()
     {
-        if (!agent.isOnNavMesh) return;
+        if (agent == null || !agent.isOnNavMesh) return;
 
         float chosenSpeed = Random.Range(minSpeed, maxSpeed);
         agent.speed = chosenSpeed;
@@ -60,10 +76,8 @@ public class EnemyTerrainWanderer : MonoBehaviour
             float chosenRadius = Random.Range(minWanderRadius, maxWanderRadius);
             Vector3 randomDirection = Random.insideUnitSphere.normalized * chosenRadius;
             
-            // Pick next point relative to CURRENT position
             Vector3 candidatePoint = transform.position + randomDirection;
 
-            // If candidate point drifts too far from HOME, pull target back toward Home
             if (Vector3.Distance(candidatePoint, homePosition) > maxDistanceFromHome)
             {
                 candidatePoint = homePosition + (candidatePoint - homePosition).normalized * Random.Range(0f, maxDistanceFromHome * 0.5f);
@@ -77,7 +91,6 @@ public class EnemyTerrainWanderer : MonoBehaviour
         }
     }
 
-    // Visualizes the tether radius in Scene view for easy debugging
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
