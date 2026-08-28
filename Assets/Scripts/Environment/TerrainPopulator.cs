@@ -95,13 +95,18 @@ public class TerrainPopulator : MonoBehaviour
             // Spawn object
             GameObject spawned = SpawnObject(selectedPrefab, spawnWorldPos, spawnRotation, "Scatter On Terrain");
 
-            // Handle custom EnemyLogic rotation if applicable
-            if (spawned != null && randomYRotation)
+            // Handle custom EnemyLogic setup if applicable
+            if (spawned != null)
             {
                 EnemyLogic enemy = spawned.GetComponent<EnemyLogic>();
                 if (enemy != null)
                 {
-                    enemy.rotationAngle = spawned.transform.eulerAngles.y;
+                    enemy.movementType = EnemyLogic.MovementType.TerrainWander;
+
+                    if (randomYRotation)
+                    {
+                        enemy.rotationAngle = spawned.transform.eulerAngles.y;
+                    }
                 }
             }
         }
