@@ -9,13 +9,13 @@ public class PlatformPopulator : MonoBehaviour
 {
     [Header("Single Attachment Prefabs")]
     public GameObject enemyPrefab;
-    [Range(0f, 5f)] public float enemySpawnHeightOffset = 0.5f;
+    [Range(0f, 5f)] private float enemySpawnHeightOffset = 0.5f;
 
     public GameObject obstaclePrefab;
-    [Range(0f, 5f)] public float obstacleSpawnHeightOffset = 0.5f;
+    [Range(0f, 5f)] private float obstacleSpawnHeightOffset = 0.5f;
 
     public GameObject trampolinePrefab;
-    [Range(0f, 5f)] public float trampolineSpawnHeightOffset = 0.5f;
+    [Range(0f, 5f)] private float trampolineSpawnHeightOffset = 0.5f;
 
     [Header("Random Scatter Setup")]
     [Tooltip("Drag rock, tree, or prop prefabs here to scatter randomly across the platform surface.")]

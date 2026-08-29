@@ -1,3 +1,4 @@
+using KinematicCharacterController.Examples;
 using UnityEngine;
 
 [ExecuteAlways]
@@ -27,13 +28,13 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     [Header("Surface Height Snapping")]
     [Tooltip("Distance above local feet to cast down from.")]
-    [Range(0.1f, 5f)] public float raycastOriginHeight = 1.5f;
+    [Range(0.1f, 5f)] private float raycastOriginHeight = 4f;
 
     [Tooltip("Height offset above the mesh surface.")]
-    [Range(0f, 2f)] public float surfaceOffset = 0.5f;
+    [Range(0f, 2f)] private float surfaceOffset = 0.5f;
 
     [Tooltip("How fast it steps up/down over bumps.")]
-    [Range(1f, 50f)] public float stepUpSpeed = 15f;
+    [Range(1f, 50f)] private float stepUpSpeed = 15f;
 
     // Advanced / Internal Movement Variables
     [Range(15f, 180f)] private float maxTurnAngle = 90f;
@@ -43,7 +44,6 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     private Vector3 lastPatrolOffset;
     private Vector3 currentWanderOffsetFromHome;
-    private Vector3 currentEnemyOffsetFromHome;
     private MovementType previousMovementType;
     private bool isReturningHome = false;
 
@@ -54,22 +54,40 @@ public class EnemyPlatformLogic : MonoBehaviour
     private Transform childPhysicsObject;
     private Rigidbody rigidbody;
 
+    // Platform anchor integration
+    private Transform platformTransform;
+    private Vector3 initialPlatformLocalHome;
+
     private void Start()
     {
         lastPatrolOffset = Vector3.zero;
-        currentEnemyOffsetFromHome = Vector3.zero;
         previousMovementType = movementType;
 
-        enemyCollider = GetComponent<Collider>();
-        if (enemyCollider != null)
+        // Locate moving platform component on parent hierarchy
+        if (transform.parent != null)
         {
-            enemyCollider.hideFlags = HideFlags.HideInInspector;
+            ExampleMovingPlatform movingPlatform = transform.parent.GetComponentInChildren<ExampleMovingPlatform>();
+            if (movingPlatform != null)
+            {
+                platformTransform = movingPlatform.transform;
+            }
+            else
+            {
+                platformTransform = transform.parent;
+            }
         }
+
+        // Cache local starting position relative to platform anchor
+        if (platformTransform != null)
+        {
+            initialPlatformLocalHome = platformTransform.InverseTransformPoint(transform.position);
+        }
+
+        enemyCollider = GetComponentInChildren<Collider>();
         
-        rigidbody = GetComponent<Rigidbody>();
+        rigidbody = GetComponentInChildren<Rigidbody>();
         if (rigidbody != null)
         {
-            rigidbody.hideFlags = HideFlags.HideInInspector;
             rigidbody.isKinematic = false;
             rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
         }
@@ -97,7 +115,6 @@ public class EnemyPlatformLogic : MonoBehaviour
             ResetReturnHomeState();
             if (movementType == MovementType.RandomWander)
             {
-                currentEnemyOffsetFromHome = Vector3.zero;
                 PickNewWanderTarget();
             }
             else
@@ -142,6 +159,15 @@ public class EnemyPlatformLogic : MonoBehaviour
         SnapToSurfaceHeight();
     }
 
+    public Vector3 GetHomeWorldPosition()
+    {
+        if (platformTransform != null)
+        {
+            return platformTransform.TransformPoint(initialPlatformLocalHome);
+        }
+        return transform.position;
+    }
+
     private void SnapToSurfaceHeight()
     {
         Vector3 rayOrigin = transform.position + (Vector3.up * raycastOriginHeight);
@@ -150,7 +176,6 @@ public class EnemyPlatformLogic : MonoBehaviour
         RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, rayLength, Physics.AllLayers, QueryTriggerInteraction.Ignore);
         foreach (RaycastHit hit in hits)
         {
-            // Ignore enemy's own colliders
             if (hit.collider == enemyCollider || hit.transform.IsChildOf(transform)) continue;
 
             float targetY = hit.point.y + surfaceOffset;
@@ -228,13 +253,15 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     private void UpdateWanderMovement()
     {
-        Vector3 vectorToTarget = currentWanderOffsetFromHome - currentEnemyOffsetFromHome;
+        Vector3 homeWorldPos = GetHomeWorldPosition();
+        Vector3 targetWorldPos = homeWorldPos + currentWanderOffsetFromHome;
+
+        Vector3 vectorToTarget = targetWorldPos - transform.position;
         vectorToTarget.y = 0f;
 
         if (vectorToTarget.magnitude < 0.2f)
         {
             AlignChildToParent();
-            currentEnemyOffsetFromHome = currentWanderOffsetFromHome;
             PickNewWanderTarget();
             return;
         }
@@ -248,24 +275,19 @@ public class EnemyPlatformLogic : MonoBehaviour
         }
 
         Vector3 moveStep = Vector3.forward * moveSpeed * Time.deltaTime;
-        Vector3 worldMoveDelta = transform.TransformDirection(moveStep);
-        
         transform.Translate(moveStep, Space.Self);
-
-        currentEnemyOffsetFromHome += worldMoveDelta;
     }
 
     private void UpdateReturnToHomeMovement()
     {
-        Vector3 vectorToHome = -currentEnemyOffsetFromHome;
+        Vector3 homeWorldPos = GetHomeWorldPosition();
+        Vector3 vectorToHome = homeWorldPos - transform.position;
         vectorToHome.y = 0f;
 
         if (vectorToHome.magnitude < 0.25f)
         {
             ResetReturnHomeState();
             AlignChildToParent();
-
-            currentEnemyOffsetFromHome = Vector3.zero;
 
             if (movementType == MovementType.RandomWander)
             {
@@ -288,10 +310,7 @@ public class EnemyPlatformLogic : MonoBehaviour
         }
 
         Vector3 moveStep = Vector3.forward * moveSpeed * Time.deltaTime;
-        Vector3 worldMoveDelta = transform.TransformDirection(moveStep);
-
         transform.Translate(moveStep, Space.Self);
-        currentEnemyOffsetFromHome += worldMoveDelta;
     }
 
     private void ResetReturnHomeState()
@@ -307,27 +326,15 @@ public class EnemyPlatformLogic : MonoBehaviour
     [ContextMenu("Debug: Pick New Wander Target")]
     public void PickNewWanderTarget()
     {
-        Vector3 potentialTarget = Vector3.zero;
-        
-        for (int i = 0; i < 15; i++)
-        {
-            Vector2 circle = Random.insideUnitCircle * wanderRadius;
-            potentialTarget = new Vector3(circle.x, 0f, circle.y);
-            
-            if (Vector3.Distance(currentEnemyOffsetFromHome, potentialTarget) >= MIN_WANDER_DISTANCE)
-            {
-                break;
-            }
-        }
-        
-        currentWanderOffsetFromHome = potentialTarget;
+        Vector2 circle = Random.insideUnitCircle * wanderRadius;
+        currentWanderOffsetFromHome = new Vector3(circle.x, 0f, circle.y);
     }
 
     private void OnDrawGizmosSelected()
     {
         if (movementType == MovementType.RandomWander || isReturningHome)
         {
-            Vector3 homeWorldPos = transform.position - currentEnemyOffsetFromHome;
+            Vector3 homeWorldPos = Application.isPlaying ? GetHomeWorldPosition() : transform.position;
 
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(homeWorldPos, wanderRadius);
