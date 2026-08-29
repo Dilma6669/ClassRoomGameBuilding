@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
+using System.IO;
 
 [CustomEditor(typeof(TriggerLogic))]
 public class TriggerLogicEditor : Editor
@@ -33,14 +35,32 @@ public class TriggerLogicEditor : Editor
 
         EditorGUILayout.Space(10);
 
-        // 3. Scene Transition settings (conditional)
+        // 3. Scene Transition settings (conditional dropdown)
         SerializedProperty changeSceneProp = serializedObject.FindProperty("changeScene");
         EditorGUILayout.PropertyField(changeSceneProp, new GUIContent("Change Scene"));
 
         if (changeSceneProp.boolValue)
         {
             EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("sceneToLoad"), new GUIContent("Scene Name", "Exact name of the scene to load in Build Settings."));
+            
+            SerializedProperty sceneToLoadProp = serializedObject.FindProperty("sceneToLoad");
+            string[] sceneNames = GetBuildSceneNames();
+
+            if (sceneNames.Length > 0)
+            {
+                // Find currently selected scene index in the array
+                int currentIndex = System.Array.IndexOf(sceneNames, sceneToLoadProp.stringValue);
+                if (currentIndex < 0) currentIndex = 0;
+
+                int selectedIndex = EditorGUILayout.Popup("Target Scene", currentIndex, sceneNames);
+                sceneToLoadProp.stringValue = sceneNames[selectedIndex];
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("No active scenes found in Build Settings! Go to File > Build Settings to add scenes.", MessageType.Warning);
+                EditorGUILayout.PropertyField(sceneToLoadProp, new GUIContent("Scene Name"));
+            }
+
             EditorGUI.indentLevel--;
         }
 
@@ -56,5 +76,24 @@ public class TriggerLogicEditor : Editor
             trigger.DeleteTrigger();
         }
         GUI.backgroundColor = Color.white;
+    }
+
+    private string[] GetBuildSceneNames()
+    {
+        List<string> scenes = new List<string>();
+
+        foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+        {
+            if (scene.enabled)
+            {
+                string name = Path.GetFileNameWithoutExtension(scene.path);
+                if (!string.IsNullOrEmpty(name))
+                {
+                    scenes.Add(name);
+                }
+            }
+        }
+
+        return scenes.ToArray();
     }
 }
