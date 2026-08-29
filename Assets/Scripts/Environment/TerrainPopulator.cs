@@ -22,7 +22,7 @@ public class TerrainPopulator : MonoBehaviour
     [Range(0f, 5f)] private float heightOffset = 0f;
 
     private bool randomYRotation = true;
-    private bool alignWithTerrainSlope = true;
+    private bool alignWithTerrainSlope = false;
 
     private TerrainCollider terrainCollider;
     private NavMeshSurface navMeshSurface;
