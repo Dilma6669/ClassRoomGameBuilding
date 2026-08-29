@@ -18,6 +18,26 @@ public class PlatformPopulatorEditor : Editor
         };
 
         EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("Platform Management", EditorStyles.boldLabel);
+
+        // Duplicate Platform Button
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.8f);
+        if (GUILayout.Button("📋 Duplicate Platform Setup", buttonStyle))
+        {
+            populator.DuplicatePlatform();
+        }
+
+        EditorGUILayout.Space(4);
+
+        // Delete Platform Button
+        GUI.backgroundColor = new Color(0.9f, 0.2f, 0.2f);
+        if (GUILayout.Button("❌ Delete Platform Setup", buttonStyle))
+        {
+            populator.DeletePlatform();
+            return; // Exit GUI immediately since the target object has been deleted
+        }
+
+        EditorGUILayout.Space(15);
         EditorGUILayout.LabelField("Single Attachment Spawning", EditorStyles.boldLabel);
 
         // Enemy Button

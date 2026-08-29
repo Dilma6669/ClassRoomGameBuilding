@@ -48,6 +48,49 @@ public class PlatformPopulator : MonoBehaviour
         followLogic.offsetZ = localOffset.z;
     }
 
+    #region Platform Management
+
+    [ContextMenu("Duplicate Platform Setup")]
+    public void DuplicatePlatform()
+    {
+#if UNITY_EDITOR
+        FetchPlatformLogic();
+
+        float xOffset = platformLogic != null ? platformLogic.width + 2f : 5f;
+        Vector3 duplicatePosition = transform.position + new Vector3(xOffset, 0f, 0f);
+
+        GameObject duplicateObj = Instantiate(gameObject, duplicatePosition, transform.rotation, transform.parent);
+        duplicateObj.name = gameObject.name + "_Copy";
+
+        Undo.RegisterCreatedObjectUndo(duplicateObj, "Duplicate Platform Setup");
+
+        PlatformLogic newPlatformLogic = duplicateObj.GetComponent<PlatformLogic>();
+        if (newPlatformLogic != null && newPlatformLogic.TargetChild != null)
+        {
+            FollowPlatform[] childFollowers = duplicateObj.GetComponentsInChildren<FollowPlatform>();
+            foreach (FollowPlatform follower in childFollowers)
+            {
+                follower.targetPlatform = newPlatformLogic.TargetChild;
+            }
+        }
+
+        Selection.activeGameObject = duplicateObj;
+#endif
+    }
+
+    [ContextMenu("Delete Platform Setup")]
+    public void DeletePlatform()
+    {
+#if UNITY_EDITOR
+        Selection.activeGameObject = null;
+        Undo.DestroyObjectImmediate(gameObject);
+#else
+        Destroy(gameObject);
+#endif
+    }
+
+    #endregion
+
     #region Single Spawning Context Menus
 
     [ContextMenu("Create Enemy On Center")]
@@ -150,7 +193,6 @@ public class PlatformPopulator : MonoBehaviour
                 {
                     float randomAngle = Random.Range(0f, 360f);
 
-                    // If it's an enemy, update its EnemyLogic script so it doesn't get overridden
                     EnemyPlatformLogic enemyPlatorm = spawned.GetComponent<EnemyPlatformLogic>();
                     if (enemyPlatorm != null)
                     {
@@ -158,7 +200,6 @@ public class PlatformPopulator : MonoBehaviour
                     }
                     else
                     {
-                        // For standard props/rocks without EnemyLogic, set transform rotation directly
                         spawned.transform.rotation = Quaternion.Euler(0f, randomAngle, 0f);
                     }
                 }
@@ -204,7 +245,6 @@ public class PlatformPopulator : MonoBehaviour
         newObj.transform.SetParent(transform);
         Undo.RegisterCreatedObjectUndo(newObj, undoName);
 
-        // Select the newly created object in the hierarchy automatically
         Selection.activeGameObject = newObj;
 
         return newObj;
