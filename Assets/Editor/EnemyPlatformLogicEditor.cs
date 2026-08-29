@@ -67,7 +67,7 @@ public class EnemyPlatformLogicEditor : Editor
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Bounce / Trampoline", EditorStyles.boldLabel);
 
-        // 4. Draw Bounce Toggle & Launch Physics
+        // 4. Draw Bounce Toggle & Conditional Launch Physics
         EditorGUILayout.PropertyField(isBouncyProp);
 
         if (isBouncyProp.boolValue)

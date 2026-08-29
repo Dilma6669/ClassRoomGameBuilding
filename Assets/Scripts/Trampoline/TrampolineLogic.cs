@@ -3,6 +3,10 @@ using KinematicCharacterController;
 
 public class TrampolineLogic : MonoBehaviour
 {
+    [Header("Trampoline Toggle")]
+    [Tooltip("Enable or disable the trampoline bounce effect.")]
+    public bool isBouncy = true;
+
     [Header("Launch Physics")]
     [Tooltip("How much force is applied to the player when touching the trampoline.")]
     public float launchForce = 25f;
@@ -13,6 +17,9 @@ public class TrampolineLogic : MonoBehaviour
     // Called directly from TrampolineTriggerBridge on the child object
     public void HandlePlayerEnter(Collider other)
     {
+        // Early return if bounciness is disabled
+        if (!isBouncy) return;
+
         KinematicCharacterMotor motor = other.GetComponentInParent<KinematicCharacterMotor>();
 
         if (motor != null)
