@@ -15,6 +15,16 @@ public class PlatformController : MonoBehaviour
     [Tooltip("Find this prefab in: Assets/KinematicCharacterController/Examples/Prefabs/MovingPlatform (3)")]
     public GameObject movingPlatformPrefab;
 
+    [Header("Custom Platform Assets")]
+    [Tooltip("Assign the custom mesh. This will automatically update both the visual mesh and the MeshCollider.")]
+    public Mesh customMesh;
+
+    [Tooltip("Assign an optional custom material (leave empty to keep default prefab material).")]
+    public Material customMaterial;
+
+    //[Tooltip("Set true if moving platforms/characters need to physically push or collide with convex shapes.")]
+    private bool isConvexCollider = true;
+
     private HashSet<int> knownChildIDs = new HashSet<int>();
 
     private void OnEnable()
@@ -66,9 +76,12 @@ public class PlatformController : MonoBehaviour
             return;
         }
 
+        GameObject platformParent;
+        GameObject movingChild;
+
 #if UNITY_EDITOR
         // 1. Instantiate outer PlatformLogic prefab
-        GameObject platformParent = (GameObject)PrefabUtility.InstantiatePrefab(platformLogicPrefab, transform);
+        platformParent = (GameObject)PrefabUtility.InstantiatePrefab(platformLogicPrefab, transform);
         platformParent.transform.localPosition = Vector3.zero;
 
         // 2. Find existing hidden/folder object, or fallback to creating one if missing
@@ -81,13 +94,13 @@ public class PlatformController : MonoBehaviour
         }
 
         // 3. Instantiate inner ExampleMovingPlatform inside the existing folder
-        GameObject movingChild = (GameObject)PrefabUtility.InstantiatePrefab(movingPlatformPrefab, hiddenFolder);
+        movingChild = (GameObject)PrefabUtility.InstantiatePrefab(movingPlatformPrefab, hiddenFolder);
         movingChild.transform.localPosition = Vector3.zero;
 
         Undo.RegisterCreatedObjectUndo(platformParent, "Create Platform Setup");
         Selection.activeGameObject = platformParent;
 #else
-        GameObject platformParent = Instantiate(platformLogicPrefab, transform);
+        platformParent = Instantiate(platformLogicPrefab, transform);
         Transform hiddenFolder = platformParent.transform.Find("⚠️ DO NOT TOUCH");
         if (hiddenFolder == null)
         {
@@ -95,10 +108,57 @@ public class PlatformController : MonoBehaviour
             newFolder.transform.SetParent(platformParent.transform, false);
             hiddenFolder = newFolder.transform;
         }
-        GameObject movingChild = Instantiate(movingPlatformPrefab, hiddenFolder);
+        movingChild = Instantiate(movingPlatformPrefab, hiddenFolder);
         movingChild.transform.localPosition = Vector3.zero;
 #endif
 
+        // Apply custom Mesh & auto-generate MeshCollider
+        ApplyCustomMeshAndCollider(movingChild);
+
         knownChildIDs.Add(platformParent.GetInstanceID());
+    }
+
+    private void ApplyCustomMeshAndCollider(GameObject movingPlatformObj)
+    {
+        if (movingPlatformObj == null || customMesh == null) return;
+
+        // 1. Disable existing default colliders on ExampleMovingPlatform
+        Collider[] existingColliders = movingPlatformObj.GetComponents<Collider>();
+        foreach (Collider col in existingColliders)
+        {
+            col.enabled = false;
+        }
+
+        // 2. Auto-generate and assign MeshCollider using customMesh
+        MeshCollider meshCol = movingPlatformObj.GetComponent<MeshCollider>();
+        if (meshCol == null)
+        {
+            meshCol = movingPlatformObj.AddComponent<MeshCollider>();
+        }
+
+        meshCol.enabled = true;
+        meshCol.sharedMesh = customMesh;
+        meshCol.convex = isConvexCollider;
+
+        // 3. Traverse down to child to update MeshFilter and MeshRenderer
+        if (movingPlatformObj.transform.childCount > 0)
+        {
+            Transform meshChild = movingPlatformObj.transform.GetChild(0);
+
+            MeshFilter meshFilter = meshChild.GetComponent<MeshFilter>();
+            if (meshFilter != null)
+            {
+                meshFilter.sharedMesh = customMesh;
+            }
+
+            if (customMaterial != null)
+            {
+                MeshRenderer meshRenderer = meshChild.GetComponent<MeshRenderer>();
+                if (meshRenderer != null)
+                {
+                    meshRenderer.sharedMaterial = customMaterial;
+                }
+            }
+        }
     }
 }

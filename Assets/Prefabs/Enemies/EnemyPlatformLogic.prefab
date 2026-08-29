@@ -159,6 +159,9 @@ MonoBehaviour:
   moveDistance: 3
   rotationAngle: 0
   wanderRadius: 3
+  raycastOriginHeight: 1.5
+  surfaceOffset: 0.5
+  stepUpSpeed: 15
 --- !u!54 &4426837204932067442
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -193,7 +196,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6755809666008450591}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 926c617611f2543e4a52af2be9a17348, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

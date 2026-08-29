@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2862742471814041639}
   - component: {fileID: 2292324037485104556}
+  - component: {fileID: 7264134633330348782}
   m_Layer: 0
   m_Name: PlatformLogicDefault
   m_TagString: Untagged
@@ -45,22 +46,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdce4a5b2e4db48ae9d3d0912220b87c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlatformLogic
-  width: 7
-  height: 0.32
-  depth: 9.69
-  offsetX: -9.6
-  offsetY: -6.7
-  offsetZ: 12.6
+  width: 1
+  height: 1
+  depth: 1
+  offsetX: 0
+  offsetY: 0
+  offsetZ: 0
   initialDirection: 1
-  moveDistance: 38.7
+  moveDistance: 42
   moveSpeed: 0.49
+  moveX: 0
+  moveY: 0
+  moveZ: 0
+--- !u!114 &7264134633330348782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 403405926849257869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e7f85fe492a2451aa8aa426301ef122, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlatformPopulator
   enemyPrefab: {fileID: 0}
   enemySpawnHeightOffset: 0.5
   obstaclePrefab: {fileID: 0}
   obstacleSpawnHeightOffset: 0.5
-  moveX: 0
-  moveY: 0
-  moveZ: 0
+  trampolinePrefab: {fileID: 0}
+  trampolineSpawnHeightOffset: 0.5
+  randomPrefabs: []
+  scatterCount: 5
+  scatterEdgePadding: 0.5
+  scatterHeightOffset: 0.5
+  randomYRotation: 1
 --- !u!1 &6475533822703361650
 GameObject:
   m_ObjectHideFlags: 0

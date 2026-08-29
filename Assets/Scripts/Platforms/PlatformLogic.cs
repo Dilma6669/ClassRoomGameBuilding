@@ -9,7 +9,7 @@ public class PlatformLogic : MonoBehaviour
 
     [Header("Platform Size")]
     [Range(0.5f, 20f)] public float width = 3f;
-    [Range(0.2f, 5f)] public float height = 0.5f;
+    [Range(0.2f, 20f)] public float height = 3f;
     [Range(0.5f, 20f)] public float depth = 3f;
 
     [Header("Starting Position Offset")]
