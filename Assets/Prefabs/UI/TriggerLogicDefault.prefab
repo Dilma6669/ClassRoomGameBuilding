@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8546216999481528736}
   - component: {fileID: 9002993543445612136}
   - component: {fileID: 3175168140654161898}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: "\u26A0\uFE0F DO NOT TOUCH"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,7 @@ GameObject:
   - component: {fileID: 6801610482899380904}
   - component: {fileID: 1523530704120011740}
   - component: {fileID: 5549232523713459919}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: TriggerLogicDefault
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -163,7 +163,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
