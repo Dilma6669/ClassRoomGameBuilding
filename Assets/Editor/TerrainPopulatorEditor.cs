@@ -29,6 +29,15 @@ public class TerrainPopulatorEditor : Editor
 
         EditorGUILayout.Space(6);
 
+        // Bake NavMesh Button
+        GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f); // Green tint
+        if (GUILayout.Button("🧠 Bake NavMesh Surface", buttonStyle))
+        {
+            populator.BakeNavMeshSurface();
+        }
+
+        EditorGUILayout.Space(6);
+
         // Clear Button
         GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f); // Red tint
         if (GUILayout.Button("🗑️ Clear All Terrain Spawns", buttonStyle))

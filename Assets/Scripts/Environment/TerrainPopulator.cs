@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Unity.AI.Navigation;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -14,15 +15,52 @@ public class TerrainPopulator : MonoBehaviour
     public GameObject[] randomPrefabs;
 
     [Range(1, 1000)] public int scatterCount = 20;
-    [Range(0f, 20f)] public float edgePadding = 5f;
-    [Range(0f, 5f)] public float heightOffset = 0f;
+    [Range(0f, 20f)] private float edgePadding = 5f;
+    [Range(0f, 5f)] private float heightOffset = 0f;
 
-    [Header("Orientation Settings")]
-    [Tooltip("If checked, objects will rotate randomly on the Y axis.")]
-    public bool randomYRotation = true;
+    //[Header("Orientation Settings")]
+    //[Tooltip("If checked, objects will rotate randomly on the Y axis.")]
+    private bool randomYRotation = true;
 
-    [Tooltip("If checked, objects will align their Up direction with the slope of the terrain.")]
-    public bool alignWithTerrainSlope = false;
+    //[Tooltip("If checked, objects will align their Up direction with the slope of the terrain.")]
+    private bool alignWithTerrainSlope = true;
+
+    private TerrainCollider terrainCollider;
+    private NavMeshSurface navMeshSurface;
+
+    private void Start()
+    {
+        terrainCollider = GetComponent<TerrainCollider>();
+        if (terrainCollider != null)
+        {
+            terrainCollider.hideFlags = HideFlags.HideInInspector;
+        }
+
+        navMeshSurface = GetComponent<NavMeshSurface>();
+        if (navMeshSurface != null)
+        {
+            navMeshSurface.hideFlags = HideFlags.HideInInspector;
+        }
+    }
+
+    [ContextMenu("Bake NavMesh Surface")]
+    public void BakeNavMeshSurface()
+    {
+        if (navMeshSurface == null)
+        {
+            navMeshSurface = GetComponent<NavMeshSurface>();
+        }
+
+        if (navMeshSurface != null)
+        {
+            navMeshSurface.BuildNavMesh();
+            Debug.Log("✅ NavMesh Surface baked successfully!");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ No NavMeshSurface component found on this GameObject!");
+        }
+    }
 
     private void FetchTerrain()
     {
