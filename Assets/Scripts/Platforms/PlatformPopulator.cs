@@ -203,6 +203,10 @@ public class PlatformPopulator : MonoBehaviour
         newObj.transform.position = spawnWorldPos;
         newObj.transform.SetParent(transform);
         Undo.RegisterCreatedObjectUndo(newObj, undoName);
+
+        // Select the newly created object in the hierarchy automatically
+        Selection.activeGameObject = newObj;
+
         return newObj;
 #else
         return Instantiate(prefab, spawnWorldPos, Quaternion.identity, transform);

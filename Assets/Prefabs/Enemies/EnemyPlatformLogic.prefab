@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 2447971570365861456}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 7751015933214049424}
+  - component: {fileID: 7292615533562928232}
   m_Layer: 0
   m_Name: EnemyPlatformLogic
   m_TagString: Untagged
@@ -159,6 +160,11 @@ MonoBehaviour:
   moveDistance: 3
   rotationAngle: 0
   wanderRadius: 3
+  isBouncy: 1
+  triggerRadius: 0.64
+  launchForce: 12
+  upwardBias: 0.504
+  momentumTransfer: 0.3
 --- !u!54 &4426837204932067442
 Rigidbody:
   m_ObjectHideFlags: 2
@@ -206,4 +212,25 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!135 &7292615533562928232
+SphereCollider:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6755809666008450591}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.64
   m_Center: {x: 0, y: 0, z: 0}

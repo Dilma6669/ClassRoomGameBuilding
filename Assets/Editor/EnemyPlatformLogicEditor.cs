@@ -11,6 +11,13 @@ public class EnemyPlatformLogicEditor : Editor
     private SerializedProperty rotationAngleProp;
     private SerializedProperty wanderRadiusProp;
 
+    // Bounce Properties
+    private SerializedProperty isBouncyProp;
+    private SerializedProperty triggerRadiusProp;
+    private SerializedProperty launchForceProp;
+    private SerializedProperty upwardBiasProp;
+    private SerializedProperty momentumTransferProp;
+
     private void OnEnable()
     {
         movementTypeProp = serializedObject.FindProperty("movementType");
@@ -18,25 +25,30 @@ public class EnemyPlatformLogicEditor : Editor
         moveDistanceProp = serializedObject.FindProperty("moveDistance");
         rotationAngleProp = serializedObject.FindProperty("rotationAngle");
         wanderRadiusProp = serializedObject.FindProperty("wanderRadius");
+
+        isBouncyProp = serializedObject.FindProperty("isBouncy");
+        triggerRadiusProp = serializedObject.FindProperty("triggerRadius");
+        launchForceProp = serializedObject.FindProperty("launchForce");
+        upwardBiasProp = serializedObject.FindProperty("upwardBias");
+        momentumTransferProp = serializedObject.FindProperty("momentumTransfer");
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        // 1. Draw Movement Mode Dropdown
+        // 1. Movement Mode Selection
         EditorGUILayout.PropertyField(movementTypeProp);
         EditorGUILayout.Space(5);
 
-        // 2. Draw Speed if not Idle
+        // 2. Movement Speed (Hidden in Idle)
         EnemyPlatformLogic.MovementType currentMode = (EnemyPlatformLogic.MovementType)movementTypeProp.enumValueIndex;
-        
         if (currentMode != EnemyPlatformLogic.MovementType.Idle)
         {
             EditorGUILayout.PropertyField(moveSpeedProp);
         }
 
-        // 3. Contextual Settings display
+        // 3. Contextual Movement Settings
         switch (currentMode)
         {
             case EnemyPlatformLogic.MovementType.Idle:
@@ -50,6 +62,22 @@ public class EnemyPlatformLogicEditor : Editor
             case EnemyPlatformLogic.MovementType.RandomWander:
                 EditorGUILayout.PropertyField(wanderRadiusProp);
                 break;
+        }
+
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Bounce / Trampoline", EditorStyles.boldLabel);
+
+        // 4. Draw Bounce Toggle & Launch Physics
+        EditorGUILayout.PropertyField(isBouncyProp);
+
+        if (isBouncyProp.boolValue)
+        {
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(triggerRadiusProp);
+            EditorGUILayout.PropertyField(launchForceProp);
+            EditorGUILayout.PropertyField(upwardBiasProp);
+            EditorGUILayout.PropertyField(momentumTransferProp);
+            EditorGUI.indentLevel--;
         }
 
         serializedObject.ApplyModifiedProperties();

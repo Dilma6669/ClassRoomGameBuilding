@@ -1,3 +1,4 @@
+using KinematicCharacterController;
 using KinematicCharacterController.Examples;
 using UnityEngine;
 
@@ -20,7 +21,7 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     [Header("Patrol Settings")]
     [Tooltip("How far back and forth the enemy walks when patrolling.")]
-    [Range(0f, 20f)] public float moveDistance = 3f;
+    public float moveDistance = 3f;
 
     [Header("Idle Settings")]
     [Tooltip("Which direction the enemy faces when standing still or starting out (0 to 360 degrees).")]
@@ -29,6 +30,22 @@ public class EnemyPlatformLogic : MonoBehaviour
     [Header("Wandering Settings")]
     [Tooltip("How big of an area the enemy is allowed to explore when wandering.")]
     [Range(1f, 30f)] public float wanderRadius = 3f;
+
+    [Header("Bounce / Trampoline Settings")]
+    [Tooltip("Enable if this enemy platform acts like a trampoline when touched.")]
+    public bool isBouncy = false;
+
+    [Tooltip("How far past the enemy collider the bounce trigger extends.")]
+    [Range(0.5f, 5f)] public float triggerRadius = 1.2f;
+
+    [Tooltip("How much force is applied to launch the player.")]
+    [Range(5f, 50f)] public float launchForce = 25f;
+
+    [Tooltip("Blends straight UP vector into the outward bounce (0 = pure normal, 1 = straight up).")]
+    [Range(0f, 1f)] public float upwardBias = 0.5f;
+
+    [Tooltip("How much incoming player speed is preserved in the jump.")]
+    [Range(0f, 1f)] public float momentumTransfer = 0.3f;
 
     [Header("Surface Height Snapping")]
     [Tooltip("Distance above local feet to cast down from.")]
@@ -55,6 +72,7 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     private Collider enemyCollider;
     private Collider playerCollider;
+    private SphereCollider bounceTriggerCollider;
     private Transform childPhysicsObject;
     private Rigidbody rigidbody;
 
@@ -65,37 +83,55 @@ public class EnemyPlatformLogic : MonoBehaviour
     private void Awake()
     {
         HideComponents();
+        SetupBounceTrigger();
     }
 
     private void OnValidate()
     {
         HideComponents();
+        SetupBounceTrigger();
     }
 
     private void HideComponents()
     {
-        // Hide Rigidbody and Collider from Inspector
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.hideFlags = HideFlags.HideInInspector;
         }
+    }
 
-        Collider col = GetComponent<Collider>();
-        if (col != null)
+    private void SetupBounceTrigger()
+    {
+        SphereCollider[] sphereColliders = GetComponents<SphereCollider>();
+        foreach (SphereCollider col in sphereColliders)
         {
-           // col.hideFlags = HideFlags.HideInInspector;
+            if (col.isTrigger)
+            {
+                bounceTriggerCollider = col;
+                break;
+            }
         }
+
+        if (bounceTriggerCollider == null)
+        {
+            bounceTriggerCollider = gameObject.AddComponent<SphereCollider>();
+            bounceTriggerCollider.isTrigger = true;
+        }
+
+        bounceTriggerCollider.radius = triggerRadius;
+        bounceTriggerCollider.hideFlags = HideFlags.HideInInspector;
+        bounceTriggerCollider.enabled = isBouncy;
     }
 
     private void Start()
     {
         HideComponents();
+        SetupBounceTrigger();
 
         lastPatrolOffset = Vector3.zero;
         previousMovementType = movementType;
 
-        // Locate moving platform component on parent hierarchy
         if (transform.parent != null)
         {
             ExampleMovingPlatform movingPlatform = transform.parent.GetComponentInChildren<ExampleMovingPlatform>();
@@ -109,7 +145,6 @@ public class EnemyPlatformLogic : MonoBehaviour
             }
         }
 
-        // Cache local starting position relative to platform anchor
         if (platformTransform != null)
         {
             initialPlatformLocalHome = platformTransform.InverseTransformPoint(transform.position);
@@ -191,6 +226,33 @@ public class EnemyPlatformLogic : MonoBehaviour
         SnapToSurfaceHeight();
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!isBouncy || !Application.isPlaying) return;
+
+        KinematicCharacterMotor motor = other.GetComponentInParent<KinematicCharacterMotor>();
+
+        if (motor != null)
+        {
+            Vector3 playerFeet = motor.TransientPosition;
+            Vector3 enemyCenter = transform.position;
+
+            Vector3 surfaceNormal = (playerFeet - enemyCenter).normalized;
+            if (surfaceNormal == Vector3.zero)
+            {
+                surfaceNormal = Vector3.up;
+            }
+
+            Vector3 launchDirection = Vector3.Lerp(surfaceNormal, Vector3.up, upwardBias).normalized;
+
+            motor.ForceUnground();
+            float incomingSpeed = motor.BaseVelocity.magnitude;
+            float totalLaunchSpeed = launchForce + (incomingSpeed * momentumTransfer);
+
+            motor.BaseVelocity = launchDirection * totalLaunchSpeed;
+        }
+    }
+
     public Vector3 GetHomeWorldPosition()
     {
         if (platformTransform != null)
@@ -230,7 +292,7 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     public void HandleCollision(Collision collision)
     {
-        if (!Application.isPlaying || isReturningHome) return;
+        if (!Application.isPlaying || isReturningHome || isBouncy) return;
 
         if (collision.gameObject.name == "ExampleCharacter")
         {
@@ -386,6 +448,12 @@ public class EnemyPlatformLogic : MonoBehaviour
             Gizmos.DrawLine(startPos, endPos);
             Gizmos.DrawWireSphere(startPos, 0.3f);
             Gizmos.DrawWireSphere(endPos, 0.3f);
+        }
+
+        if (isBouncy)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(transform.position, triggerRadius);
         }
     }
 }
