@@ -22,9 +22,9 @@ public class PlatformPopulator : MonoBehaviour
     public GameObject[] randomPrefabs;
 
     [Range(1, 50)] public int scatterCount = 5;
-    [Range(0f, 2f)] public float scatterEdgePadding = 0.5f;
-    [Range(0f, 5f)] public float scatterHeightOffset = 0.5f;
-    public bool randomYRotation = true;
+    [Range(0f, 2f)] private float scatterEdgePadding = 0.5f;
+    [Range(0f, 5f)] private float scatterHeightOffset = 0.5f;
+    private bool randomYRotation = true;
 
     private PlatformLogic platformLogic;
 

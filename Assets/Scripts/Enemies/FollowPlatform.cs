@@ -3,6 +3,7 @@ using UnityEngine;
 [ExecuteAlways]
 public class FollowPlatform : MonoBehaviour
 {
+    [HideInInspector]
     public Transform targetPlatform;
 
     [Header("Starting Position Offset")]

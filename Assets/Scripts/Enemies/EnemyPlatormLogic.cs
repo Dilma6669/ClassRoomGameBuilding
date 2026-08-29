@@ -1,6 +1,10 @@
 using KinematicCharacterController.Examples;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 [ExecuteAlways]
 public class EnemyPlatformLogic : MonoBehaviour
 {
@@ -58,8 +62,36 @@ public class EnemyPlatformLogic : MonoBehaviour
     private Transform platformTransform;
     private Vector3 initialPlatformLocalHome;
 
+    private void Awake()
+    {
+        HideComponents();
+    }
+
+    private void OnValidate()
+    {
+        HideComponents();
+    }
+
+    private void HideComponents()
+    {
+        // Hide Rigidbody and Collider from Inspector
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.hideFlags = HideFlags.HideInInspector;
+        }
+
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+        {
+           // col.hideFlags = HideFlags.HideInInspector;
+        }
+    }
+
     private void Start()
     {
+        HideComponents();
+
         lastPatrolOffset = Vector3.zero;
         previousMovementType = movementType;
 
@@ -350,7 +382,7 @@ public class EnemyPlatformLogic : MonoBehaviour
             Vector3 startPos = transform.position + transform.TransformDirection(new Vector3(0f, 0f, -moveDistance) - lastPatrolOffset);
             Vector3 endPos = transform.position + transform.TransformDirection(new Vector3(0f, 0f, moveDistance) - lastPatrolOffset);
 
-            Gizmos.color = Color.red;
+            Gizmos.color = Color.cyan;
             Gizmos.DrawLine(startPos, endPos);
             Gizmos.DrawWireSphere(startPos, 0.3f);
             Gizmos.DrawWireSphere(endPos, 0.3f);

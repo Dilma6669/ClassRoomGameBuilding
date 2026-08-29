@@ -21,8 +21,9 @@ public class EnemyTerrainLogic : MonoBehaviour
     private float turnSpeedMultiplier = 60f;
     private float minAngularSpeed = 120f;
     
-    // "Maximum distance from spawn position the agent is allowed to wander."
-    private float maxDistanceFromHome = 30f;
+    [Header("Leash Constraint")]
+    [Tooltip("Maximum distance from spawn position the agent is allowed to wander.")]
+    public float maxDistanceFromHome = 30f;
 
     private NavMeshAgent agent;
     private Vector3 homePosition;
@@ -71,19 +72,27 @@ public class EnemyTerrainLogic : MonoBehaviour
         float calculatedTurnSpeed = chosenSpeed * turnSpeedMultiplier;
         agent.angularSpeed = Mathf.Max(minAngularSpeed, calculatedTurnSpeed);
 
+        Vector3 currentHome = Application.isPlaying ? homePosition : transform.position;
+
         for (int i = 0; i < 10; i++)
         {
+            // Pick a distance between min and max radius
             float chosenRadius = Random.Range(minWanderRadius, maxWanderRadius);
-            Vector3 randomDirection = Random.insideUnitSphere.normalized * chosenRadius;
             
+            // Generate a random direction on a flat horizontal plane (XZ)
+            Vector2 randomCircle = Random.insideUnitCircle.normalized * chosenRadius;
+            Vector3 randomDirection = new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+            // Sample around current position
             Vector3 candidatePoint = transform.position + randomDirection;
 
-            if (Vector3.Distance(candidatePoint, homePosition) > maxDistanceFromHome)
+            // Clamp point within max home leash distance
+            if (Vector3.Distance(candidatePoint, currentHome) > maxDistanceFromHome)
             {
-                candidatePoint = homePosition + (candidatePoint - homePosition).normalized * Random.Range(0f, maxDistanceFromHome * 0.5f);
+                candidatePoint = currentHome + (candidatePoint - currentHome).normalized * Random.Range(minWanderRadius, Mathf.Min(maxWanderRadius, maxDistanceFromHome));
             }
 
-            if (NavMesh.SamplePosition(candidatePoint, out NavMeshHit hit, 10f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(candidatePoint, out NavMeshHit hit, maxWanderRadius, NavMesh.AllAreas))
             {
                 agent.SetDestination(hit.position);
                 return;
@@ -93,8 +102,18 @@ public class EnemyTerrainLogic : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.cyan;
         Vector3 center = Application.isPlaying ? homePosition : transform.position;
+
+        // 1. Draw Max Leash Boundary (Red Wireframe)
+        Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.75f);
         Gizmos.DrawWireSphere(center, maxDistanceFromHome);
+
+        // 2. Draw Min Wander Radius (Yellow Wireframe)
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, minWanderRadius);
+
+        // 3. Draw Max Wander Radius (Cyan Wireframe)
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, maxWanderRadius);
     }
 }

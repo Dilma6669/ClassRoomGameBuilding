@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3101820417137144067}
   - component: {fileID: 8761553405591650542}
   - component: {fileID: 2346825447628205879}
+  - component: {fileID: 170449915317730948}
   m_Layer: 0
   m_Name: "\u26A0\uFE0F DO NOT TOUCH"
   m_TagString: Untagged
@@ -90,6 +91,18 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &170449915317730948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 691594586847189042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b187c8b6c6aeb4ce6b1613930ea40352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrampolineTriggerBridge
 --- !u!1 &6755809666008450591
 GameObject:
   m_ObjectHideFlags: 0
@@ -102,7 +115,7 @@ GameObject:
   - component: {fileID: 6987877513863229446}
   - component: {fileID: 2447971570365861456}
   - component: {fileID: 4426837204932067442}
-  - component: {fileID: 7126108319046845674}
+  - component: {fileID: 7751015933214049424}
   m_Layer: 0
   m_Name: EnemyPlatformLogic
   m_TagString: Untagged
@@ -159,12 +172,9 @@ MonoBehaviour:
   moveDistance: 3
   rotationAngle: 0
   wanderRadius: 3
-  raycastOriginHeight: 1.5
-  surfaceOffset: 0.5
-  stepUpSpeed: 15
 --- !u!54 &4426837204932067442
 Rigidbody:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -187,16 +197,16 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
---- !u!65 &7126108319046845674
-BoxCollider:
+--- !u!135 &7751015933214049424
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6755809666008450591}
-  m_Material: {fileID: 13400000, guid: 926c617611f2543e4a52af2be9a17348, type: 2}
+  m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -208,5 +218,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.76, y: 0.76, z: 0.72}
+  m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}

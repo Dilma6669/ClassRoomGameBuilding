@@ -8,11 +8,10 @@ using UnityEditor;
 [ExecuteAlways]
 public class PlatformController : MonoBehaviour
 {
-    [Header("Platform Prefab References")]
-    [Tooltip("Find this prefab in: Assets/Prefabs/Platforms/PlatformLogicDefault")]
+    [HideInInspector]
     public GameObject platformLogicPrefab;
 
-    [Tooltip("Find this prefab in: Assets/KinematicCharacterController/Examples/Prefabs/MovingPlatform (3)")]
+    [HideInInspector]
     public GameObject movingPlatformPrefab;
 
     [Header("Custom Platform Assets")]
@@ -22,7 +21,6 @@ public class PlatformController : MonoBehaviour
     [Tooltip("Assign an optional custom material (leave empty to keep default prefab material).")]
     public Material customMaterial;
 
-    //[Tooltip("Set true if moving platforms/characters need to physically push or collide with convex shapes.")]
     private bool isConvexCollider = true;
 
     private HashSet<int> knownChildIDs = new HashSet<int>();
@@ -67,12 +65,51 @@ public class PlatformController : MonoBehaviour
         }
     }
 
+    public void SetupPlatforms()
+    {
+#if UNITY_EDITOR
+        // Find PlatformLogicDefault prefab
+        string[] logicGuids = AssetDatabase.FindAssets("PlatformLogicDefault t:Prefab");
+        if (logicGuids.Length > 0)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(logicGuids[0]);
+            platformLogicPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Debug.Log("✅ Assigned 'PlatformLogicDefault' prefab.");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Could not find 'PlatformLogicDefault' prefab in project.");
+        }
+
+        // Find MovingPlatform (3) prefab
+        string[] movingGuids = AssetDatabase.FindAssets("\"MovingPlatform (3)\" t:Prefab");
+        if (movingGuids.Length == 0)
+        {
+            // Fallback search in case exact quote matching misses
+            movingGuids = AssetDatabase.FindAssets("MovingPlatform t:Prefab");
+        }
+
+        if (movingGuids.Length > 0)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(movingGuids[0]);
+            movingPlatformPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Debug.Log("✅ Assigned 'MovingPlatform (3)' prefab.");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Could not find 'MovingPlatform (3)' prefab in project.");
+        }
+
+        EditorUtility.SetDirty(this);
+#endif
+    }
+
     [ContextMenu("Create Platform")]
     public void CreatePlatform()
     {
         if (platformLogicPrefab == null || movingPlatformPrefab == null)
         {
-            Debug.LogWarning("⚠️ Cannot create platform! Please ensure both 'Platform Logic Prefab' and 'Moving Platform Prefab' are assigned on PlatformController.");
+            Debug.LogWarning("⚠️ Cannot create platform! Please click 'Setup Platforms' first or ensure prefabs are present in project.");
             return;
         }
 

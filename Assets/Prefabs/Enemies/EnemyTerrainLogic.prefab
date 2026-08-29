@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6148076519419669494}
   - component: {fileID: 1047037574671914805}
   - component: {fileID: 1144531808880213778}
+  - component: {fileID: 4977646336614721741}
   m_Layer: 6
   m_Name: "\u26A0\uFE0F DO NOT TOUCH"
   m_TagString: Untagged
@@ -108,7 +109,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -123,7 +124,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 3023086163987619233}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.15
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -152,6 +153,18 @@ MonoBehaviour:
   mediumDistance: 300
   closeQuality: 4
   mediumQuality: 1
+--- !u!114 &4977646336614721741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3023086163987619233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b187c8b6c6aeb4ce6b1613930ea40352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrampolineTriggerBridge
 --- !u!1 &8578969085247257696
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,6 +175,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7116624324283185483}
   - component: {fileID: -5675250232158027561}
+  - component: {fileID: 6053944138223365205}
   m_Layer: 6
   m_Name: EnemyTerrainLogic
   m_TagString: Untagged
@@ -197,10 +211,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a276bc76edd14627bbc3a21dc9ccb4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTerrainWanderer
-  maxDistanceFromHome: 100
   minWanderRadius: 5
-  maxWanderRadius: 50
+  maxWanderRadius: 64.5
   minSpeed: 5
   maxSpeed: 200
-  turnSpeedMultiplier: 5
-  minAngularSpeed: 50
+  maxDistanceFromHome: 156.2
+--- !u!114 &6053944138223365205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8578969085247257696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f8a9139b44e94b33b52ccb1ea47a9ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrampolineLogic
+  launchForce: 50
+  momentumTransfer: 0.734

@@ -1,13 +1,16 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Unity.AI.Navigation;
+using UnityEngine.AI;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 [ExecuteAlways]
 public class TerrainPopulator : MonoBehaviour
 {
+    [HideInInspector]
     public Terrain targetTerrain;
 
     [Header("Random Scatter Setup")]
@@ -18,17 +21,23 @@ public class TerrainPopulator : MonoBehaviour
     [Range(0f, 20f)] private float edgePadding = 5f;
     [Range(0f, 5f)] private float heightOffset = 0f;
 
-    //[Header("Orientation Settings")]
-    //[Tooltip("If checked, objects will rotate randomly on the Y axis.")]
     private bool randomYRotation = true;
-
-    //[Tooltip("If checked, objects will align their Up direction with the slope of the terrain.")]
     private bool alignWithTerrainSlope = true;
 
     private TerrainCollider terrainCollider;
     private NavMeshSurface navMeshSurface;
 
     private void Start()
+    {
+        EnsureComponentsHidden();
+    }
+
+    private void OnValidate()
+    {
+        EnsureComponentsHidden();
+    }
+
+    private void EnsureComponentsHidden()
     {
         terrainCollider = GetComponent<TerrainCollider>();
         if (terrainCollider != null)
@@ -46,20 +55,47 @@ public class TerrainPopulator : MonoBehaviour
     [ContextMenu("Bake NavMesh Surface")]
     public void BakeNavMeshSurface()
     {
+        FetchTerrain();
+
+        // 1. Ensure NavMeshSurface exists and hidden
         if (navMeshSurface == null)
         {
             navMeshSurface = GetComponent<NavMeshSurface>();
+            if (navMeshSurface == null)
+            {
+                navMeshSurface = gameObject.AddComponent<NavMeshSurface>();
+            }
+        }
+        EnsureComponentsHidden();
+
+        // 2. Configure NavMeshSurface properties for Terrain & Children
+        navMeshSurface.collectObjects = CollectObjects.Children; // Collect terrain and scattered objects under this root
+        navMeshSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders; // Use Physics Colliders (TerrainCollider)
+
+        // 3. Ensure target Terrain has an active TerrainCollider
+        if (targetTerrain != null)
+        {
+            TerrainCollider tCollider = targetTerrain.GetComponent<TerrainCollider>();
+            if (tCollider == null)
+            {
+                tCollider = targetTerrain.gameObject.AddComponent<TerrainCollider>();
+            }
+            if (targetTerrain.terrainData != null)
+            {
+                tCollider.terrainData = targetTerrain.terrainData;
+            }
+            tCollider.enabled = true;
         }
 
-        if (navMeshSurface != null)
-        {
-            navMeshSurface.BuildNavMesh();
-            Debug.Log("✅ NavMesh Surface baked successfully!");
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ No NavMeshSurface component found on this GameObject!");
-        }
+        // 4. Build the NavMesh
+        navMeshSurface.BuildNavMesh();
+
+#if UNITY_EDITOR
+        EditorUtility.SetDirty(gameObject);
+        EditorSceneManager.MarkSceneDirty(gameObject.scene);
+#endif
+
+        Debug.Log("✅ NavMesh Surface baked successfully!");
     }
 
     private void FetchTerrain()
