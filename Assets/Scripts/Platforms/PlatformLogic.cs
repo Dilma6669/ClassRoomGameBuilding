@@ -7,10 +7,11 @@ public class PlatformLogic : MonoBehaviour
 {
     public enum InitialDirection { Forward, Reverse }
 
-    [Header("Platform Size")]
+    [Header("Platform Size & Orientation")]
     [Range(0.5f, 20f)] public float width = 3f;
     [Range(0.2f, 20f)] public float height = 3f;
     [Range(0.5f, 20f)] public float depth = 3f;
+    [Range(0f, 360f)] public float rotationY = 0f;
 
     [Header("Starting Position Offset")]
     [Range(-20f, 20f)] public float offsetX = 0f;
@@ -36,12 +37,24 @@ public class PlatformLogic : MonoBehaviour
 
     public bool HasActiveAxis => moveX || moveY || moveZ;
 
+    // Rotates the chosen movement axis into local space based on childMover's Y rotation
     public Vector3 MoveDirection
     {
         get
         {
-            Vector3 dir = new Vector3(moveX ? 1f : 0f, moveY ? 1f : 0f, moveZ ? 1f : 0f);
-            return dir.sqrMagnitude > 0 ? dir.normalized : Vector3.zero;
+            Vector3 rawLocalDir = new Vector3(moveX ? 1f : 0f, moveY ? 1f : 0f, moveZ ? 1f : 0f);
+            if (rawLocalDir.sqrMagnitude <= 0f) return Vector3.zero;
+
+            Vector3 normalizedLocalDir = rawLocalDir.normalized;
+
+            if (childMover != null)
+            {
+                // Convert local movement axis to world direction based on platform rotation
+                return childMover.transform.TransformDirection(normalizedLocalDir);
+            }
+
+            // Fallback to local orientation if child isn't cached yet
+            return Quaternion.Euler(0f, rotationY, 0f) * normalizedLocalDir;
         }
     }
 
@@ -131,6 +144,7 @@ public class PlatformLogic : MonoBehaviour
         if (!Application.isPlaying)
         {
             childMover.transform.localPosition = new Vector3(offsetX, offsetY, offsetZ);
+            childMover.transform.localRotation = Quaternion.Euler(0f, rotationY, 0f);
         }
 
         Vector3 targetScale = new Vector3(width, height, depth);
@@ -163,8 +177,16 @@ public class PlatformLogic : MonoBehaviour
             }
 
             Gizmos.DrawLine(startPos, endPos);
-            Gizmos.DrawWireCube(startPos, childMover.transform.localScale);
-            Gizmos.DrawWireCube(endPos, childMover.transform.localScale);
+
+            // Draw rotated gizmo wire cubes matching the platform's orientation
+            Matrix4x4 oldMatrix = Gizmos.matrix;
+            Gizmos.matrix = Matrix4x4.TRS(startPos, childMover.transform.rotation, childMover.transform.localScale);
+            Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+
+            Gizmos.matrix = Matrix4x4.TRS(endPos, childMover.transform.rotation, childMover.transform.localScale);
+            Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+
+            Gizmos.matrix = oldMatrix;
         }
     }
 }
