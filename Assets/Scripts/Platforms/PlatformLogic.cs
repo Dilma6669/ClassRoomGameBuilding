@@ -19,11 +19,12 @@ public class PlatformLogic : MonoBehaviour
     [Range(-500f, 500f)] public float offsetY = 0f;
     [Range(-500f, 500f)] public float offsetZ = 0f;
 
-    // Movement & Rotation Toggles
+    // Toggles
     [HideInInspector] public bool moveX = true;
     [HideInInspector] public bool moveY = false;
     [HideInInspector] public bool moveZ = false;
     [HideInInspector] public bool enableRotation = false;
+    [HideInInspector] public bool enableScaling = false;
 
     // Movement Settings
     public InitialDirection initialDirection = InitialDirection.Forward;
@@ -34,6 +35,11 @@ public class PlatformLogic : MonoBehaviour
     [Range(-500f, 500f)]
     [Tooltip("Degrees per second to rotate around the Y axis.")]
     public float rotationSpeedY = 90f;
+
+    // Scale Settings (X & Z only)
+    [Range(0.1f, 100f)] public float scaleSpeed = 2f;
+    [Range(0.1f, 10f)] public float minScale = 0.5f;
+    [Range(0.1f, 10f)] public float maxScale = 1.5f;
 
     private ExampleMovingPlatform childMover;
 
@@ -118,6 +124,8 @@ public class PlatformLogic : MonoBehaviour
         // Apply continuous Y rotation to ExampleMovingPlatform if enabled
         childMover.RotationAxis = Vector3.up;
         childMover.RotSpeed = enableRotation ? rotationSpeedY : 0f;
+
+        // Clear ExampleMovingPlatform's oscillation built-ins so it doesn't displace position
         childMover.OscillationPeriod = 0f;
         childMover.OscillationSpeed = 0f;
 
@@ -144,7 +152,6 @@ public class PlatformLogic : MonoBehaviour
 
     private void OnValidate()
     {
-        // 1. Check if the uniform multiplier slider moved
         if (!Mathf.Approximately(uniformScale, lastUniformScale))
         {
             widthOffset = Mathf.Clamp(baseScale.x * uniformScale, 0.5f, 500f);
@@ -154,7 +161,6 @@ public class PlatformLogic : MonoBehaviour
         }
         else
         {
-            // 2. An individual axis moved! Recalculate base proportions relative to current uniformScale
             float safeScale = Mathf.Max(0.01f, uniformScale);
             baseScale = new Vector3(widthOffset / safeScale, heightOffset / safeScale, depthOffset / safeScale);
         }
@@ -167,16 +173,31 @@ public class PlatformLogic : MonoBehaviour
         FindChildComponents();
         if (childMover == null) return;
 
-        if (!Application.isPlaying)
+        if (Application.isPlaying)
+        {
+            if (enableScaling)
+            {
+                // Smoothly oscillate between minScale and maxScale over time
+                float sineWave = (Mathf.Sin(Time.time * scaleSpeed) + 1f) * 0.5f; // Maps sine from [-1,1] to [0,1]
+                float scaleFactor = Mathf.Lerp(minScale, maxScale, sineWave);
+
+                childMover.transform.localScale = new Vector3(widthOffset * scaleFactor, heightOffset, depthOffset * scaleFactor);
+            }
+            else
+            {
+                childMover.transform.localScale = new Vector3(widthOffset, heightOffset, depthOffset);
+            }
+        }
+        else
         {
             childMover.transform.localPosition = new Vector3(offsetX, offsetY, offsetZ);
             childMover.transform.localRotation = Quaternion.Euler(0f, rotationY, 0f);
-        }
 
-        Vector3 targetScale = new Vector3(widthOffset, heightOffset, depthOffset);
-        if (childMover.transform.localScale != targetScale)
-        {
-            childMover.transform.localScale = targetScale;
+            Vector3 targetScale = new Vector3(widthOffset, heightOffset, depthOffset);
+            if (childMover.transform.localScale != targetScale)
+            {
+                childMover.transform.localScale = targetScale;
+            }
         }
     }
 

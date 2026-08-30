@@ -8,7 +8,6 @@ public class PlatformLogicEditor : Editor
     {
         PlatformLogic platform = (PlatformLogic)target;
         
-        // Grab the child transform if available, otherwise fallback to parent
         Transform t = platform.TargetChild != null ? platform.TargetChild : platform.transform;
 
         EditorGUI.BeginChangeCheck();
@@ -45,19 +44,23 @@ public class PlatformLogicEditor : Editor
             enterChildren = false;
 
             // Skip internal script property and custom toggles
-            if (prop.name == "m_Script" || prop.name == "moveX" || prop.name == "moveY" || prop.name == "moveZ" || prop.name == "enableRotation")
+            if (prop.name == "m_Script" || prop.name == "moveX" || prop.name == "moveY" || prop.name == "moveZ" || prop.name == "enableRotation" || prop.name == "enableScaling")
                 continue;
 
             // Hide rotation speed slider if enableRotation is unchecked
             if (prop.name == "rotationSpeedY" && !platformTarget.enableRotation)
                 continue;
 
+            // Hide scale speed/min/max sliders if enableScaling is unchecked
+            if ((prop.name == "scaleSpeed" || prop.name == "minScale" || prop.name == "maxScale") && !platformTarget.enableScaling)
+                continue;
+
             // Hide movement properties if no movement axis is selected
             if ((prop.name == "initialDirection" || prop.name == "moveDistance" || prop.name == "moveSpeed") && !platformTarget.HasActiveAxis)
                 continue;
 
-            // Render Movement & Rotation Toggles block right before initialDirection or rotationSpeedY
-            if (!drewToggles && (prop.name == "initialDirection" || prop.name == "rotationSpeedY"))
+            // Render Movement, Rotation & Scale Toggles block right before initialDirection, rotationSpeedY, or scaleSpeed
+            if (!drewToggles && (prop.name == "initialDirection" || prop.name == "rotationSpeedY" || prop.name == "scaleSpeed"))
             {
                 DrawToggleSection(platformTarget);
                 drewToggles = true;
@@ -66,7 +69,7 @@ public class PlatformLogicEditor : Editor
             EditorGUILayout.PropertyField(prop, true);
         }
 
-        // Render toggles at the bottom if neither movement nor rotation was active
+        // Render toggles at the bottom if none of movement, rotation, or scaling were active
         if (!drewToggles)
         {
             DrawToggleSection(platformTarget);
@@ -78,15 +81,16 @@ public class PlatformLogicEditor : Editor
     private void DrawToggleSection(PlatformLogic platformTarget)
     {
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("Movement & Rotation Toggles", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Movement, Rotation & Scale Toggles", EditorStyles.boldLabel);
 
         EditorGUILayout.BeginHorizontal();
 
         EditorGUI.BeginChangeCheck();
-        bool x = EditorGUILayout.ToggleLeft("Left/Right", platformTarget.moveX, GUILayout.Width(85));
-        bool y = EditorGUILayout.ToggleLeft("Up/Down", platformTarget.moveY, GUILayout.Width(80));
-        bool z = EditorGUILayout.ToggleLeft("Forward/Back", platformTarget.moveZ, GUILayout.Width(100));
-        bool rot = EditorGUILayout.ToggleLeft("Rotate", platformTarget.enableRotation, GUILayout.Width(90));
+        bool x = EditorGUILayout.ToggleLeft("Left/Right", platformTarget.moveX, GUILayout.Width(75));
+        bool y = EditorGUILayout.ToggleLeft("Up/Down", platformTarget.moveY, GUILayout.Width(70));
+        bool z = EditorGUILayout.ToggleLeft("Forward/Back", platformTarget.moveZ, GUILayout.Width(90));
+        bool rot = EditorGUILayout.ToggleLeft("Rotate (Y)", platformTarget.enableRotation, GUILayout.Width(80));
+        bool scale = EditorGUILayout.ToggleLeft("Scale (XZ)", platformTarget.enableScaling, GUILayout.Width(80));
 
         if (EditorGUI.EndChangeCheck())
         {
@@ -95,6 +99,7 @@ public class PlatformLogicEditor : Editor
             platformTarget.moveY = y;
             platformTarget.moveZ = z;
             platformTarget.enableRotation = rot;
+            platformTarget.enableScaling = scale;
             EditorUtility.SetDirty(platformTarget);
         }
 
