@@ -41,6 +41,18 @@ public class Health : MonoBehaviour, IDamagable
         }
     }
 
+    public void Heal(int amount)
+    {
+        // Increase health up to maxHealth ceiling
+        currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+
+        // Update the health bar UI
+        if (healthHUD != null)
+        {
+            healthHUD.UpdateHealthBar(currentHealth, maxHealth);
+        }
+    }
+
     private void Die()
     {
         // Handle player death logic here

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class DamageDealer : MonoBehaviour
 {
-    [SerializeField] private int damageAmount = 10;
+    [SerializeField, Range(0.1f, 50f)] private int damageAmount = 10;
 
     private void OnTriggerEnter(Collider other)
     {
