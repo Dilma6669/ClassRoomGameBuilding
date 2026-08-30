@@ -29,7 +29,7 @@ public class ObstacleLogic : MonoBehaviour
 
     [Header("Payload Settings")]
     public PayloadType payloadType = PayloadType.Damage;
-    [Range(1, 1000f)] public int payloadAmount = 10;
+    [Range(1, 100f)] public int payloadAmount = 10;
     [Tooltip("Duration in seconds for temporary buffs.")]
     [Range(1f, 60f)] public float buffDuration = 5f;
     [Tooltip("If checked, destroys this object when triggered (useful for health/stamina/buff pickups).")]
@@ -332,7 +332,7 @@ public class ObstacleLogic : MonoBehaviour
                     break;
 
                 case PayloadType.DoubleSprintBuff:
-                    if (playerLogic != null) playerLogic.ApplyDoubleSprintBuff(buffDuration);
+                    if (playerLogic != null) playerLogic.ApplySprintBuff(payloadAmount, buffDuration);
                     break;
             }
 

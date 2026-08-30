@@ -181,6 +181,20 @@ public class PlayerLogic : MonoBehaviour
             staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
         }
     }
+    
+    public void ApplySprintBuff(float multiplier, float duration)
+    {
+        if (doubleSprintCoroutine != null) StopCoroutine(doubleSprintCoroutine);
+        doubleSprintCoroutine = StartCoroutine(SprintBuffRoutine(multiplier, duration));
+    }
+
+    private IEnumerator SprintBuffRoutine(float multiplier, float duration)
+    {
+        activeSprintMultiplier = multiplier;
+        yield return new WaitForSeconds(duration);
+        activeSprintMultiplier = sprintMultiplier;
+        doubleSprintCoroutine = null;
+    }
 
     private bool IsMoving()
     {
