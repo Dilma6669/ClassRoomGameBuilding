@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HealthUI : MonoBehaviour
+public class HealthHUD : MonoBehaviour
 {
     [SerializeField] private RectTransform healthBarFillRect;
     [SerializeField] private Image healthBarImage; // The Image component on HealthBarFiller

@@ -9,14 +9,16 @@ public class FallDamage : MonoBehaviour
     [Range(0.2f, 5f)] public float minFallTime = 1.0f;
 
     [Tooltip("How many seconds of falling deals MAXIMUM damage.")]
-    [Range(0.5f, 10f)] public float maxFallTime = 10f;
+    [Range(0.5f, 50f)] public float maxFallTime = 10f;
 
     [Header("Damage Settings")]
     [Tooltip("Damage dealt when falling duration reaches minFallTime.")]
     [Range(1f, 100f)] public float minDamage = 1f;
 
     [Tooltip("Damage dealt when falling duration reaches maxFallTime.")]
-    [Range(1f, 200f)] public float maxDamage = 200f;
+    [Range(1f, 1000f)] public float maxDamage = 200f;
+
+    public int damageMultiplier;
 
     //[Header("References")]
    // [Tooltip("The Health script on this player object.")]
@@ -70,6 +72,6 @@ public class FallDamage : MonoBehaviour
         float timePercent = Mathf.InverseLerp(minFallTime, maxFallTime, fallDuration);
         float calculatedDamage = Mathf.Lerp(minDamage, maxDamage, timePercent);
 
-        playerHealth.TakeDamage(Mathf.RoundToInt(calculatedDamage));
+        playerHealth.TakeDamage(Mathf.RoundToInt(calculatedDamage) * damageMultiplier);
     }
 }
