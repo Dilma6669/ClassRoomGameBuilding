@@ -13,7 +13,7 @@ public class PlatformLogicEditor : Editor
 
         EditorGUI.BeginChangeCheck();
 
-        Vector3 currentSize = new Vector3(platform.width, platform.height, platform.depth);
+        Vector3 currentSize = new Vector3(platform.widthOffset, platform.heightOffset, platform.depthOffset);
         Vector3 newSize = Handles.ScaleHandle(
             currentSize, 
             t.position, 
@@ -25,9 +25,9 @@ public class PlatformLogicEditor : Editor
         {
             Undo.RecordObject(platform, "Resize Platform");
             
-            platform.width = Mathf.Max(0.5f, newSize.x);
-            platform.height = Mathf.Max(0.2f, newSize.y);
-            platform.depth = Mathf.Max(0.5f, newSize.z);
+            platform.widthOffset = Mathf.Max(0.5f, newSize.x);
+            platform.heightOffset = Mathf.Max(0.2f, newSize.y);
+            platform.depthOffset = Mathf.Max(0.5f, newSize.z);
         }
     }
 

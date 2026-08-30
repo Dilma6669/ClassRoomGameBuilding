@@ -56,7 +56,7 @@ public class PlatformPopulator : MonoBehaviour
 #if UNITY_EDITOR
         FetchPlatformLogic();
 
-        float xOffset = platformLogic != null ? platformLogic.width + 2f : 5f;
+        float xOffset = platformLogic != null ? platformLogic.widthOffset + 2f : 5f;
         Vector3 duplicatePosition = transform.position + new Vector3(xOffset, 0f, 0f);
 
         GameObject duplicateObj = Instantiate(gameObject, duplicatePosition, transform.rotation, transform.parent);
@@ -105,7 +105,7 @@ public class PlatformPopulator : MonoBehaviour
         FetchPlatformLogic();
         if (platformLogic == null || platformLogic.TargetChild == null) return;
 
-        float yOffset = (platformLogic.height / 2f) + enemySpawnHeightOffset;
+        float yOffset = (platformLogic.heightOffset / 2f) + enemySpawnHeightOffset;
         GameObject enemy = SpawnObject(enemyPrefab, new Vector3(0f, yOffset, 0f), "Create Enemy On Platform");
 
         if (enemy != null)
@@ -126,7 +126,7 @@ public class PlatformPopulator : MonoBehaviour
         FetchPlatformLogic();
         if (platformLogic == null || platformLogic.TargetChild == null) return;
 
-        float yOffset = (platformLogic.height / 2f) + obstacleSpawnHeightOffset;
+        float yOffset = (platformLogic.heightOffset / 2f) + obstacleSpawnHeightOffset;
         GameObject obstacle = SpawnObject(obstaclePrefab, new Vector3(0f, yOffset, 0f), "Create Obstacle On Platform");
 
         if (obstacle != null)
@@ -147,7 +147,7 @@ public class PlatformPopulator : MonoBehaviour
         FetchPlatformLogic();
         if (platformLogic == null || platformLogic.TargetChild == null) return;
 
-        float yOffset = (platformLogic.height / 2f) + trampolineSpawnHeightOffset;
+        float yOffset = (platformLogic.heightOffset / 2f) + trampolineSpawnHeightOffset;
         GameObject trampoline = SpawnObject(trampolinePrefab, new Vector3(0f, yOffset, 0f), "Create Trampoline On Platform");
 
         if (trampoline != null)
@@ -172,9 +172,9 @@ public class PlatformPopulator : MonoBehaviour
         FetchPlatformLogic();
         if (platformLogic == null || platformLogic.TargetChild == null) return;
 
-        float halfWidth = Mathf.Max(0.1f, (platformLogic.width / 2f) - scatterEdgePadding);
-        float halfDepth = Mathf.Max(0.1f, (platformLogic.depth / 2f) - scatterEdgePadding);
-        float yOffset = (platformLogic.height / 2f) + scatterHeightOffset;
+        float halfWidth = Mathf.Max(0.1f, (platformLogic.widthOffset / 2f) - scatterEdgePadding);
+        float halfDepth = Mathf.Max(0.1f, (platformLogic.depthOffset / 2f) - scatterEdgePadding);
+        float yOffset = (platformLogic.heightOffset / 2f) + scatterHeightOffset;
 
         for (int i = 0; i < scatterCount; i++)
         {

@@ -8,20 +8,21 @@ public class PlatformLogic : MonoBehaviour
     public enum InitialDirection { Forward, Reverse }
 
     [Header("Platform Size & Orientation")]
-    [Range(0.5f, 20f)] public float width = 3f;
-    [Range(0.2f, 20f)] public float height = 3f;
-    [Range(0.5f, 20f)] public float depth = 3f;
+    [Range(0.1f, 500f)] public float uniformScale = 1f;
+    [Range(0.5f, 500f)] public float widthOffset = 3f;
+    [Range(0.2f, 500f)] public float heightOffset = 3f;
+    [Range(0.5f, 500f)] public float depthOffset = 3f;
     [Range(0f, 360f)] public float rotationY = 0f;
 
     [Header("Starting Position Offset")]
-    [Range(-20f, 20f)] public float offsetX = 0f;
-    [Range(-20f, 20f)] public float offsetY = 0f;
-    [Range(-20f, 20f)] public float offsetZ = 0f;
+    [Range(-500f, 500f)] public float offsetX = 0f;
+    [Range(-500f, 500f)] public float offsetY = 0f;
+    [Range(-500f, 500f)] public float offsetZ = 0f;
 
     // Movement Settings
     public InitialDirection initialDirection = InitialDirection.Forward;
     [Range(0f, 1000f)] public float moveDistance = 0f;
-    [Range(0.1f, 10f)] public float moveSpeed = 2f;
+    [Range(0.1f, 100f)] public float moveSpeed = 2f;
 
     // Movement Toggles (X = Left/Right, Y = Up/Down, Z = Forward/Backward)
     [HideInInspector] public bool moveX = true;
@@ -30,6 +31,10 @@ public class PlatformLogic : MonoBehaviour
 
     private ExampleMovingPlatform childMover;
 
+    // Base dimensions saved prior to uniform scaling
+    [SerializeField, HideInInspector] private Vector3 baseScale = new Vector3(3f, 3f, 3f);
+    private float lastUniformScale = 1f;
+
     // Gizmo path caching for Play mode
     private Vector3 cachedGizmoStart;
     private Vector3 cachedGizmoEnd;
@@ -37,7 +42,6 @@ public class PlatformLogic : MonoBehaviour
 
     public bool HasActiveAxis => moveX || moveY || moveZ;
 
-    // Rotates the chosen movement axis into local space based on childMover's Y rotation
     public Vector3 MoveDirection
     {
         get
@@ -49,11 +53,9 @@ public class PlatformLogic : MonoBehaviour
 
             if (childMover != null)
             {
-                // Convert local movement axis to world direction based on platform rotation
                 return childMover.transform.TransformDirection(normalizedLocalDir);
             }
 
-            // Fallback to local orientation if child isn't cached yet
             return Quaternion.Euler(0f, rotationY, 0f) * normalizedLocalDir;
         }
     }
@@ -64,6 +66,7 @@ public class PlatformLogic : MonoBehaviour
     {
         EnsureParentScaleReset();
         FindChildComponents();
+        lastUniformScale = uniformScale;
     }
 
     private void EnsureParentScaleReset()
@@ -134,6 +137,24 @@ public class PlatformLogic : MonoBehaviour
         childMover.TranslationSpeed = (2f * Mathf.PI) / calculatedPeriod;
     }
 
+    private void OnValidate()
+    {
+        // 1. Check if the uniform multiplier slider moved
+        if (!Mathf.Approximately(uniformScale, lastUniformScale))
+        {
+            widthOffset = Mathf.Clamp(baseScale.x * uniformScale, 0.5f, 500f);
+            heightOffset = Mathf.Clamp(baseScale.y * uniformScale, 0.2f, 500f);
+            depthOffset = Mathf.Clamp(baseScale.z * uniformScale, 0.5f, 500f);
+            lastUniformScale = uniformScale;
+        }
+        else
+        {
+            // 2. An individual axis moved! Recalculate base proportions relative to current uniformScale
+            float safeScale = Mathf.Max(0.01f, uniformScale);
+            baseScale = new Vector3(widthOffset / safeScale, heightOffset / safeScale, depthOffset / safeScale);
+        }
+    }
+
     private void Update()
     {
         EnsureParentScaleReset();
@@ -147,7 +168,7 @@ public class PlatformLogic : MonoBehaviour
             childMover.transform.localRotation = Quaternion.Euler(0f, rotationY, 0f);
         }
 
-        Vector3 targetScale = new Vector3(width, height, depth);
+        Vector3 targetScale = new Vector3(widthOffset, heightOffset, depthOffset);
         if (childMover.transform.localScale != targetScale)
         {
             childMover.transform.localScale = targetScale;
@@ -178,7 +199,6 @@ public class PlatformLogic : MonoBehaviour
 
             Gizmos.DrawLine(startPos, endPos);
 
-            // Draw rotated gizmo wire cubes matching the platform's orientation
             Matrix4x4 oldMatrix = Gizmos.matrix;
             Gizmos.matrix = Matrix4x4.TRS(startPos, childMover.transform.rotation, childMover.transform.localScale);
             Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
