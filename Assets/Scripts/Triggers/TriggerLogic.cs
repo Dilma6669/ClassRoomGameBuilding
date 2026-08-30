@@ -35,15 +35,16 @@ public class TriggerLogic : MonoBehaviour
     [Range(-20f, 20f)] public float offsetX = 0f;
     [Range(-20f, 20f)] public float offsetY = 0f;
     [Range(-20f, 20f)] public float offsetZ = 0f;
-
-    [HideInInspector]
+    
     private SphereCollider triggerCollider;
     private CanvasGroup canvasGroup;
     private Coroutine fadeCoroutine;
+    public Canvas canvas;
 
     private void Awake()
     {
         EnsureColliderSetup();
+        CacheUIReferences();
     }
 
     private void Start()
@@ -65,28 +66,28 @@ public class TriggerLogic : MonoBehaviour
 
     private void CacheUIReferences()
     {
-        Transform rootParent = transform.parent;
-        if (rootParent == null) return;
-
-        // 1. Find TextMeshProUGUI in parent's children
-        if (uiTextObject == null)
+        // Auto-find CanvasDialog by name if canvas is not assigned
+        if (canvas == null)
         {
-            uiTextObject = rootParent.GetComponentInChildren<TextMeshProUGUI>(true);
+            GameObject canvasObj = GameObject.Find("CanvasDialog");
+            if (canvasObj != null)
+            {
+                canvas = canvasObj.GetComponent<Canvas>();
+            }
         }
 
-        // 2. Find CanvasGroup in parent's children
+        if (canvas == null) return;
+
+        // 1. Find TextMeshProUGUI inside the assigned canvas
+        if (uiTextObject == null)
+        {
+            uiTextObject = canvas.GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        // 2. Find CanvasGroup inside the assigned canvas
         if (canvasGroup == null)
         {
-            canvasGroup = rootParent.GetComponentInChildren<CanvasGroup>(true);
-
-            if (canvasGroup == null)
-            {
-                Canvas canvas = rootParent.GetComponentInChildren<Canvas>(true);
-                if (canvas != null)
-                {
-                    canvasGroup = canvas.gameObject.AddComponent<CanvasGroup>();
-                }
-            }
+            canvasGroup = canvas.GetComponentInChildren<CanvasGroup>(true);
         }
     }
 

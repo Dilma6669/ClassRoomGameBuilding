@@ -27,6 +27,7 @@ public class TriggerLogicEditor : Editor
         if (displayTextProp.boolValue)
         {
             EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("canvas"), new GUIContent("Dialog Canvas"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("message"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("clearOnExit"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fadeDuration"), new GUIContent("Fade Duration (s)"));
