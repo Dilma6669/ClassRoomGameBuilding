@@ -49,7 +49,7 @@ public class ObstacleLogic : MonoBehaviour
     [Header("Idle Rotation")]
     [Range(0f, 360f)] public float rotationAngle = 0f;
 
-    [Header("Bounce / Trampoline Settings")]
+    //[Header("Bounce / Trampoline Settings")]
     public bool isBouncy = false;
     [Range(0.5f, 5f)] public float triggerRadius = 1.2f;
     [Range(5f, 50f)] public float launchForce = 25f;
@@ -328,7 +328,7 @@ public class ObstacleLogic : MonoBehaviour
                     break;
 
                 case PayloadType.JumpBuff:
-                    if (playerLogic != null) playerLogic.ApplyDoubleJumpBuff(buffDuration);
+                    if (playerLogic != null) playerLogic.ApplyJumpBuff(payloadAmount, buffDuration);
                     break;
 
                 case PayloadType.SprintBuff:

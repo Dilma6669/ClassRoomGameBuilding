@@ -6,10 +6,10 @@ using KinematicCharacterController.Examples;
 public class PlayerLogic : MonoBehaviour
 {
     [Header("Movement Controls")]
-    [Range(1f, 30f)] public float moveSpeed = 10f;
+    [Range(1f, 300f)] public float moveSpeed = 10f;
     public bool enableSprint = true;
     public KeyCode sprintKey = KeyCode.LeftShift;
-    [Range(1.1f, 3f)] public float sprintMultiplier = 1.8f;
+    public float sprintMultiplier = 1.8f;
 
     [Header("Stamina Settings")]
     [Range(10f, 200f)] public float maxStamina = 100f;
@@ -23,7 +23,7 @@ public class PlayerLogic : MonoBehaviour
     [HideInInspector] public StaminaHUD staminaHUD;
 
     [Header("Jump Controls")]
-    [Range(1f, 30f)] public float jumpHeight = 10f;
+    [Range(1f, 300f)] public float jumpHeight = 10f;
 
     [Tooltip("Extra forward boost applied on jump.")]
     [Range(0f, 20f)] public float jumpForwardBoost = 2f;
@@ -37,8 +37,8 @@ public class PlayerLogic : MonoBehaviour
     private bool isExhausted = false;
 
     // Buff trackers
-    private Coroutine doubleJumpCoroutine;
-    private Coroutine doubleSprintCoroutine;
+    private Coroutine jumpBuffCoroutine;
+    private Coroutine sprintBuffCoroutine;
     private float activeSprintMultiplier;
     private float activeJumpHeight;
 
@@ -94,8 +94,8 @@ public class PlayerLogic : MonoBehaviour
 
     private void ResetBuffValues()
     {
-        activeSprintMultiplier = sprintMultiplier;
-        activeJumpHeight = jumpHeight;
+        if (sprintBuffCoroutine == null) activeSprintMultiplier = sprintMultiplier;
+        if (jumpBuffCoroutine == null) activeJumpHeight = jumpHeight;
     }
 
     public void RestoreStamina(float amount)
@@ -113,32 +113,32 @@ public class PlayerLogic : MonoBehaviour
         }
     }
 
-    public void ApplyDoubleJumpBuff(float duration)
+    public void ApplyJumpBuff(float multiplier, float duration)
     {
-        if (doubleJumpCoroutine != null) StopCoroutine(doubleJumpCoroutine);
-        doubleJumpCoroutine = StartCoroutine(DoubleJumpRoutine(duration));
+        if (jumpBuffCoroutine != null) StopCoroutine(jumpBuffCoroutine);
+        jumpBuffCoroutine = StartCoroutine(JumpBuffRoutine(multiplier, duration));
     }
 
-    private IEnumerator DoubleJumpRoutine(float duration)
+    private IEnumerator JumpBuffRoutine(float multiplier, float duration)
     {
-        activeJumpHeight = jumpHeight * 2f;
+        activeJumpHeight = jumpHeight * multiplier;
         yield return new WaitForSeconds(duration);
         activeJumpHeight = jumpHeight;
-        doubleJumpCoroutine = null;
+        jumpBuffCoroutine = null;
     }
 
-    public void ApplyDoubleSprintBuff(float duration)
+    public void ApplySprintBuff(float multiplier, float duration)
     {
-        if (doubleSprintCoroutine != null) StopCoroutine(doubleSprintCoroutine);
-        doubleSprintCoroutine = StartCoroutine(DoubleSprintRoutine(duration));
+        if (sprintBuffCoroutine != null) StopCoroutine(sprintBuffCoroutine);
+        sprintBuffCoroutine = StartCoroutine(SprintBuffRoutine(multiplier, duration));
     }
 
-    private IEnumerator DoubleSprintRoutine(float duration)
+    private IEnumerator SprintBuffRoutine(float multiplier, float duration)
     {
-        activeSprintMultiplier = sprintMultiplier * 2f;
+        activeSprintMultiplier = multiplier;
         yield return new WaitForSeconds(duration);
         activeSprintMultiplier = sprintMultiplier;
-        doubleSprintCoroutine = null;
+        sprintBuffCoroutine = null;
     }
 
     private void HandleStamina()
@@ -180,20 +180,6 @@ public class PlayerLogic : MonoBehaviour
         {
             staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
         }
-    }
-    
-    public void ApplySprintBuff(float multiplier, float duration)
-    {
-        if (doubleSprintCoroutine != null) StopCoroutine(doubleSprintCoroutine);
-        doubleSprintCoroutine = StartCoroutine(SprintBuffRoutine(multiplier, duration));
-    }
-
-    private IEnumerator SprintBuffRoutine(float multiplier, float duration)
-    {
-        activeSprintMultiplier = multiplier;
-        yield return new WaitForSeconds(duration);
-        activeSprintMultiplier = sprintMultiplier;
-        doubleSprintCoroutine = null;
     }
 
     private bool IsMoving()
