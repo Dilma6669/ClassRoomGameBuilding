@@ -73,23 +73,41 @@ public class CharacterController : MonoBehaviour
             Debug.Log($"✅ Attached 'PlayerLogic' script to '{gameObject.name}'.");
         }
 
-        // 5. Assign component references from the newly spawned children
+        // 5. Ensure Health script is attached to the spawned player mesh
+        Health healthScript = spawnedPlayerMesh.GetComponent<Health>();
+        if (healthScript == null)
+        {
+            healthScript = spawnedPlayerMesh.AddComponent<Health>();
+            Debug.Log($"✅ Attached 'Health' script to '{spawnedPlayerMesh.name}'.");
+        }
+
+        // 6. Ensure FallDamage script is attached to the spawned player mesh
+        FallDamage fallDamageScript = spawnedPlayerMesh.GetComponent<FallDamage>();
+        if (fallDamageScript == null)
+        {
+            fallDamageScript = spawnedPlayerMesh.AddComponent<FallDamage>();
+            Debug.Log($"✅ Attached 'FallDamage' script to '{spawnedPlayerMesh.name}'.");
+        }
+
+        // 7. Assign component references from the newly spawned children
         ExampleCharacterController characterComp = spawnedPlayerMesh.GetComponent<ExampleCharacterController>();
         ExampleCharacterCamera cameraComp = spawnedCameraMesh.GetComponent<ExampleCharacterCamera>();
 
         if (characterComp != null) playerScript.Character = characterComp;
         if (cameraComp != null) playerScript.CharacterCamera = cameraComp;
 
-        // 6. Hide ExamplePlayer script from Inspector (PlayerLogic remains visible)
+        // 8. Hide ExamplePlayer script from Inspector (PlayerLogic remains visible)
        // playerScript.hideFlags = HideFlags.HideInInspector;
 
         CacheExistingChildren();
 
         EditorUtility.SetDirty(playerScript);
         EditorUtility.SetDirty(logicScript);
+        EditorUtility.SetDirty(healthScript);
+        EditorUtility.SetDirty(fallDamageScript);
         EditorUtility.SetDirty(gameObject);
 
-        Debug.Log("🧙‍♂️ Character created, wired up, PlayerLogic attached, and ExamplePlayer hidden successfully!");
+        Debug.Log("🧙‍♂️ Character created, wired up, PlayerLogic, Health, and FallDamage attached successfully!");
 #endif
     }
 

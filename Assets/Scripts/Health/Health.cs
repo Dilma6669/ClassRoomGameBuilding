@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class Health : MonoBehaviour, IDamagable
 {
-    [SerializeField] private int maxHealth = 100;
+    [Range(10f, 500f)][SerializeField] private int maxHealth = 100;
     private int currentHealth;
 
-    [SerializeField] private HealthUI healthUI;
+    [SerializeField, HideInInspector] private HealthUI healthUI;
 
     private void Start()
     {
