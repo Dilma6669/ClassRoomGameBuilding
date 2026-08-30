@@ -18,8 +18,8 @@ public class ObstacleLogic : MonoBehaviour
         HealthBooster, 
         StaminaBooster, 
         InvincibilityBuff, 
-        DoubleJumpBuff, 
-        DoubleSprintBuff 
+        JumpBuff, 
+        SprintBuff 
     }
 
     [Header("Environment & Movement Space")]
@@ -327,11 +327,11 @@ public class ObstacleLogic : MonoBehaviour
                     if (healthComp != null) healthComp.ApplyInvincibility(buffDuration);
                     break;
 
-                case PayloadType.DoubleJumpBuff:
+                case PayloadType.JumpBuff:
                     if (playerLogic != null) playerLogic.ApplyDoubleJumpBuff(buffDuration);
                     break;
 
-                case PayloadType.DoubleSprintBuff:
+                case PayloadType.SprintBuff:
                     if (playerLogic != null) playerLogic.ApplySprintBuff(payloadAmount, buffDuration);
                     break;
             }
