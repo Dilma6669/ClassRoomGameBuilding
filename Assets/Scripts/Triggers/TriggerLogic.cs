@@ -29,12 +29,11 @@ public class TriggerLogic : MonoBehaviour
 
     [Header("Trigger Scale & Rotation")]
     [Range(0.5f, 20f)] public float size = 3f;
-    [Range(0f, 360f)] public float rotationY = 0f;
 
     [Header("Position Offset")]
-    [Range(-20f, 20f)] public float offsetX = 0f;
-    [Range(-20f, 20f)] public float offsetY = 0f;
-    [Range(-20f, 20f)] public float offsetZ = 0f;
+    [Range(-500f, 500f)] public float offsetX = 0f;
+    [Range(-500f, 500f)] public float offsetY = 0f;
+    [Range(-500f, 500f)] public float offsetZ = 0f;
     
     private SphereCollider triggerCollider;
     private CanvasGroup canvasGroup;
@@ -99,7 +98,6 @@ public class TriggerLogic : MonoBehaviour
 
         if (!Application.isPlaying)
         {
-            transform.localRotation = Quaternion.Euler(0f, rotationY, 0f);
             transform.localPosition = new Vector3(offsetX, offsetY, offsetZ);
         }
     }

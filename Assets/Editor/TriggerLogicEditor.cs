@@ -12,7 +12,6 @@ public class TriggerLogicEditor : Editor
 
         // 1. Transform settings at the top
         EditorGUILayout.PropertyField(serializedObject.FindProperty("size"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("rotationY"));
         
         EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetX"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetY"));

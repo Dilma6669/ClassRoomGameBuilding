@@ -5,25 +5,25 @@ public class EnemyTerrainLogic : MonoBehaviour
 {
     [Header("Wander Range")]
     [Tooltip("The shortest distance the agent will walk when wandering.")]
-    public float minWanderRadius = 5f;
+    [Range(0.1f, 100f)] public float minWanderRadius = 5f;
 
     [Tooltip("The farthest distance the agent will walk when wandering.")]
-    public float maxWanderRadius = 15f;
+    [Range(0.1f, 500f)] public float maxWanderRadius = 15f;
 
     [Header("Movement Speed Range")]
     [Tooltip("The slowest speed the agent will move (like a slow stroll).")]
-    public float minSpeed = 2f;
+    [Range(0.1f, 50f)] public float minSpeed = 2f;
 
     [Tooltip("The fastest speed the agent will move (like a full sprint).")]
-    public float maxSpeed = 6f;
+    [Range(0.1f, 200f)] public float maxSpeed = 6f;
 
     // "Dynamic Rotation Setup" 
     private float turnSpeedMultiplier = 60f;
     private float minAngularSpeed = 120f;
     
-    [Header("Leash Constraint")]
-    [Tooltip("Maximum distance from spawn position the agent is allowed to wander.")]
-    public float maxDistanceFromHome = 30f;
+   // [Header("Leash Constraint")]
+    //[Tooltip("Maximum distance from spawn position the agent is allowed to wander.")]
+    private float maxDistanceFromHome = 30f;
 
     private NavMeshAgent agent;
     private Vector3 homePosition;

@@ -9,7 +9,7 @@ public class TrampolineLogic : MonoBehaviour
 
     [Header("Launch Physics")]
     [Tooltip("How much force is applied to the player when touching the trampoline.")]
-    public float launchForce = 25f;
+    [Range(0f, 100f)] public float launchForce = 25f;
 
     [Tooltip("How much of the players running or falling speed gets added to your jump!")]
     [Range(0f, 1f)] public float momentumTransfer = 0.3f;

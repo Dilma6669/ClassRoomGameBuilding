@@ -7,9 +7,9 @@ public class FollowPlatform : MonoBehaviour
     public Transform targetPlatform;
 
     [Header("Starting Position Offset")]
-    [Range(-50f, 50f)] public float offsetX = 0f;
-    [Range(-50f, 50f)] public float offsetY = 0.5f;
-    [Range(-50f, 50f)] public float offsetZ = 0f;
+    [Range(-500f, 500f)] public float offsetX = 0f;
+    [Range(-500f, 500f)] public float offsetY = 0.5f;
+    [Range(-500f, 500f)] public float offsetZ = 0f;
 
     private Vector3 lastPlatformPosition;
     private bool initialized = false;

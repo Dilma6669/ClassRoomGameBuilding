@@ -17,11 +17,11 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     [Header("General Movement Speed")]
     [Tooltip("How fast the enemy moves (higher numbers mean a faster walk or chase).")]
-    [Range(0.1f, 20f)] public float moveSpeed = 3f;
+    [Range(0.1f, 100f)] public float moveSpeed = 3f;
 
     [Header("Patrol Settings")]
     [Tooltip("How far back and forth the enemy walks when patrolling.")]
-    public float moveDistance = 3f;
+    [Range(0.1f, 300f)] public float moveDistance = 3f;
 
     [Header("Idle Settings")]
     [Tooltip("Which direction the enemy faces when standing still or starting out (0 to 360 degrees).")]
@@ -29,7 +29,7 @@ public class EnemyPlatformLogic : MonoBehaviour
 
     [Header("Wandering Settings")]
     [Tooltip("How big of an area the enemy is allowed to explore when wandering.")]
-    [Range(1f, 30f)] public float wanderRadius = 3f;
+    [Range(1f, 200f)] public float wanderRadius = 3f;
 
     [Header("Bounce / Trampoline Settings")]
     [Tooltip("Enable if this enemy platform acts like a trampoline when touched.")]
