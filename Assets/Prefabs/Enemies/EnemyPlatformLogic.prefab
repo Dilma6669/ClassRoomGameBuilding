@@ -100,11 +100,12 @@ GameObject:
   m_Component:
   - component: {fileID: 7389228385384115287}
   - component: {fileID: 6987877513863229446}
-  - component: {fileID: 2447971570365861456}
+  - component: {fileID: 5118680761599632941}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 7751015933214049424}
   - component: {fileID: 7292615533562928232}
-  - component: {fileID: 2689323994822810462}
+  - component: {fileID: 4302889297415998115}
+  - component: {fileID: 5459958457977684752}
   m_Layer: 0
   m_Name: EnemyPlatformLogic
   m_TagString: Untagged
@@ -144,7 +145,7 @@ MonoBehaviour:
   offsetX: 0
   offsetY: 0.5
   offsetZ: 0
---- !u!114 &2447971570365861456
+--- !u!114 &5118680761599632941
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -153,22 +154,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 6755809666008450591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4b9dea039a7841f9885d81c1693e8ad, type: 3}
+  m_Script: {fileID: 11500000, guid: e94b70faace554c3a8be313fa0192f88, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyLogic
+  m_EditorClassIdentifier: Assembly-CSharp::Obstacle
+  movementSpace: 1
   movementType: 1
-  moveSpeed: 0.96
+  payloadType: 1
+  payloadAmount: 10
+  destroyOnTrigger: 0
+  moveSpeed: 3
   moveDistance: 3
+  minWanderRadius: 2
+  maxWanderRadius: 6
   rotationAngle: 0
-  wanderRadius: 3
-  isBouncy: 1
-  triggerRadius: 0.64
-  launchForce: 12
-  upwardBias: 0.504
+  isBouncy: 0
+  triggerRadius: 1.2
+  launchForce: 25
+  upwardBias: 0.5
   momentumTransfer: 0.3
 --- !u!54 &4426837204932067442
 Rigidbody:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -216,7 +222,7 @@ SphereCollider:
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!135 &7292615533562928232
 SphereCollider:
-  m_ObjectHideFlags: 2
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -233,9 +239,31 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.64
+  m_Radius: 1.2
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2689323994822810462
+--- !u!195 &4302889297415998115
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6755809666008450591}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &5459958457977684752
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -244,8 +272,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 6755809666008450591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cdab6a26463da49b3b98c9f0b99e6c1b, type: 3}
+  m_Script: {fileID: 11500000, guid: 995d990c794a04941b847ba5b9977e32, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HealthBooster
-  healAmount: 25
-  destroyOnPickup: 1
+  m_EditorClassIdentifier: Assembly-CSharp::AgentPerformanceThrottler
+  closeDistance: 1
+  mediumDistance: 300
+  closeQuality: 4
+  mediumQuality: 1

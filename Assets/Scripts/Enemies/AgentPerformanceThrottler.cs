@@ -27,7 +27,11 @@ public class AgentPerformanceThrottler : MonoBehaviour
 
     private void Update()
     {
-        if (mainCam == null || !agent.isOnNavMesh) return;
+        // Lazy-load camera if it wasn't ready at Start
+        if (mainCam == null) mainCam = Camera.main;
+
+        // Skip completely if camera missing, agent disabled (e.g. on Platform), or off NavMesh
+        if (mainCam == null || agent == null || !agent.enabled || !agent.isOnNavMesh) return;
 
         checkTimer += Time.deltaTime;
         if (checkTimer >= checkInterval)
@@ -39,7 +43,7 @@ public class AgentPerformanceThrottler : MonoBehaviour
 
     private void EvaluatePerformanceTier()
     {
-        if (!agent.isOnNavMesh) return;
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh) return;
 
         float distSqr = (transform.position - mainCam.transform.position).sqrMagnitude;
 
@@ -55,7 +59,7 @@ public class AgentPerformanceThrottler : MonoBehaviour
         }
         else
         {
-            // Disables avoidance entirely for distant agents
+            // Disables avoidance entirely and pauses distant agents
             agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
             agent.isStopped = true; 
         }
