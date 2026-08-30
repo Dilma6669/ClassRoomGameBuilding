@@ -6,6 +6,10 @@ public class ObstacleLogic : MonoBehaviour
     [Header("Physics Setup")]
     public bool enableRigidbody = false;
 
+    [Header("Scale Settings")]
+    [Range(0.1f, 500f)]
+    public float uniformScale = 1f;
+
     private Rigidbody rb;
     private Transform childFolder;
 
@@ -13,12 +17,14 @@ public class ObstacleLogic : MonoBehaviour
     {
         FindChildFolder();
         ToggleRigidbody();
+        ApplyScale();
     }
 
     private void Start()
     {
         FindChildFolder();
         ToggleRigidbody();
+        ApplyScale();
     }
 
     private void FindChildFolder()
@@ -37,6 +43,24 @@ public class ObstacleLogic : MonoBehaviour
     {
         FindChildFolder();
         ToggleRigidbody();
+        ApplyScale();
+    }
+
+    private void Update()
+    {
+        ApplyScale();
+    }
+
+    private void ApplyScale()
+    {
+        if (childFolder != null)
+        {
+            childFolder.localScale = new Vector3(uniformScale, uniformScale, uniformScale);
+        }
+        else
+        {
+            transform.localScale = new Vector3(uniformScale, uniformScale, uniformScale);
+        }
     }
 
     private void ToggleRigidbody()
