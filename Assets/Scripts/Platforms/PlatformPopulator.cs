@@ -7,15 +7,10 @@ using UnityEditor;
 [ExecuteAlways]
 public class PlatformPopulator : MonoBehaviour
 {
-    [Header("Single Attachment Prefabs")]
-    public GameObject enemyPrefab;
-    [Range(0f, 5f)] private float enemySpawnHeightOffset = 0.5f;
-
+    [Header("Single Attachment Setup")]
+    [Tooltip("Assign your consolidated Obstacle prefab here (handles Enemies, Hazards, Trampolines, and Pickups).")]
     public GameObject obstaclePrefab;
     [Range(0f, 5f)] private float obstacleSpawnHeightOffset = 0.5f;
-
-    public GameObject trampolinePrefab;
-    [Range(0f, 5f)] private float trampolineSpawnHeightOffset = 0.5f;
 
     [Header("Random Scatter Setup")]
     [Tooltip("Drag rock, tree, or prop prefabs here to scatter randomly across the platform surface.")]
@@ -36,7 +31,6 @@ public class PlatformPopulator : MonoBehaviour
         }
     }
 
-    // Helper method to set up FollowPlatform on any spawned object
     private void SetupFollower(GameObject spawnedObject, Vector3 localOffset)
     {
         FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
@@ -93,27 +87,6 @@ public class PlatformPopulator : MonoBehaviour
 
     #region Single Spawning Context Menus
 
-    [ContextMenu("Create Enemy On Center")]
-    public void CreateEnemyOnPlatform()
-    {
-        if (enemyPrefab == null)
-        {
-            Debug.LogWarning("⚠️ Please assign an Enemy Prefab first.");
-            return;
-        }
-
-        FetchPlatformLogic();
-        if (platformLogic == null || platformLogic.TargetChild == null) return;
-
-        float yOffset = (platformLogic.heightOffset / 2f) + enemySpawnHeightOffset;
-        GameObject enemy = SpawnObject(enemyPrefab, new Vector3(0f, yOffset, 0f), "Create Enemy On Platform");
-
-        if (enemy != null)
-        {
-            SetupFollower(enemy, new Vector3(0f, yOffset, 0f));
-        }
-    }
-
     [ContextMenu("Create Obstacle On Center")]
     public void CreateObstacleOnPlatform()
     {
@@ -132,27 +105,6 @@ public class PlatformPopulator : MonoBehaviour
         if (obstacle != null)
         {
             SetupFollower(obstacle, new Vector3(0f, yOffset, 0f));
-        }
-    }
-
-    [ContextMenu("Create Trampoline On Center")]
-    public void CreateTrampolineOnPlatform()
-    {
-        if (trampolinePrefab == null)
-        {
-            Debug.LogWarning("⚠️ Please assign a Trampoline Prefab first.");
-            return;
-        }
-
-        FetchPlatformLogic();
-        if (platformLogic == null || platformLogic.TargetChild == null) return;
-
-        float yOffset = (platformLogic.heightOffset / 2f) + trampolineSpawnHeightOffset;
-        GameObject trampoline = SpawnObject(trampolinePrefab, new Vector3(0f, yOffset, 0f), "Create Trampoline On Platform");
-
-        if (trampoline != null)
-        {
-            SetupFollower(trampoline, new Vector3(0f, yOffset, 0f));
         }
     }
 
@@ -193,10 +145,10 @@ public class PlatformPopulator : MonoBehaviour
                 {
                     float randomAngle = Random.Range(0f, 360f);
 
-                    EnemyPlatformLogic enemyPlatorm = spawned.GetComponent<EnemyPlatformLogic>();
-                    if (enemyPlatorm != null)
+                    Obstacle obstacleComponent = spawned.GetComponent<Obstacle>();
+                    if (obstacleComponent != null)
                     {
-                        enemyPlatorm.rotationAngle = randomAngle;
+                        obstacleComponent.rotationAngle = randomAngle;
                     }
                     else
                     {

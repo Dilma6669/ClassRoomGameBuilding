@@ -14,7 +14,7 @@ public class TerrainPopulator : MonoBehaviour
     public Terrain targetTerrain;
 
     [Header("Random Scatter Setup")]
-    [Tooltip("Drag rock, tree, enemy, or prop prefabs here to scatter across the terrain.")]
+    [Tooltip("Drag rock, tree, obstacle, or prop prefabs here to scatter across the terrain.")]
     public GameObject[] randomPrefabs;
 
     [Range(1, 1000)] public int scatterCount = 20;
@@ -69,8 +69,8 @@ public class TerrainPopulator : MonoBehaviour
         EnsureComponentsHidden();
 
         // 2. Configure NavMeshSurface properties for Terrain & Children
-        navMeshSurface.collectObjects = CollectObjects.Children; // Collect terrain and scattered objects under this root
-        navMeshSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders; // Use Physics Colliders (TerrainCollider)
+        navMeshSurface.collectObjects = CollectObjects.Children;
+        navMeshSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
 
         // 3. Ensure target Terrain has an active TerrainCollider
         if (targetTerrain != null)
@@ -155,9 +155,10 @@ public class TerrainPopulator : MonoBehaviour
                 spawnRotation = Quaternion.FromToRotation(Vector3.up, terrainNormal);
             }
 
+            float randomAngle = 0f;
             if (randomYRotation)
             {
-                float randomAngle = Random.Range(0f, 360f);
+                randomAngle = Random.Range(0f, 360f);
                 spawnRotation *= Quaternion.Euler(0f, randomAngle, 0f);
             }
 
@@ -165,10 +166,10 @@ public class TerrainPopulator : MonoBehaviour
 
             if (spawned != null)
             {
-                EnemyTerrainLogic enemyTerrain = spawned.GetComponent<EnemyTerrainLogic>();
-                if (enemyTerrain != null)
+                Obstacle obstacle = spawned.GetComponent<Obstacle>();
+                if (obstacle != null && randomYRotation)
                 {
-                    enemyTerrain.SetInitialRotation(spawnRotation);
+                    obstacle.rotationAngle = randomAngle;
                 }
             }
         }
