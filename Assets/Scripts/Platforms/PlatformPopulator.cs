@@ -145,7 +145,7 @@ public class PlatformPopulator : MonoBehaviour
                 {
                     float randomAngle = Random.Range(0f, 360f);
 
-                    Obstacle obstacleComponent = spawned.GetComponent<Obstacle>();
+                    ObstacleLogic obstacleComponent = spawned.GetComponent<ObstacleLogic>();
                     if (obstacleComponent != null)
                     {
                         obstacleComponent.rotationAngle = randomAngle;

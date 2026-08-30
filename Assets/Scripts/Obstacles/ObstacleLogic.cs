@@ -7,11 +7,11 @@ using UnityEditor;
 #endif
 
 [ExecuteAlways]
-public class Obstacle : MonoBehaviour
+public class ObstacleLogic : MonoBehaviour
 {
     public enum MovementSpace { AutoDetect, TerrainNavMesh, MovingPlatform }
     public enum MovementType { Static, Patrol, RandomWander }
-    public enum PayloadType { None, Damage, HealthBooster }
+    public enum PayloadType { None, Damage, HealthBooster, StaminaBooster }
 
     [Header("Environment & Movement Space")]
     [Tooltip("AutoDetect checks for a FollowPlatform component. Terrain uses NavMesh. MovingPlatform tracks targetPlatform.")]
@@ -21,7 +21,7 @@ public class Obstacle : MonoBehaviour
     [Header("Payload Settings")]
     public PayloadType payloadType = PayloadType.Damage;
     [Range(1, 500)] public int payloadAmount = 10;
-    [Tooltip("If checked, destroys this object when triggered (useful for health pickups).")]
+    [Tooltip("If checked, destroys this object when triggered (useful for health/stamina pickups).")]
     public bool destroyOnTrigger = false;
 
     [Header("General Movement Speed")]
@@ -294,7 +294,7 @@ public class Obstacle : MonoBehaviour
                 motor.BaseVelocity = launchDirection * totalLaunchSpeed;
             }
 
-            // 2. Handle Payload Logic (Damage / Heal)
+            // 2. Handle Payload Logic (Damage / Heal / Stamina)
             if (payloadType == PayloadType.Damage)
             {
                 var damagable = other.GetComponentInParent<IDamagable>();
@@ -304,6 +304,11 @@ public class Obstacle : MonoBehaviour
             {
                 var playerHealth = other.GetComponentInParent<Health>();
                 if (playerHealth != null) playerHealth.Heal(payloadAmount);
+            }
+            else if (payloadType == PayloadType.StaminaBooster)
+            {
+                var playerLogic = other.GetComponentInParent<PlayerLogic>();
+                if (playerLogic != null) playerLogic.RestoreStamina(payloadAmount);
             }
 
             if (destroyOnTrigger && payloadType != PayloadType.None)

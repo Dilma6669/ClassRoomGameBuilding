@@ -129,6 +129,21 @@ public class PlayerLogic : MonoBehaviour
             staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
         }
     }
+    
+    public void RestoreStamina(float amount)
+    {
+        currentStamina = Mathf.Min(currentStamina + amount, maxStamina);
+    
+        if (isExhausted && currentStamina >= maxStamina * 0.15f)
+        {
+            isExhausted = false;
+        }
+
+        if (staminaHUD != null)
+        {
+            staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
+        }
+    }
 
     private bool IsMoving()
     {

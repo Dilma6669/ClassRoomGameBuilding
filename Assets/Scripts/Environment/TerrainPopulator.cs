@@ -166,7 +166,7 @@ public class TerrainPopulator : MonoBehaviour
 
             if (spawned != null)
             {
-                Obstacle obstacle = spawned.GetComponent<Obstacle>();
+                ObstacleLogic obstacle = spawned.GetComponent<ObstacleLogic>();
                 if (obstacle != null && randomYRotation)
                 {
                     obstacle.rotationAngle = randomAngle;
