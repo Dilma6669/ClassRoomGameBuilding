@@ -11,7 +11,16 @@ public class ObstacleLogic : MonoBehaviour
 {
     public enum MovementSpace { AutoDetect, TerrainNavMesh, MovingPlatform }
     public enum MovementType { Static, Patrol, RandomWander }
-    public enum PayloadType { None, Damage, HealthBooster, StaminaBooster }
+    public enum PayloadType 
+    { 
+        None, 
+        Damage, 
+        HealthBooster, 
+        StaminaBooster, 
+        InvincibilityBuff, 
+        DoubleJumpBuff, 
+        DoubleSprintBuff 
+    }
 
     [Header("Environment & Movement Space")]
     [Tooltip("AutoDetect checks for a FollowPlatform component. Terrain uses NavMesh. MovingPlatform tracks targetPlatform.")]
@@ -20,8 +29,10 @@ public class ObstacleLogic : MonoBehaviour
 
     [Header("Payload Settings")]
     public PayloadType payloadType = PayloadType.Damage;
-    [Range(1, 500)] public int payloadAmount = 10;
-    [Tooltip("If checked, destroys this object when triggered (useful for health/stamina pickups).")]
+    [Range(1, 1000f)] public int payloadAmount = 10;
+    [Tooltip("Duration in seconds for temporary buffs.")]
+    [Range(1f, 60f)] public float buffDuration = 5f;
+    [Tooltip("If checked, destroys this object when triggered (useful for health/stamina/buff pickups).")]
     public bool destroyOnTrigger = false;
 
     [Header("General Movement Speed")]
@@ -106,7 +117,6 @@ public class ObstacleLogic : MonoBehaviour
         lastPatrolOffset = Vector3.zero;
         previousMovementType = movementType;
 
-        // Auto-detect whether we use Platform or Terrain pathing
         if (movementSpace == MovementSpace.AutoDetect)
         {
             if (followPlatform != null && followPlatform.targetPlatform != null)
@@ -174,7 +184,6 @@ public class ObstacleLogic : MonoBehaviour
     {
         if (navMeshAgent == null || !navMeshAgent.isOnNavMesh || movementType == MovementType.Static) return;
 
-        // Keep NavMeshAgent speed and acceleration instantly updated with moveSpeed slider
         navMeshAgent.speed = moveSpeed;
         navMeshAgent.acceleration = moveSpeed * 8f;
         navMeshAgent.angularSpeed = Mathf.Max(120f, moveSpeed * 60f);
@@ -294,21 +303,37 @@ public class ObstacleLogic : MonoBehaviour
                 motor.BaseVelocity = launchDirection * totalLaunchSpeed;
             }
 
-            // 2. Handle Payload Logic (Damage / Heal / Stamina)
-            if (payloadType == PayloadType.Damage)
+            // 2. Handle Payload Logic
+            var playerLogic = other.GetComponentInParent<PlayerLogic>();
+
+            switch (payloadType)
             {
-                var damagable = other.GetComponentInParent<IDamagable>();
-                if (damagable != null) damagable.TakeDamage(payloadAmount);
-            }
-            else if (payloadType == PayloadType.HealthBooster)
-            {
-                var playerHealth = other.GetComponentInParent<Health>();
-                if (playerHealth != null) playerHealth.Heal(payloadAmount);
-            }
-            else if (payloadType == PayloadType.StaminaBooster)
-            {
-                var playerLogic = other.GetComponentInParent<PlayerLogic>();
-                if (playerLogic != null) playerLogic.RestoreStamina(payloadAmount);
+                case PayloadType.Damage:
+                    var damagable = other.GetComponentInParent<IDamagable>();
+                    if (damagable != null) damagable.TakeDamage(payloadAmount);
+                    break;
+
+                case PayloadType.HealthBooster:
+                    var playerHealth = other.GetComponentInParent<Health>();
+                    if (playerHealth != null) playerHealth.Heal(payloadAmount);
+                    break;
+
+                case PayloadType.StaminaBooster:
+                    if (playerLogic != null) playerLogic.RestoreStamina(payloadAmount);
+                    break;
+
+                case PayloadType.InvincibilityBuff:
+                    var healthComp = other.GetComponentInParent<Health>();
+                    if (healthComp != null) healthComp.ApplyInvincibility(buffDuration);
+                    break;
+
+                case PayloadType.DoubleJumpBuff:
+                    if (playerLogic != null) playerLogic.ApplyDoubleJumpBuff(buffDuration);
+                    break;
+
+                case PayloadType.DoubleSprintBuff:
+                    if (playerLogic != null) playerLogic.ApplyDoubleSprintBuff(buffDuration);
+                    break;
             }
 
             if (destroyOnTrigger && payloadType != PayloadType.None)

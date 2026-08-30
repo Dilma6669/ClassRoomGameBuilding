@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using KinematicCharacterController.Examples;
 
@@ -19,9 +20,7 @@ public class PlayerLogic : MonoBehaviour
     [Tooltip("Delay in seconds before stamina starts regenerating after sprinting.")]
     [Range(0f, 5f)] public float regenDelay = 1f;
 
-    //[Header("UI Reference")]
-    //[Tooltip("Will automatically find StaminaHUD in scene on game load if left empty.")]
-   [HideInInspector] public StaminaHUD staminaHUD;
+    [HideInInspector] public StaminaHUD staminaHUD;
 
     [Header("Jump Controls")]
     [Range(1f, 30f)] public float jumpHeight = 10f;
@@ -37,11 +36,18 @@ public class PlayerLogic : MonoBehaviour
     private float regenTimer;
     private bool isExhausted = false;
 
+    // Buff trackers
+    private Coroutine doubleJumpCoroutine;
+    private Coroutine doubleSprintCoroutine;
+    private float activeSprintMultiplier;
+    private float activeJumpHeight;
+
     private void Awake()
     {
         FindCharacterController();
         FindStaminaHUD();
         currentStamina = maxStamina;
+        ResetBuffValues();
     }
 
     private void FindCharacterController()
@@ -69,6 +75,7 @@ public class PlayerLogic : MonoBehaviour
         {
             currentStamina = maxStamina;
         }
+        ResetBuffValues();
         ApplyMovementSettings();
     }
 
@@ -85,13 +92,61 @@ public class PlayerLogic : MonoBehaviour
         ApplyMovementSettings();
     }
 
+    private void ResetBuffValues()
+    {
+        activeSprintMultiplier = sprintMultiplier;
+        activeJumpHeight = jumpHeight;
+    }
+
+    public void RestoreStamina(float amount)
+    {
+        currentStamina = Mathf.Min(currentStamina + amount, maxStamina);
+
+        if (isExhausted && currentStamina >= maxStamina * 0.15f)
+        {
+            isExhausted = false;
+        }
+
+        if (staminaHUD != null)
+        {
+            staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
+        }
+    }
+
+    public void ApplyDoubleJumpBuff(float duration)
+    {
+        if (doubleJumpCoroutine != null) StopCoroutine(doubleJumpCoroutine);
+        doubleJumpCoroutine = StartCoroutine(DoubleJumpRoutine(duration));
+    }
+
+    private IEnumerator DoubleJumpRoutine(float duration)
+    {
+        activeJumpHeight = jumpHeight * 2f;
+        yield return new WaitForSeconds(duration);
+        activeJumpHeight = jumpHeight;
+        doubleJumpCoroutine = null;
+    }
+
+    public void ApplyDoubleSprintBuff(float duration)
+    {
+        if (doubleSprintCoroutine != null) StopCoroutine(doubleSprintCoroutine);
+        doubleSprintCoroutine = StartCoroutine(DoubleSprintRoutine(duration));
+    }
+
+    private IEnumerator DoubleSprintRoutine(float duration)
+    {
+        activeSprintMultiplier = sprintMultiplier * 2f;
+        yield return new WaitForSeconds(duration);
+        activeSprintMultiplier = sprintMultiplier;
+        doubleSprintCoroutine = null;
+    }
+
     private void HandleStamina()
     {
         if (!Application.isPlaying) return;
 
         bool isTryingToSprint = enableSprint && Input.GetKey(sprintKey) && IsMoving();
 
-        // Unlock exhausted lock once player recovers above 15% stamina
         if (isExhausted && currentStamina >= maxStamina * 0.15f)
         {
             isExhausted = false;
@@ -99,7 +154,6 @@ public class PlayerLogic : MonoBehaviour
 
         if (isTryingToSprint && !isExhausted)
         {
-            // Drain stamina while sprinting
             currentStamina -= staminaDrainRate * Time.deltaTime;
             regenTimer = regenDelay;
 
@@ -111,7 +165,6 @@ public class PlayerLogic : MonoBehaviour
         }
         else
         {
-            // Regenerate stamina after delay
             if (regenTimer > 0f)
             {
                 regenTimer -= Time.deltaTime;
@@ -121,22 +174,6 @@ public class PlayerLogic : MonoBehaviour
                 currentStamina += staminaRegenRate * Time.deltaTime;
                 currentStamina = Mathf.Min(currentStamina, maxStamina);
             }
-        }
-
-        // Send updates directly to StaminaHUD
-        if (staminaHUD != null)
-        {
-            staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
-        }
-    }
-    
-    public void RestoreStamina(float amount)
-    {
-        currentStamina = Mathf.Min(currentStamina + amount, maxStamina);
-    
-        if (isExhausted && currentStamina >= maxStamina * 0.15f)
-        {
-            isExhausted = false;
         }
 
         if (staminaHUD != null)
@@ -163,11 +200,11 @@ public class PlayerLogic : MonoBehaviour
 
             if (canSprint)
             {
-                targetSpeed *= sprintMultiplier;
+                targetSpeed *= activeSprintMultiplier;
             }
 
             characterController.MaxStableMoveSpeed = targetSpeed;
-            characterController.JumpUpSpeed = jumpHeight;
+            characterController.JumpUpSpeed = activeJumpHeight;
             characterController.JumpScalableForwardSpeed = jumpForwardBoost;
             characterController.AirAccelerationSpeed = airSteerSpeed;
             characterController.MaxAirMoveSpeed = targetSpeed;

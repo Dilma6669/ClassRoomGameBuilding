@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -5,6 +6,9 @@ public class Health : MonoBehaviour, IDamagable
 {
     [Range(10f, 500f)][SerializeField] private int maxHealth = 100;
     private int currentHealth;
+    
+    private bool isInvincible = false;
+    private Coroutine invincibilityCoroutine;
 
     [FormerlySerializedAs("healthUI")] [SerializeField, HideInInspector] private HealthHUD healthHUD;
 
@@ -27,6 +31,8 @@ public class Health : MonoBehaviour, IDamagable
 
     public void TakeDamage(int amount)
     {
+        if (isInvincible) return;
+        
         currentHealth = Mathf.Max(0, currentHealth - amount);
 
         // Update the health bar UI
@@ -51,6 +57,20 @@ public class Health : MonoBehaviour, IDamagable
         {
             healthHUD.UpdateHealthBar(currentHealth, maxHealth);
         }
+    }
+
+    public void ApplyInvincibility(float duration)
+    {
+        if (invincibilityCoroutine != null) StopCoroutine(invincibilityCoroutine);
+        invincibilityCoroutine = StartCoroutine(InvincibilityRoutine(duration));
+    }
+
+    private IEnumerator InvincibilityRoutine(float duration)
+    {
+        isInvincible = true;
+        yield return new WaitForSeconds(duration);
+        isInvincible = false;
+        invincibilityCoroutine = null;
     }
 
     private void Die()
