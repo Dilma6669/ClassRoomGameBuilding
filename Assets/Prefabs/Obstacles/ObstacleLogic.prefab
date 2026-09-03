@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3101820417137144067}
   - component: {fileID: 8761553405591650542}
   - component: {fileID: 2346825447628205879}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: "\u26A0\uFE0F DO NOT TOUCH"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -102,11 +102,11 @@ GameObject:
   - component: {fileID: 6987877513863229446}
   - component: {fileID: 5118680761599632941}
   - component: {fileID: 4426837204932067442}
-  - component: {fileID: 7751015933214049424}
-  - component: {fileID: 7292615533562928232}
   - component: {fileID: 4302889297415998115}
   - component: {fileID: 5459958457977684752}
-  m_Layer: 0
+  - component: {fileID: 5353323033446820523}
+  - component: {fileID: 9129731868200871840}
+  m_Layer: 7
   m_Name: ObstacleLogic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -157,18 +157,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e94b70faace554c3a8be313fa0192f88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Obstacle
-  movementSpace: 1
+  objectScale: 1
+  navMeshRadius: 0.12
+  movementSpace: 2
   movementType: 1
   payloadType: 1
   payloadAmount: 10
+  buffDuration: 5
   destroyOnTrigger: 0
-  moveSpeed: 3
-  moveDistance: 3
-  minWanderRadius: 2
-  maxWanderRadius: 6
+  moveSpeed: 97.7
+  moveDistance: 33
+  minWanderRadius: 13.1
+  maxWanderRadius: 24.7
   rotationAngle: 0
-  isBouncy: 0
-  triggerRadius: 1.2
+  isBouncy: 1
+  triggerRadius: 0.6
   launchForce: 25
   upwardBias: 0.5
   momentumTransfer: 0.3
@@ -194,53 +197,11 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!135 &7751015933214049424
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!135 &7292615533562928232
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 1.2
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!195 &4302889297415998115
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -248,9 +209,9 @@ NavMeshAgent:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 1
+  m_Enabled: 0
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.12
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -262,7 +223,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
 --- !u!114 &5459958457977684752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -279,3 +240,47 @@ MonoBehaviour:
   mediumDistance: 300
   closeQuality: 4
   mediumQuality: 1
+--- !u!64 &5353323033446820523
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6755809666008450591}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!64 &9129731868200871840
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6755809666008450591}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}

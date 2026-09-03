@@ -5,15 +5,19 @@ using UnityEngine;
 [CanEditMultipleObjects]
 public class ObstacleLogicEditor : Editor
 {
+    private SerializedProperty objectScaleProp;
+
     private SerializedProperty movementSpaceProp;
     private SerializedProperty movementTypeProp;
+    private SerializedProperty navMeshRadiusProp;
 
     private SerializedProperty payloadTypeProp;
     private SerializedProperty payloadAmountProp;
     private SerializedProperty buffDurationProp;
     private SerializedProperty destroyOnTriggerProp;
 
-    private SerializedProperty moveSpeedProp;
+    private SerializedProperty minMoveSpeedProp;
+    private SerializedProperty maxMoveSpeedProp;
     private SerializedProperty moveDistanceProp;
     private SerializedProperty minWanderRadiusProp;
     private SerializedProperty maxWanderRadiusProp;
@@ -27,15 +31,19 @@ public class ObstacleLogicEditor : Editor
 
     private void OnEnable()
     {
+        objectScaleProp = serializedObject.FindProperty("objectScale");
+
         movementSpaceProp = serializedObject.FindProperty("movementSpace");
         movementTypeProp = serializedObject.FindProperty("movementType");
+        navMeshRadiusProp = serializedObject.FindProperty("navMeshRadius");
 
         payloadTypeProp = serializedObject.FindProperty("payloadType");
         payloadAmountProp = serializedObject.FindProperty("payloadAmount");
         buffDurationProp = serializedObject.FindProperty("buffDuration");
         destroyOnTriggerProp = serializedObject.FindProperty("destroyOnTrigger");
 
-        moveSpeedProp = serializedObject.FindProperty("moveSpeed");
+        minMoveSpeedProp = serializedObject.FindProperty("minMoveSpeed");
+        maxMoveSpeedProp = serializedObject.FindProperty("maxMoveSpeed");
         moveDistanceProp = serializedObject.FindProperty("moveDistance");
         minWanderRadiusProp = serializedObject.FindProperty("minWanderRadius");
         maxWanderRadiusProp = serializedObject.FindProperty("maxWanderRadius");
@@ -52,10 +60,24 @@ public class ObstacleLogicEditor : Editor
     {
         serializedObject.Update();
 
+        // 0. Transform Settings
+        EditorGUILayout.LabelField("Transform Settings", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(objectScaleProp, new GUIContent("Uniform Scale"));
+
+        EditorGUILayout.Space(5);
+
         // 1. Movement Settings
         EditorGUILayout.LabelField("Environment & Movement Space", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(movementSpaceProp);
         EditorGUILayout.PropertyField(movementTypeProp);
+
+        ObstacleLogic.MovementSpace movementSpace = (ObstacleLogic.MovementSpace)movementSpaceProp.enumValueIndex;
+        
+        // Show NavMesh Radius slider unless explicitly set to MovingPlatform
+        if (movementSpace != ObstacleLogic.MovementSpace.MovingPlatform)
+        {
+            EditorGUILayout.PropertyField(navMeshRadiusProp, new GUIContent("NavMesh Agent Radius"));
+        }
 
         EditorGUILayout.Space(5);
 
@@ -103,7 +125,8 @@ public class ObstacleLogicEditor : Editor
 
         if (movementType != ObstacleLogic.MovementType.Static)
         {
-            EditorGUILayout.PropertyField(moveSpeedProp);
+            EditorGUILayout.PropertyField(minMoveSpeedProp, new GUIContent("Min Move Speed"));
+            EditorGUILayout.PropertyField(maxMoveSpeedProp, new GUIContent("Max Move Speed"));
         }
 
         if (movementType == ObstacleLogic.MovementType.Patrol)

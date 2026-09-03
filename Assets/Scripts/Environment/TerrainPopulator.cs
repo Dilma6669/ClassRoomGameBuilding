@@ -19,7 +19,7 @@ public class TerrainPopulator : MonoBehaviour
 
     [Range(1, 1000)] public int scatterCount = 20;
     [Range(0f, 20f)] private float edgePadding = 5f;
-    [Range(0f, 5f)] private float heightOffset = 0f;
+    [Range(0f, 5f)] private float heightOffset = 0.2f;
 
     private bool randomYRotation = true;
     private bool alignWithTerrainSlope = false;
@@ -42,13 +42,13 @@ public class TerrainPopulator : MonoBehaviour
         terrainCollider = GetComponent<TerrainCollider>();
         if (terrainCollider != null)
         {
-            terrainCollider.hideFlags = HideFlags.HideInInspector;
+           // terrainCollider.hideFlags = HideFlags.HideInInspector;
         }
 
         navMeshSurface = GetComponent<NavMeshSurface>();
         if (navMeshSurface != null)
         {
-            navMeshSurface.hideFlags = HideFlags.HideInInspector;
+           // navMeshSurface.hideFlags = HideFlags.HideInInspector;
         }
     }
 
@@ -57,7 +57,6 @@ public class TerrainPopulator : MonoBehaviour
     {
         FetchTerrain();
 
-        // 1. Ensure NavMeshSurface exists and hidden
         if (navMeshSurface == null)
         {
             navMeshSurface = GetComponent<NavMeshSurface>();
@@ -68,11 +67,9 @@ public class TerrainPopulator : MonoBehaviour
         }
         EnsureComponentsHidden();
 
-        // 2. Configure NavMeshSurface properties for Terrain & Children
         navMeshSurface.collectObjects = CollectObjects.Children;
         navMeshSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
 
-        // 3. Ensure target Terrain has an active TerrainCollider
         if (targetTerrain != null)
         {
             TerrainCollider tCollider = targetTerrain.GetComponent<TerrainCollider>();
@@ -87,7 +84,6 @@ public class TerrainPopulator : MonoBehaviour
             tCollider.enabled = true;
         }
 
-        // 4. Build the NavMesh
         navMeshSurface.BuildNavMesh();
 
 #if UNITY_EDITOR
@@ -139,7 +135,7 @@ public class TerrainPopulator : MonoBehaviour
             float randomZ = Random.Range(terrainPos.z + edgePadding, terrainPos.z + terrainSize.z - edgePadding);
 
             float surfaceY = targetTerrain.SampleHeight(new Vector3(randomX, 0f, randomZ)) + terrainPos.y;
-            Vector3 spawnWorldPos = new Vector3(randomX, surfaceY + heightOffset, randomZ);
+            Vector3 spawnWorldPos = new Vector3(randomX, surfaceY + Mathf.Max(0.2f, heightOffset), randomZ);
 
             Quaternion spawnRotation = Quaternion.identity;
 
