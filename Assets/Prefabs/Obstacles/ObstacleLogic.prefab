@@ -212,7 +212,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AgentPerformanceThrottler
   closeDistance: 1
-  mediumDistance: 300
+  mediumDistance: 500
   closeQuality: 4
   mediumQuality: 1
 --- !u!64 &5353323033446820523

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -44,7 +45,14 @@ public class PlatformPopulator : MonoBehaviour
 
     private FollowPlatform EnsureBaseObstacleComponents(GameObject spawnedObject, Vector3 localOffset)
     {
-        // 1. Setup FollowPlatform
+        // 1. Disable NavMeshAgent if present on the base prefab
+        NavMeshAgent agent = spawnedObject.GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.enabled = false;
+        }
+
+        // 2. Setup FollowPlatform
         FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
         if (followLogic == null) followLogic = spawnedObject.AddComponent<FollowPlatform>();
 
@@ -53,7 +61,7 @@ public class PlatformPopulator : MonoBehaviour
         followLogic.offsetY = localOffset.y;
         followLogic.offsetZ = localOffset.z;
 
-        // 2. Setup PlatformObstacle
+        // 3. Setup PlatformObstacle
         PlatformObstacle platformObstacle = spawnedObject.GetComponent<PlatformObstacle>();
         if (platformObstacle == null) spawnedObject.AddComponent<PlatformObstacle>();
 

@@ -12,25 +12,44 @@ public class TerrainPopulatorEditor : Editor
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
         {
-            fontSize = 13,
+            fontSize = 12,
             fontStyle = FontStyle.Bold,
-            fixedHeight = 35
+            fixedHeight = 30
         };
 
         EditorGUILayout.Space(15);
         EditorGUILayout.LabelField("Terrain Scatter Controls", EditorStyles.boldLabel);
 
-        // Scatter Button
-        GUI.backgroundColor = new Color(0.4f, 0.7f, 1f); // Sky blue
-        if (GUILayout.Button("⛰️ Scatter Objects On Terrain", buttonStyle))
+        // Patrol Scatter Button
+        GUI.backgroundColor = new Color(0.9f, 0.6f, 0.2f);
+        if (GUILayout.Button("🚶 Scatter Patrol Obstacles", buttonStyle))
         {
-            populator.ScatterObjectsOnTerrain();
+            populator.ScatterPatrolObstacles();
         }
 
-        EditorGUILayout.Space(6);
+        EditorGUILayout.Space(4);
+
+        // Wander Scatter Button
+        GUI.backgroundColor = new Color(0.3f, 0.7f, 0.9f);
+        if (GUILayout.Button("🎲 Scatter Wander Obstacles", buttonStyle))
+        {
+            populator.ScatterWanderObstacles();
+        }
+
+        EditorGUILayout.Space(4);
+
+        // Static Scatter Button
+        GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
+        if (GUILayout.Button("🛑 Scatter Static Obstacles", buttonStyle))
+        {
+            populator.ScatterStaticObstacles();
+        }
+
+        EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("NavMesh & Management", EditorStyles.boldLabel);
 
         // Bake NavMesh Button
-        GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f); // Green tint
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.8f);
         if (GUILayout.Button("🧠 Bake NavMesh Surface", buttonStyle))
         {
             populator.BakeNavMeshSurface();
@@ -39,7 +58,7 @@ public class TerrainPopulatorEditor : Editor
         EditorGUILayout.Space(6);
 
         // Clear Button
-        GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f); // Red tint
+        GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
         if (GUILayout.Button("🗑️ Clear All Terrain Spawns", buttonStyle))
         {
             populator.ClearTerrainSpawns();
