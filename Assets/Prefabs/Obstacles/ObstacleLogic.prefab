@@ -124,7 +124,7 @@ GameObject:
   - component: {fileID: 7389228385384115287}
   - component: {fileID: 496393772340926126}
   - component: {fileID: 5889621760306508883}
-  - component: {fileID: 3454339752931210355}
+  - component: {fileID: 7075351078036343140}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 4302889297415998115}
   - component: {fileID: 5459958457977684752}
@@ -192,9 +192,8 @@ MonoBehaviour:
   upwardBias: 0.5
   momentumTransfer: 0.3
   raycastOriginHeight: 4
-  surfaceOffset: 0.5
   stepUpSpeed: 15
---- !u!114 &3454339752931210355
+--- !u!114 &7075351078036343140
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -203,11 +202,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 6755809666008450591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86d082d4d3fc46a2acc7bb326fd98bca, type: 3}
+  m_Script: {fileID: 11500000, guid: 4c4f60c43031844a9aa95f8c3bc851b4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlatformWanderDriver
-  minWanderRadius: 2
-  maxWanderRadius: 6
+  m_EditorClassIdentifier: Assembly-CSharp::PlatformPatrolDriver
+  moveDistance: 3
   minMoveSpeed: 2
   maxMoveSpeed: 5
 --- !u!54 &4426837204932067442
