@@ -11,7 +11,7 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
 
     [Header("Steering & Fluidity")]
     [Tooltip("Multiplier for turn speed. Higher values allow sharper turns without stopping.")]
-    [Range(90f, 1080f)] private float turnSpeedMultiplier = 540f;
+    [Range(90f, 1080f)] private float turnSpeedMultiplier = 1000f;
 
     [Tooltip("Distance threshold to trigger target picking before reaching the exact point (prevents stopping).")]
     [Range(0.3f, 3f)] private float arrivalThreshold = 1.0f;

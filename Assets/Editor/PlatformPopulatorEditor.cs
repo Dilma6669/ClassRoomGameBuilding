@@ -37,32 +37,15 @@ public class PlatformPopulatorEditor : Editor
         }
 
         EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("Single Attachment Spawning", EditorStyles.boldLabel);
-
-        GUI.backgroundColor = new Color(0.9f, 0.6f, 0.2f);
-        if (GUILayout.Button("🚶 Create Patrol Obstacle", buttonStyle))
-        {
-            populator.CreatePatrolObstacle();
-        }
-
-        EditorGUILayout.Space(4);
-
-        GUI.backgroundColor = new Color(0.3f, 0.7f, 0.9f);
-        if (GUILayout.Button("🎲 Create Wander Obstacle", buttonStyle))
-        {
-            populator.CreateWanderObstacle();
-        }
-
-        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("Attachment Spawning", EditorStyles.boldLabel);
 
         GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
-        if (GUILayout.Button("🛑 Create Static Obstacle", buttonStyle))
+        if (GUILayout.Button("➕ Create Single Obstacle", buttonStyle))
         {
-            populator.CreateStaticObstacle();
+            populator.CreateSingleObstacle();
         }
 
-        EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("Random Scatter Controls", EditorStyles.boldLabel);
+        EditorGUILayout.Space(4);
 
         GUI.backgroundColor = new Color(0.7f, 0.4f, 0.9f);
         if (GUILayout.Button("🎲 Scatter Random Objects", buttonStyle))

@@ -14,7 +14,7 @@ public class TerrainPopulator : MonoBehaviour
     public Terrain targetTerrain;
 
     [Header("Single Obstacle Setup")]
-    [Tooltip("Assign your base Obstacle prefab here for spawning specific types.")]
+    [Tooltip("Assign your base Obstacle prefab here for spawning.")]
     public GameObject obstaclePrefab;
 
     [Tooltip("Assign a custom mesh to override the obstacle visual and physics collision.")]
@@ -24,8 +24,8 @@ public class TerrainPopulator : MonoBehaviour
     public Material customMaterial;
 
     [Header("Random Scatter Setup")]
-    [Tooltip("Drag rock, tree, obstacle, or prop prefabs here to scatter across the terrain.")]
-    public GameObject[] randomPrefabs;
+    [Tooltip("Select which type of obstacle to create when scattering across the terrain.")]
+    public ObstacleSpawnType scatterObstacleType = ObstacleSpawnType.Static;
 
     [Range(1, 1000)] public int scatterCount = 20;
     [Range(0f, 20f)] private float edgePadding = 5f;
@@ -109,14 +109,12 @@ public class TerrainPopulator : MonoBehaviour
 
     private void EnsureBaseTerrainComponents(GameObject spawnedObject)
     {
-        // 1. Ensure NavMeshAgent is enabled for terrain movement
         NavMeshAgent agent = spawnedObject.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
             agent.enabled = true;
         }
 
-        // 2. Remove FollowPlatform if carried over from prefab templates
         FollowPlatform follower = spawnedObject.GetComponent<FollowPlatform>();
         if (follower != null)
         {
@@ -127,7 +125,6 @@ public class TerrainPopulator : MonoBehaviour
 #endif
         }
 
-        // 3. Remove PlatformObstacle if carried over from prefab templates
         PlatformObstacle platformObstacle = spawnedObject.GetComponent<PlatformObstacle>();
         if (platformObstacle != null)
         {
@@ -138,7 +135,6 @@ public class TerrainPopulator : MonoBehaviour
 #endif
         }
 
-        // 4. Apply Custom Mesh & Material if assigned
         ApplyCustomMeshAndCollider(spawnedObject);
     }
 
@@ -146,7 +142,6 @@ public class TerrainPopulator : MonoBehaviour
     {
         if (obstacleObj == null || customMesh == null) return;
 
-        // A. Update MeshFilter and MeshRenderer on Visual Child
         MeshFilter filter = obstacleObj.GetComponentInChildren<MeshFilter>();
         if (filter != null)
         {
@@ -162,70 +157,45 @@ public class TerrainPopulator : MonoBehaviour
             }
         }
 
-        // B. Update ALL MeshColliders across ALL child objects (Solid & TriggerSub-Child)
         MeshCollider[] childMeshColliders = obstacleObj.GetComponentsInChildren<MeshCollider>(true);
         foreach (MeshCollider col in childMeshColliders)
         {
-            // Skip root colliders if any remain enabled on the parent object
             if (col.gameObject == obstacleObj) continue;
 
             col.sharedMesh = customMesh;
-            col.convex = true; // Required for dynamic physics/trigger interaction
+            col.convex = true;
+        }
+    }
+
+    private void AttachDriverBySpawnType(GameObject obstacleObj, ObstacleSpawnType spawnType)
+    {
+        switch (spawnType)
+        {
+            case ObstacleSpawnType.Static:
+                if (obstacleObj.GetComponent<TerrainStaticDriver>() == null)
+                    obstacleObj.AddComponent<TerrainStaticDriver>();
+                break;
+
+            case ObstacleSpawnType.Wander:
+                if (obstacleObj.GetComponent<TerrainWanderDriver>() == null)
+                    obstacleObj.AddComponent<TerrainWanderDriver>();
+                break;
+
+            case ObstacleSpawnType.Patrol:
+                if (obstacleObj.GetComponent<TerrainPatrolDriver>() == null)
+                    obstacleObj.AddComponent<TerrainPatrolDriver>();
+                break;
         }
     }
 
     #region Terrain Obstacle Spawning
 
-    [ContextMenu("Scatter Patrol Obstacles")]
-    public void ScatterPatrolObstacles()
+    [ContextMenu("Scatter Obstacles")]
+    public void ScatterObstacles()
     {
-        ScatterObstacleType("Scatter Patrol Obstacles", (spawned) =>
+        if (obstaclePrefab == null)
         {
-            EnsureBaseTerrainComponents(spawned);
-            if (spawned.GetComponent<TerrainPatrolDriver>() == null)
-            {
-                spawned.AddComponent<TerrainPatrolDriver>();
-            }
-        });
-    }
-
-    [ContextMenu("Scatter Wander Obstacles")]
-    public void ScatterWanderObstacles()
-    {
-        ScatterObstacleType("Scatter Wander Obstacles", (spawned) =>
-        {
-            EnsureBaseTerrainComponents(spawned);
-            if (spawned.GetComponent<TerrainWanderDriver>() == null)
-            {
-                spawned.AddComponent<TerrainWanderDriver>();
-            }
-        });
-    }
-
-    [ContextMenu("Scatter Static Obstacles")]
-    public void ScatterStaticObstacles()
-    {
-        ScatterObstacleType("Scatter Static Obstacles", (spawned) =>
-        {
-            EnsureBaseTerrainComponents(spawned);
-            if (spawned.GetComponent<TerrainStaticDriver>() == null)
-            {
-                spawned.AddComponent<TerrainStaticDriver>();
-            }
-        });
-    }
-
-    private void ScatterObstacleType(string undoName, System.Action<GameObject> setupAction)
-    {
-        GameObject prefabToUse = obstaclePrefab;
-        if (prefabToUse == null && randomPrefabs != null && randomPrefabs.Length > 0)
-        {
-            prefabToUse = randomPrefabs[0];
-        }
-
-        if (prefabToUse == null)
-        {
-            Debug.LogWarning("⚠️ Please assign an Obstacle Prefab or assign entries in the Random Prefabs array.");
+            Debug.LogWarning("⚠️ Please assign an Obstacle Prefab before scattering.");
             return;
         }
 
@@ -241,12 +211,6 @@ public class TerrainPopulator : MonoBehaviour
 
         for (int i = 0; i < scatterCount; i++)
         {
-            GameObject selectedPrefab = (randomPrefabs != null && randomPrefabs.Length > 0) 
-                ? randomPrefabs[Random.Range(0, randomPrefabs.Length)] 
-                : obstaclePrefab;
-
-            if (selectedPrefab == null) continue;
-
             float randomX = Random.Range(terrainPos.x + edgePadding, terrainPos.x + terrainSize.x - edgePadding);
             float randomZ = Random.Range(terrainPos.z + edgePadding, terrainPos.z + terrainSize.z - edgePadding);
 
@@ -274,7 +238,7 @@ public class TerrainPopulator : MonoBehaviour
                 spawnRotation *= Quaternion.Euler(0f, randomAngle, 0f);
             }
 
-            GameObject spawned = SpawnObject(selectedPrefab, spawnWorldPos, spawnRotation, undoName);
+            GameObject spawned = SpawnObject(obstaclePrefab, spawnWorldPos, spawnRotation, "Scatter Obstacles");
 
             if (spawned != null)
             {
@@ -284,7 +248,8 @@ public class TerrainPopulator : MonoBehaviour
                     obstacle.rotationAngle = randomAngle;
                 }
 
-                setupAction?.Invoke(spawned);
+                EnsureBaseTerrainComponents(spawned);
+                AttachDriverBySpawnType(spawned, scatterObstacleType);
             }
         }
     }

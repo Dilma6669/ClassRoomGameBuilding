@@ -21,8 +21,8 @@ public class PlatformPopulator : MonoBehaviour
     [Range(0f, 5f)] private float obstacleSpawnHeightOffset = 0.5f;
 
     [Header("Random Scatter Setup")]
-    [Tooltip("Drag rock, tree, or prop prefabs here to scatter randomly across the platform surface.")]
-    public GameObject[] randomPrefabs;
+    [Tooltip("Select which type of obstacle to create when scattering across the platform.")]
+    public ObstacleSpawnType scatterObstacleType = ObstacleSpawnType.Static;
 
     [Range(1, 50)] public int scatterCount = 5;
     [Range(0f, 2f)] private float scatterEdgePadding = 0.5f;
@@ -52,14 +52,12 @@ public class PlatformPopulator : MonoBehaviour
 
     private FollowPlatform EnsureBaseObstacleComponents(GameObject spawnedObject, Vector3 localOffset)
     {
-        // 1. Disable NavMeshAgent if present on the base prefab
         NavMeshAgent agent = spawnedObject.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
             agent.enabled = false;
         }
 
-        // 2. Setup FollowPlatform
         FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
         if (followLogic == null) followLogic = spawnedObject.AddComponent<FollowPlatform>();
 
@@ -68,11 +66,9 @@ public class PlatformPopulator : MonoBehaviour
         followLogic.offsetY = localOffset.y;
         followLogic.offsetZ = localOffset.z;
 
-        // 3. Setup PlatformObstacle
         PlatformObstacle platformObstacle = spawnedObject.GetComponent<PlatformObstacle>();
         if (platformObstacle == null) spawnedObject.AddComponent<PlatformObstacle>();
 
-        // 4. Apply Custom Mesh & Material if assigned
         ApplyCustomMeshAndCollider(spawnedObject);
 
         return followLogic;
@@ -82,7 +78,6 @@ public class PlatformPopulator : MonoBehaviour
     {
         if (obstacleObj == null || customMesh == null) return;
 
-        // A. Update MeshFilter and MeshRenderer on Visual Child
         MeshFilter filter = obstacleObj.GetComponentInChildren<MeshFilter>();
         if (filter != null)
         {
@@ -98,15 +93,34 @@ public class PlatformPopulator : MonoBehaviour
             }
         }
 
-        // B. Update ALL MeshColliders across ALL child objects (Solid & TriggerSub-Child)
         MeshCollider[] childMeshColliders = obstacleObj.GetComponentsInChildren<MeshCollider>(true);
         foreach (MeshCollider col in childMeshColliders)
         {
-            // Skip root colliders if any remain enabled on the parent object
             if (col.gameObject == obstacleObj) continue;
 
             col.sharedMesh = customMesh;
-            col.convex = true; // Required for dynamic physics/trigger interaction
+            col.convex = true;
+        }
+    }
+
+    private void AttachDriverBySpawnType(GameObject obstacleObj, ObstacleSpawnType spawnType)
+    {
+        switch (spawnType)
+        {
+            case ObstacleSpawnType.Static:
+                if (obstacleObj.GetComponent<PlatformStaticDriver>() == null)
+                    obstacleObj.AddComponent<PlatformStaticDriver>();
+                break;
+
+            case ObstacleSpawnType.Wander:
+                if (obstacleObj.GetComponent<PlatformWanderDriver>() == null)
+                    obstacleObj.AddComponent<PlatformWanderDriver>();
+                break;
+
+            case ObstacleSpawnType.Patrol:
+                if (obstacleObj.GetComponent<PlatformPatrolDriver>() == null)
+                    obstacleObj.AddComponent<PlatformPatrolDriver>();
+                break;
         }
     }
 
@@ -155,46 +169,14 @@ public class PlatformPopulator : MonoBehaviour
 
     #region Single Spawning Context Menus
 
-    [ContextMenu("Create Patrol Obstacle")]
-    public void CreatePatrolObstacle()
+    [ContextMenu("Create Single Obstacle")]
+    public void CreateSingleObstacle()
     {
-        GameObject obstacle = SpawnBaseObstacle("Create Patrol Obstacle", out Vector3 localOffset);
+        GameObject obstacle = SpawnBaseObstacle("Create Single Obstacle", out Vector3 localOffset);
         if (obstacle == null) return;
 
         EnsureBaseObstacleComponents(obstacle, localOffset);
-
-        if (obstacle.GetComponent<PlatformPatrolDriver>() == null)
-        {
-            obstacle.AddComponent<PlatformPatrolDriver>();
-        }
-    }
-
-    [ContextMenu("Create Wander Obstacle")]
-    public void CreateWanderObstacle()
-    {
-        GameObject obstacle = SpawnBaseObstacle("Create Wander Obstacle", out Vector3 localOffset);
-        if (obstacle == null) return;
-
-        EnsureBaseObstacleComponents(obstacle, localOffset);
-
-        if (obstacle.GetComponent<PlatformWanderDriver>() == null)
-        {
-            obstacle.AddComponent<PlatformWanderDriver>();
-        }
-    }
-
-    [ContextMenu("Create Static Obstacle")]
-    public void CreateStaticObstacle()
-    {
-        GameObject obstacle = SpawnBaseObstacle("Create Static Obstacle", out Vector3 localOffset);
-        if (obstacle == null) return;
-
-        EnsureBaseObstacleComponents(obstacle, localOffset);
-
-        if (obstacle.GetComponent<PlatformStaticDriver>() == null)
-        {
-            obstacle.AddComponent<PlatformStaticDriver>();
-        }
+        AttachDriverBySpawnType(obstacle, scatterObstacleType);
     }
 
     private GameObject SpawnBaseObstacle(string undoName, out Vector3 localOffset)
@@ -223,9 +205,9 @@ public class PlatformPopulator : MonoBehaviour
     [ContextMenu("Scatter Random Objects")]
     public void ScatterRandomObjects()
     {
-        if (randomPrefabs == null || randomPrefabs.Length == 0)
+        if (obstaclePrefab == null)
         {
-            Debug.LogWarning("⚠️ Please assign at least one prefab to the 'Random Prefabs' array before scattering.");
+            Debug.LogWarning("⚠️ Please assign an Obstacle Prefab before scattering.");
             return;
         }
 
@@ -238,14 +220,11 @@ public class PlatformPopulator : MonoBehaviour
 
         for (int i = 0; i < scatterCount; i++)
         {
-            GameObject selectedPrefab = randomPrefabs[Random.Range(0, randomPrefabs.Length)];
-            if (selectedPrefab == null) continue;
-
             float randomX = Random.Range(-halfWidth, halfWidth);
             float randomZ = Random.Range(-halfDepth, halfDepth);
             Vector3 localOffset = new Vector3(randomX, yOffset, randomZ);
 
-            GameObject spawned = SpawnObject(selectedPrefab, localOffset, "Scatter Random Objects");
+            GameObject spawned = SpawnObject(obstaclePrefab, localOffset, "Scatter Random Objects");
 
             if (spawned != null)
             {
@@ -264,8 +243,8 @@ public class PlatformPopulator : MonoBehaviour
                     }
                 }
 
-                SetupFollower(spawned, localOffset);
-                ApplyCustomMeshAndCollider(spawned);
+                EnsureBaseObstacleComponents(spawned, localOffset);
+                AttachDriverBySpawnType(spawned, scatterObstacleType);
             }
         }
     }
