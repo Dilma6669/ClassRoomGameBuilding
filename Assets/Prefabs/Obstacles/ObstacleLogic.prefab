@@ -99,8 +99,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7389228385384115287}
-  - component: {fileID: 6987877513863229446}
-  - component: {fileID: 5118680761599632941}
+  - component: {fileID: -4690154506518844309}
+  - component: {fileID: -3753101811259630237}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 4302889297415998115}
   - component: {fileID: 5459958457977684752}
@@ -129,7 +129,7 @@ Transform:
   - {fileID: 3101820417137144067}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6987877513863229446
+--- !u!114 &-4690154506518844309
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -138,43 +138,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 6755809666008450591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa2e40572f2d423394af2622af1bce4, type: 3}
+  m_Script: {fileID: 11500000, guid: 9a95ef04b0975497aba209bdfb240a65, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FollowPlatform
-  targetPlatform: {fileID: 0}
-  offsetX: 0
-  offsetY: 0.5
-  offsetZ: 0
---- !u!114 &5118680761599632941
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e94b70faace554c3a8be313fa0192f88, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Obstacle
+  m_EditorClassIdentifier: Assembly-CSharp::TerrainObstacle
   objectScale: 1
-  navMeshRadius: 0.12
-  movementSpace: 2
-  movementType: 1
   payloadType: 1
   payloadAmount: 10
   buffDuration: 5
   destroyOnTrigger: 0
-  moveSpeed: 97.7
-  moveDistance: 33
-  minWanderRadius: 13.1
-  maxWanderRadius: 24.7
-  rotationAngle: 0
-  isBouncy: 1
-  triggerRadius: 0.6
+  isBouncy: 0
+  triggerRadius: 0.5
   launchForce: 25
   upwardBias: 0.5
   momentumTransfer: 0.3
+  navMeshRadius: 0.5
+--- !u!114 &-3753101811259630237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6755809666008450591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48c625fc738d42a09fd4d6eb1879fee2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TerrainWanderDriver
+  minWanderRadius: 2
+  maxWanderRadius: 6
+  minMoveSpeed: 2
+  maxMoveSpeed: 5
 --- !u!54 &4426837204932067442
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -209,9 +202,9 @@ NavMeshAgent:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 0
+  m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.12
+  m_Radius: 0.5
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
