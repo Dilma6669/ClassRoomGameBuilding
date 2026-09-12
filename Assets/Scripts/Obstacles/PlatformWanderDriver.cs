@@ -9,10 +9,16 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
     [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
     [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
 
+    [Header("Steering & Fluidity")]
+    [Tooltip("Multiplier for turn speed. Higher values allow sharper turns without stopping.")]
+    [Range(90f, 1080f)] public float turnSpeedMultiplier = 540f;
+
+    [Tooltip("Distance threshold to trigger target picking before reaching the exact point (prevents stopping).")]
+    [Range(0.3f, 3f)] public float arrivalThreshold = 1.0f;
+
     private PlatformObstacle platformHost;
     private Vector3 currentWanderOffset;
     private float currentMoveSpeed;
-    private float turnSpeedMultiplier = 120f;
     
     private Vector3 localAnchorPosition;
     private Transform platformTransform;
@@ -58,7 +64,7 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
             ? platformTransform.TransformPoint(localAnchorPosition) 
             : transform.position;
 
-        // 2. Rotate offset by platform orientation ONLY (ignores parent scale)
+        // 2. Rotate offset by platform orientation ONLY
         Quaternion platformRotation = platformTransform != null ? platformTransform.rotation : Quaternion.identity;
         Vector3 targetWorldPos = anchorWorld + (platformRotation * currentWanderOffset);
 
@@ -68,21 +74,31 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
         Vector3 platformUp = platformTransform != null ? platformTransform.up : Vector3.up;
         worldDelta = Vector3.ProjectOnPlane(worldDelta, platformUp);
 
-        if (worldDelta.magnitude < 0.2f)
+        float distanceToTarget = worldDelta.magnitude;
+
+        // 4. Smooth Transition: Swap to next target early so momentum is preserved
+        if (distanceToTarget <= arrivalThreshold)
         {
             PickNewWanderTarget();
-            return;
+            
+            // Re-evaluate delta for new target immediately
+            targetWorldPos = anchorWorld + (platformRotation * currentWanderOffset);
+            worldDelta = Vector3.ProjectOnPlane(targetWorldPos - transform.position, platformUp);
         }
 
-        // 4. Rotate and translate towards target
         Vector3 moveDir = worldDelta.normalized;
         if (moveDir.sqrMagnitude > 0.001f)
         {
+            // 5. High-speed smooth turning
             Quaternion targetRot = Quaternion.LookRotation(moveDir, platformUp);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, currentMoveSpeed * turnSpeedMultiplier * Time.deltaTime);
-        }
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, turnSpeedMultiplier * Time.deltaTime);
 
-        transform.Translate(Vector3.forward * (currentMoveSpeed * Time.deltaTime), Space.Self);
+            // 6. Smooth Speed Curve (No hard stops—maintains continuous forward motion)
+            float angleToTarget = Vector3.Angle(transform.forward, moveDir);
+            float smoothSpeedFactor = Mathf.Lerp(0.4f, 1.0f, Mathf.Cos(angleToTarget * Mathf.Deg2Rad));
+
+            transform.Translate(Vector3.forward * (currentMoveSpeed * smoothSpeedFactor * Time.deltaTime), Space.Self);
+        }
     }
 
     public void PickNewWanderTarget()
