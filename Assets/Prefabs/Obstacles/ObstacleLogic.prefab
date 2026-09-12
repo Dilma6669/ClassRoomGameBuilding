@@ -124,13 +124,12 @@ GameObject:
   - component: {fileID: 7389228385384115287}
   - component: {fileID: 496393772340926126}
   - component: {fileID: 5889621760306508883}
-  - component: {fileID: 563705271519290727}
+  - component: {fileID: 3454339752931210355}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 4302889297415998115}
   - component: {fileID: 5459958457977684752}
   - component: {fileID: 5353323033446820523}
   - component: {fileID: 9129731868200871840}
-  - component: {fileID: 369080190038336752}
   m_Layer: 7
   m_Name: ObstacleLogic
   m_TagString: Untagged
@@ -168,7 +167,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FollowPlatform
   targetPlatform: {fileID: 0}
   offsetX: 0
-  offsetY: 0.5
+  offsetY: 0
   offsetZ: 0
 --- !u!114 &5889621760306508883
 MonoBehaviour:
@@ -195,7 +194,7 @@ MonoBehaviour:
   raycastOriginHeight: 4
   surfaceOffset: 0.5
   stepUpSpeed: 15
---- !u!114 &563705271519290727
+--- !u!114 &3454339752931210355
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -320,19 +319,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &369080190038336752
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa2e40572f2d423394af2622af1bce4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FollowPlatform
-  targetPlatform: {fileID: 0}
-  offsetX: 0
-  offsetY: 0.5
-  offsetZ: 0
