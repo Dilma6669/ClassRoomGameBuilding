@@ -146,38 +146,31 @@ public class TerrainPopulator : MonoBehaviour
     {
         if (obstacleObj == null || customMesh == null) return;
 
-        // A. Update MeshColliders on Root Object
-        MeshCollider[] rootMeshColliders = obstacleObj.GetComponents<MeshCollider>();
-        foreach (MeshCollider col in rootMeshColliders)
+        // A. Update MeshFilter and MeshRenderer on Visual Child
+        MeshFilter filter = obstacleObj.GetComponentInChildren<MeshFilter>();
+        if (filter != null)
         {
-            col.sharedMesh = customMesh;
+            filter.sharedMesh = customMesh;
         }
 
-        // B. Update MeshFilter, MeshRenderer, & Colliders on Child Object (⚠️ DO NOT TOUCH)
-        if (obstacleObj.transform.childCount > 0)
+        if (customMaterial != null)
         {
-            Transform visualChild = obstacleObj.transform.GetChild(0);
-
-            MeshFilter filter = visualChild.GetComponent<MeshFilter>();
-            if (filter != null)
+            MeshRenderer renderer = obstacleObj.GetComponentInChildren<MeshRenderer>();
+            if (renderer != null)
             {
-                filter.sharedMesh = customMesh;
+                renderer.sharedMaterial = customMaterial;
             }
+        }
 
-            if (customMaterial != null)
-            {
-                MeshRenderer renderer = visualChild.GetComponent<MeshRenderer>();
-                if (renderer != null)
-                {
-                    renderer.sharedMaterial = customMaterial;
-                }
-            }
+        // B. Update ALL MeshColliders across ALL child objects (Solid & TriggerSub-Child)
+        MeshCollider[] childMeshColliders = obstacleObj.GetComponentsInChildren<MeshCollider>(true);
+        foreach (MeshCollider col in childMeshColliders)
+        {
+            // Skip root colliders if any remain enabled on the parent object
+            if (col.gameObject == obstacleObj) continue;
 
-            MeshCollider[] childMeshColliders = visualChild.GetComponents<MeshCollider>();
-            foreach (MeshCollider col in childMeshColliders)
-            {
-                col.sharedMesh = customMesh;
-            }
+            col.sharedMesh = customMesh;
+            col.convex = true; // Required for dynamic physics/trigger interaction
         }
     }
 

@@ -69,33 +69,25 @@ public abstract class ObstacleBase : MonoBehaviour
         Rb.useGravity = true;
         Rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-        MeshFilter childMeshFilter = GetComponentInChildren<MeshFilter>();
-        Mesh targetMesh = childMeshFilter != null ? childMeshFilter.sharedMesh : null;
-
-        // Parent Physical Collider
-        physicalMeshCollider = GetComponent<MeshCollider>();
-        if (physicalMeshCollider != null && targetMesh != null && physicalMeshCollider.sharedMesh == null)
+        // 1. Solid Collider on "⚠️ DO NOT TOUCH"
+        Transform visualChild = transform.Find("⚠️ DO NOT TOUCH");
+        if (visualChild != null)
         {
-            physicalMeshCollider.sharedMesh = targetMesh;
-            physicalMeshCollider.convex = true;
-            physicalMeshCollider.isTrigger = false;
+            physicalMeshCollider = visualChild.GetComponent<MeshCollider>();
         }
 
-        // Child Trigger Collider
-        if (childMeshFilter != null)
+        // 2. Trigger Collider on "TriggerCollider"
+        Transform triggerChild = transform.Find("⚠️ DO NOT TOUCH/TriggerCollider");
+        if (triggerChild == null && visualChild != null) triggerChild = visualChild.Find("TriggerCollider");
+    
+        if (triggerChild != null)
         {
-            triggerMeshCollider = childMeshFilter.GetComponent<MeshCollider>();
-            if (triggerMeshCollider == null)
-                triggerMeshCollider = childMeshFilter.gameObject.AddComponent<MeshCollider>();
-
-            if (targetMesh != null && triggerMeshCollider.sharedMesh == null)
+            triggerMeshCollider = triggerChild.GetComponent<MeshCollider>();
+            if (triggerMeshCollider != null)
             {
-                triggerMeshCollider.sharedMesh = targetMesh;
+                triggerMeshCollider.isTrigger = true;
+                triggerMeshCollider.enabled = isBouncy || payloadType != PayloadType.None;
             }
-
-            triggerMeshCollider.convex = true;
-            triggerMeshCollider.isTrigger = true;
-            triggerMeshCollider.enabled = isBouncy || payloadType != PayloadType.None;
         }
     }
 

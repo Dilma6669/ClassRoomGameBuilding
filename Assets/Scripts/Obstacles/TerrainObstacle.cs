@@ -8,7 +8,7 @@ public class TerrainObstacle : ObstacleBase
     [Range(0.01f, 5f)] public float navMeshRadius = 0.5f;
 
     [Header("Height Alignment")]
-    [Tooltip("Adjusts vertical offset of the agent above or below the NavMesh ground surface.")]
+    [Tooltip("Adjusts vertical offset of the visual model and colliders above the terrain ground surface.")]
     [Range(-2f, 10f)] public float heightOffset = 0f;
 
     public NavMeshAgent Agent { get; private set; }
@@ -22,8 +22,9 @@ public class TerrainObstacle : ObstacleBase
         if (Agent != null)
         {
             Agent.radius = navMeshRadius;
-            Agent.baseOffset = heightOffset;
         }
+
+        ApplyVisualHeightOffset();
     }
 
     protected override void Awake()
@@ -34,10 +35,11 @@ public class TerrainObstacle : ObstacleBase
         if (Agent != null)
         {
             Agent.radius = navMeshRadius;
-            Agent.baseOffset = heightOffset;
             Agent.stoppingDistance = 0.2f;
             Agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
         }
+
+        ApplyVisualHeightOffset();
     }
 
     private void Start()
@@ -47,8 +49,20 @@ public class TerrainObstacle : ObstacleBase
         if (Agent != null && NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 15f, NavMesh.AllAreas))
         {
             Agent.Warp(hit.position);
-            Agent.baseOffset = heightOffset;
             SpawnCenterPosition = hit.position;
+        }
+
+        ApplyVisualHeightOffset();
+    }
+
+    private void ApplyVisualHeightOffset()
+    {
+        // Target the child visual container
+        Transform visualChild = transform.Find("⚠️ DO NOT TOUCH");
+        if (visualChild != null)
+        {
+            // Move the visual mesh and BOTH attached colliders up relative to the NavMesh root
+            visualChild.localPosition = new Vector3(0f, heightOffset, 0f);
         }
     }
 
