@@ -11,6 +11,13 @@ public class PlatformPopulator : MonoBehaviour
     [Header("Single Attachment Setup")]
     [Tooltip("Assign your base Obstacle prefab here.")]
     public GameObject obstaclePrefab;
+
+    [Tooltip("Assign a custom mesh to override the obstacle visual and physics collision.")]
+    public Mesh customMesh;
+
+    [Tooltip("Assign an optional custom material (leave empty to keep default material).")]
+    public Material customMaterial;
+
     [Range(0f, 5f)] private float obstacleSpawnHeightOffset = 0.5f;
 
     [Header("Random Scatter Setup")]
@@ -65,7 +72,49 @@ public class PlatformPopulator : MonoBehaviour
         PlatformObstacle platformObstacle = spawnedObject.GetComponent<PlatformObstacle>();
         if (platformObstacle == null) spawnedObject.AddComponent<PlatformObstacle>();
 
+        // 4. Apply Custom Mesh & Material if assigned
+        ApplyCustomMeshAndCollider(spawnedObject);
+
         return followLogic;
+    }
+
+    private void ApplyCustomMeshAndCollider(GameObject obstacleObj)
+    {
+        if (obstacleObj == null || customMesh == null) return;
+
+        // A. Update MeshColliders on Root Object
+        MeshCollider[] rootMeshColliders = obstacleObj.GetComponents<MeshCollider>();
+        foreach (MeshCollider col in rootMeshColliders)
+        {
+            col.sharedMesh = customMesh;
+        }
+
+        // B. Update MeshFilter, MeshRenderer, & Colliders on Child Object (⚠️ DO NOT TOUCH)
+        if (obstacleObj.transform.childCount > 0)
+        {
+            Transform visualChild = obstacleObj.transform.GetChild(0);
+
+            MeshFilter filter = visualChild.GetComponent<MeshFilter>();
+            if (filter != null)
+            {
+                filter.sharedMesh = customMesh;
+            }
+
+            if (customMaterial != null)
+            {
+                MeshRenderer renderer = visualChild.GetComponent<MeshRenderer>();
+                if (renderer != null)
+                {
+                    renderer.sharedMaterial = customMaterial;
+                }
+            }
+
+            MeshCollider[] childMeshColliders = visualChild.GetComponents<MeshCollider>();
+            foreach (MeshCollider col in childMeshColliders)
+            {
+                col.sharedMesh = customMesh;
+            }
+        }
     }
 
     #region Platform Management
@@ -223,6 +272,7 @@ public class PlatformPopulator : MonoBehaviour
                 }
 
                 SetupFollower(spawned, localOffset);
+                ApplyCustomMeshAndCollider(spawned);
             }
         }
     }
