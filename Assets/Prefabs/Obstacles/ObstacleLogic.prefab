@@ -123,7 +123,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7389228385384115287}
   - component: {fileID: -4690154506518844309}
-  - component: {fileID: 7991145370780316788}
+  - component: {fileID: 6034111365428107879}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 4302889297415998115}
   - component: {fileID: 5459958457977684752}
@@ -175,7 +175,7 @@ MonoBehaviour:
   upwardBias: 0.5
   momentumTransfer: 0.3
   navMeshRadius: 0.5
---- !u!114 &7991145370780316788
+--- !u!114 &6034111365428107879
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -184,12 +184,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 6755809666008450591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e146a4dbc764980ac8795fab539c522, type: 3}
+  m_Script: {fileID: 11500000, guid: e3334fc2f74ee4bd8a396f931d768a17, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TerrainPatrolDriver
-  moveDistance: 3
-  minMoveSpeed: 2
-  maxMoveSpeed: 5
+  m_EditorClassIdentifier: Assembly-CSharp::TerrainStaticDriver
 --- !u!54 &4426837204932067442
 Rigidbody:
   m_ObjectHideFlags: 0
