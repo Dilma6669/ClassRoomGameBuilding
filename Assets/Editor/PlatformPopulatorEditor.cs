@@ -40,9 +40,25 @@ public class PlatformPopulatorEditor : Editor
         EditorGUILayout.LabelField("Single Attachment Spawning", EditorStyles.boldLabel);
 
         GUI.backgroundColor = new Color(0.9f, 0.6f, 0.2f);
-        if (GUILayout.Button("📦 Create Obstacle On Center", buttonStyle))
+        if (GUILayout.Button("🚶 Create Patrol Obstacle", buttonStyle))
         {
-            populator.CreateObstacleOnPlatform();
+            populator.CreatePatrolObstacle();
+        }
+
+        EditorGUILayout.Space(4);
+
+        GUI.backgroundColor = new Color(0.3f, 0.7f, 0.9f);
+        if (GUILayout.Button("🎲 Create Wander Obstacle", buttonStyle))
+        {
+            populator.CreateWanderObstacle();
+        }
+
+        EditorGUILayout.Space(4);
+
+        GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
+        if (GUILayout.Button("🛑 Create Static Obstacle", buttonStyle))
+        {
+            populator.CreateStaticObstacle();
         }
 
         EditorGUILayout.Space(15);

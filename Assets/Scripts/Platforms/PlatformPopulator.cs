@@ -8,7 +8,7 @@ using UnityEditor;
 public class PlatformPopulator : MonoBehaviour
 {
     [Header("Single Attachment Setup")]
-    [Tooltip("Assign your consolidated Obstacle prefab here (handles Enemies, Hazards, Trampolines, and Pickups).")]
+    [Tooltip("Assign your base Obstacle prefab here.")]
     public GameObject obstaclePrefab;
     [Range(0f, 5f)] private float obstacleSpawnHeightOffset = 0.5f;
 
@@ -40,6 +40,24 @@ public class PlatformPopulator : MonoBehaviour
         followLogic.offsetX = localOffset.x;
         followLogic.offsetY = localOffset.y;
         followLogic.offsetZ = localOffset.z;
+    }
+
+    private FollowPlatform EnsureBaseObstacleComponents(GameObject spawnedObject, Vector3 localOffset)
+    {
+        // 1. Setup FollowPlatform
+        FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
+        if (followLogic == null) followLogic = spawnedObject.AddComponent<FollowPlatform>();
+
+        followLogic.targetPlatform = platformLogic.TargetChild;
+        followLogic.offsetX = localOffset.x;
+        followLogic.offsetY = localOffset.y;
+        followLogic.offsetZ = localOffset.z;
+
+        // 2. Setup PlatformObstacle
+        PlatformObstacle platformObstacle = spawnedObject.GetComponent<PlatformObstacle>();
+        if (platformObstacle == null) spawnedObject.AddComponent<PlatformObstacle>();
+
+        return followLogic;
     }
 
     #region Platform Management
@@ -87,25 +105,65 @@ public class PlatformPopulator : MonoBehaviour
 
     #region Single Spawning Context Menus
 
-    [ContextMenu("Create Obstacle On Center")]
-    public void CreateObstacleOnPlatform()
+    [ContextMenu("Create Patrol Obstacle")]
+    public void CreatePatrolObstacle()
     {
+        GameObject obstacle = SpawnBaseObstacle("Create Patrol Obstacle", out Vector3 localOffset);
+        if (obstacle == null) return;
+
+        EnsureBaseObstacleComponents(obstacle, localOffset);
+
+        if (obstacle.GetComponent<PlatformPatrolDriver>() == null)
+        {
+            obstacle.AddComponent<PlatformPatrolDriver>();
+        }
+    }
+
+    [ContextMenu("Create Wander Obstacle")]
+    public void CreateWanderObstacle()
+    {
+        GameObject obstacle = SpawnBaseObstacle("Create Wander Obstacle", out Vector3 localOffset);
+        if (obstacle == null) return;
+
+        EnsureBaseObstacleComponents(obstacle, localOffset);
+
+        if (obstacle.GetComponent<PlatformWanderDriver>() == null)
+        {
+            obstacle.AddComponent<PlatformWanderDriver>();
+        }
+    }
+
+    [ContextMenu("Create Static Obstacle")]
+    public void CreateStaticObstacle()
+    {
+        GameObject obstacle = SpawnBaseObstacle("Create Static Obstacle", out Vector3 localOffset);
+        if (obstacle == null) return;
+
+        EnsureBaseObstacleComponents(obstacle, localOffset);
+
+        if (obstacle.GetComponent<PlatformStaticDriver>() == null)
+        {
+            obstacle.AddComponent<PlatformStaticDriver>();
+        }
+    }
+
+    private GameObject SpawnBaseObstacle(string undoName, out Vector3 localOffset)
+    {
+        localOffset = Vector3.zero;
+
         if (obstaclePrefab == null)
         {
             Debug.LogWarning("⚠️ Please assign an Obstacle Prefab first.");
-            return;
+            return null;
         }
 
         FetchPlatformLogic();
-        if (platformLogic == null || platformLogic.TargetChild == null) return;
+        if (platformLogic == null || platformLogic.TargetChild == null) return null;
 
         float yOffset = (platformLogic.heightOffset / 2f) + obstacleSpawnHeightOffset;
-        GameObject obstacle = SpawnObject(obstaclePrefab, new Vector3(0f, yOffset, 0f), "Create Obstacle On Platform");
+        localOffset = new Vector3(0f, yOffset, 0f);
 
-        if (obstacle != null)
-        {
-            SetupFollower(obstacle, new Vector3(0f, yOffset, 0f));
-        }
+        return SpawnObject(obstaclePrefab, localOffset, undoName);
     }
 
     #endregion

@@ -122,9 +122,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7389228385384115287}
-  - component: {fileID: 496393772340926126}
-  - component: {fileID: 5889621760306508883}
-  - component: {fileID: 7075351078036343140}
   - component: {fileID: 4426837204932067442}
   - component: {fileID: 4302889297415998115}
   - component: {fileID: 5459958457977684752}
@@ -153,61 +150,6 @@ Transform:
   - {fileID: 3101820417137144067}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &496393772340926126
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa2e40572f2d423394af2622af1bce4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FollowPlatform
-  targetPlatform: {fileID: 0}
-  offsetX: 0
-  offsetY: 0
-  offsetZ: 0
---- !u!114 &5889621760306508883
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 85c5e54e25d79453d8004321411637a5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlatformObstacle
-  objectScale: 1
-  payloadType: 1
-  payloadAmount: 10
-  buffDuration: 5
-  destroyOnTrigger: 0
-  isBouncy: 0
-  triggerRadius: 0.5
-  launchForce: 25
-  upwardBias: 0.5
-  momentumTransfer: 0.3
-  raycastOriginHeight: 4
-  stepUpSpeed: 15
---- !u!114 &7075351078036343140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6755809666008450591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c4f60c43031844a9aa95f8c3bc851b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlatformPatrolDriver
-  moveDistance: 3
-  minMoveSpeed: 2
-  maxMoveSpeed: 5
 --- !u!54 &4426837204932067442
 Rigidbody:
   m_ObjectHideFlags: 0
