@@ -33,7 +33,6 @@ public class TerrainPopulator : MonoBehaviour
     [Range(0f, 5f)] public float heightOffset = 0.2f;
 
     public bool randomYRotation = true;
-    public bool alignWithTerrainSlope = false;
 
     #region Configurable Spawn Settings
 
@@ -298,18 +297,6 @@ public class TerrainPopulator : MonoBehaviour
             Vector3 spawnWorldPos = new Vector3(randomX, surfaceY + Mathf.Max(0.2f, heightOffset), randomZ);
 
             Quaternion spawnRotation = Quaternion.identity;
-
-            if (alignWithTerrainSlope)
-            {
-                float normX = (randomX - terrainPos.x) / terrainSize.x;
-                float normZ = (randomZ - terrainPos.z) / terrainSize.z;
-
-                int sampleX = Mathf.Clamp((int)(normX * targetTerrain.terrainData.heightmapResolution), 0, targetTerrain.terrainData.heightmapResolution - 1);
-                int sampleZ = Mathf.Clamp((int)(normZ * targetTerrain.terrainData.heightmapResolution), 0, targetTerrain.terrainData.heightmapResolution - 1);
-
-                Vector3 terrainNormal = targetTerrain.terrainData.GetInterpolatedNormal(sampleX, sampleZ);
-                spawnRotation = Quaternion.FromToRotation(Vector3.up, terrainNormal);
-            }
 
             float randomAngle = 0f;
             if (randomYRotation)

@@ -57,7 +57,6 @@ public class TerrainPopulatorEditor : Editor
         EditorGUILayout.PropertyField(edgePaddingProp);
         EditorGUILayout.PropertyField(heightOffsetProp);
         EditorGUILayout.PropertyField(randomYRotationProp);
-        EditorGUILayout.PropertyField(alignWithTerrainSlopeProp);
 
         EditorGUILayout.Space(10);
 
