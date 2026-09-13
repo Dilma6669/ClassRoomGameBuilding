@@ -228,6 +228,7 @@ public class TerrainPopulator : MonoBehaviour
     #region Terrain Obstacle Spawning
 
     [ContextMenu("Scatter Obstacles")]
+    [ContextMenu("Scatter Obstacles")]
     public void ScatterObstacles()
     {
         if (obstaclePrefab == null)
@@ -254,14 +255,9 @@ public class TerrainPopulator : MonoBehaviour
             float surfaceY = targetTerrain.SampleHeight(new Vector3(randomX, 0f, randomZ)) + terrainPos.y;
             Vector3 spawnWorldPos = new Vector3(randomX, surfaceY + Mathf.Max(0.2f, heightOffset), randomZ);
 
-            Quaternion spawnRotation = Quaternion.identity;
-
-            float randomAngle = 0f;
-            if (randomYRotation)
-            {
-                randomAngle = Random.Range(0f, 360f);
-                spawnRotation *= Quaternion.Euler(0f, randomAngle, 0f);
-            }
+            // 1. Calculate the initial Y angle
+            float yAngle = randomYRotation ? Random.Range(0f, 360f) : baseSettings.initialYRotation;
+            Quaternion spawnRotation = Quaternion.Euler(0f, yAngle, 0f);
 
             GameObject spawned = SpawnObject(obstaclePrefab, spawnWorldPos, spawnRotation, "Scatter Obstacles");
 
@@ -269,6 +265,14 @@ public class TerrainPopulator : MonoBehaviour
             {
                 EnsureBaseTerrainComponents(spawned);
                 AttachDriverBySpawnType(spawned, scatterObstacleType);
+
+                // 2. Override initialYRotation on the spawned obstacle so it isn't reset to baseSettings.initialYRotation
+                ObstacleBase obstacleComp = spawned.GetComponent<ObstacleBase>();
+                if (obstacleComp != null)
+                {
+                    obstacleComp.initialYRotation = yAngle;
+                    spawned.transform.rotation = spawnRotation;
+                }
             }
         }
     }
