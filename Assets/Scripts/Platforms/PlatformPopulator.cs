@@ -62,7 +62,7 @@ public class PlatformPopulator : MonoBehaviour
     [Range(1, 50)] public int scatterCount = 5;
     [Range(0f, 2f)] private float scatterEdgePadding = 0.5f;
     [Range(0f, 5f)] private float scatterHeightOffset = 0.5f;
-    private bool randomYRotation = true;
+    public bool randomYRotation = true;
 
     #region Configurable Spawn Settings
 
@@ -321,23 +321,21 @@ public class PlatformPopulator : MonoBehaviour
 
             if (spawned != null)
             {
-                if (randomYRotation)
-                {
-                    float randomAngle = Random.Range(0f, 360f);
-
-                    ObstacleLogic obstacleComponent = spawned.GetComponent<ObstacleLogic>();
-                    if (obstacleComponent != null)
-                    {
-                        obstacleComponent.rotationAngle = randomAngle;
-                    }
-                    else
-                    {
-                        spawned.transform.rotation = Quaternion.Euler(0f, randomAngle, 0f);
-                    }
-                }
-
+                // 1. Setup platform follower & base settings first
                 EnsureBaseObstacleComponents(spawned, localOffset);
                 AttachDriverBySpawnType(spawned, scatterObstacleType);
+
+                // 2. Calculate and force unique Y rotation if toggle is active
+                float yAngle = randomYRotation ? Random.Range(0f, 360f) : baseSettings.initialYRotation;
+
+                ObstacleBase obstacleComp = spawned.GetComponent<ObstacleBase>();
+                if (obstacleComp != null)
+                {
+                    obstacleComp.initialYRotation = yAngle;
+                }
+
+                // 3. Align initial world rotation with target platform facing + local Y rotation
+                spawned.transform.rotation = platformLogic.TargetChild.rotation * Quaternion.Euler(0f, yAngle, 0f);
             }
         }
     }

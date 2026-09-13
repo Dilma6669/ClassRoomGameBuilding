@@ -11,6 +11,7 @@ public class PlatformPopulatorEditor : Editor
 
     private SerializedProperty scatterObstacleTypeProp;
     private SerializedProperty scatterCountProp;
+    private SerializedProperty randomYRotationProp; // 👈 1. Added property reference
 
     private SerializedProperty baseSettingsProp;
     private SerializedProperty wanderSettingsProp;
@@ -24,6 +25,7 @@ public class PlatformPopulatorEditor : Editor
 
         scatterObstacleTypeProp = serializedObject.FindProperty("scatterObstacleType");
         scatterCountProp = serializedObject.FindProperty("scatterCount");
+        randomYRotationProp = serializedObject.FindProperty("randomYRotation"); // 👈 2. Bind property
 
         baseSettingsProp = serializedObject.FindProperty("baseSettings");
         wanderSettingsProp = serializedObject.FindProperty("wanderSettings");
@@ -46,6 +48,7 @@ public class PlatformPopulatorEditor : Editor
         EditorGUILayout.LabelField("Random Scatter Setup", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(scatterObstacleTypeProp);
         EditorGUILayout.PropertyField(scatterCountProp);
+        EditorGUILayout.PropertyField(randomYRotationProp); // 👈 3. Draw checkbox in Inspector
 
         EditorGUILayout.Space(10);
 
