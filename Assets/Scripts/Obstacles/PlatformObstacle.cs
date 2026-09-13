@@ -38,7 +38,8 @@ public class PlatformObstacle : ObstacleBase
     private void SnapToSurfaceHeight()
     {
         Vector3 rayOrigin = transform.position + (Vector3.up * raycastOriginHeight);
-        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, raycastOriginHeight * 3f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, raycastOriginHeight * 3f, Physics.AllLayers,
+            QueryTriggerInteraction.Ignore);
 
         foreach (RaycastHit hit in hits)
         {
@@ -48,12 +49,31 @@ public class PlatformObstacle : ObstacleBase
             // 2. Ignore Player colliders
             if (hit.collider.GetComponentInParent<KinematicCharacterMotor>() != null) continue;
 
-            // 3. IGNORE ALL OTHER OBSTACLES / WANDERERS (Prevents floating elevator loop)
-            if (hit.collider.GetComponentInParent<ObstacleBase>() != null) continue;
+            // 3. Static obstacles ignore all other obstacles (prevents floating loop).
+            //    BUT Wanderers CAN walk over static obstacles!
+            bool isMovingObstacle =
+                currentMovementStrategy != null && !(currentMovementStrategy is PlatformStaticDriver);
 
-            // Use FollowPlatform's offsetY if present, otherwise fallback to surfaceOffset
+            if (!isMovingObstacle)
+            {
+                // If I am a STATIC obstacle, ignore other obstacles so I don't float into the sky
+                if (hit.collider.GetComponentInParent<ObstacleBase>() != null) continue;
+            }
+            else
+            {
+                // If I am a WANDERER, ignore ONLY other moving wanderers (don't stack on each other),
+                // but ALLOW stepping on static obstacles!
+                ObstacleBase hitObstacle = hit.collider.GetComponentInParent<ObstacleBase>();
+                if (hitObstacle != null)
+                {
+                    IObstacleMovement hitMovement = hitObstacle.GetComponent<IObstacleMovement>();
+                    bool isHitMoving = hitMovement != null && !(hitMovement is PlatformStaticDriver);
+                    if (isHitMoving) continue; // Ignore other wanderers
+                }
+            }
+
+            // Apply surface height
             float heightOffset = (FollowPlatformRef != null) ? FollowPlatformRef.offsetY : 0;
-
             float targetY = hit.point.y + heightOffset;
             Vector3 currentPos = transform.position;
             currentPos.y = Mathf.Lerp(currentPos.y, targetY, Time.deltaTime * stepUpSpeed);
