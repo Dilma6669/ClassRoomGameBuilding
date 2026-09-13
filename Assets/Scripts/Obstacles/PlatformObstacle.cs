@@ -5,8 +5,8 @@ using UnityEngine;
 public class PlatformObstacle : ObstacleBase
 {
     [Header("Surface Height Snapping")]
-    [Range(0.1f, 5f)] [SerializeField] private float raycastOriginHeight = 4f;
-    [Range(1f, 50f)] [SerializeField] private float stepUpSpeed = 15f;
+    [Range(0.1f, 5f)] private float raycastOriginHeight = 4f;
+    [Range(1f, 50f)] private float stepUpSpeed = 15f;
 
     public FollowPlatform FollowPlatformRef { get; private set; }
 

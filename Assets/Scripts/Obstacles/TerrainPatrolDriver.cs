@@ -11,14 +11,6 @@ public class TerrainPatrolDriver : MonoBehaviour, IObstacleMovement
     [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
     [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
 
-    [Header("Terrain Surface Snapping")]
-    [Tooltip("Layer mask containing your Terrain layer.")]
-    public LayerMask terrainLayer = ~0;
-    [Tooltip("Height offset from the terrain surface (e.g., half the obstacle's height).")]
-    public float yOffset = 0f;
-    [Tooltip("How high above the obstacle to cast the downward ray.")]
-    public float raycastHeightOffset = 5f;
-
     private TerrainObstacle terrainHost;
     private Rigidbody rb;
     private float currentMoveSpeed;
@@ -33,12 +25,6 @@ public class TerrainPatrolDriver : MonoBehaviour, IObstacleMovement
     {
         terrainHost = GetComponent<TerrainObstacle>();
         rb = GetComponent<Rigidbody>();
-
-        // Disable NavMeshAgent if present
-        if (terrainHost != null && terrainHost.Agent != null)
-        {
-            terrainHost.Agent.enabled = false;
-        }
 
         // Kinematic setup
         if (rb != null)
@@ -85,20 +71,13 @@ public class TerrainPatrolDriver : MonoBehaviour, IObstacleMovement
 
         Vector3 nextXZ = Vector3.MoveTowards(currentXZ, targetXZ, currentMoveSpeed * Time.deltaTime);
 
-        // 2. Terrain Height Lookup with Self-Hit Protection
+        // 2. Direct Terrain Height Lookup (matches TerrainWanderDriver)
+        Terrain terrain = Terrain.activeTerrain;
         float targetY = transform.position.y;
-        Vector3 rayOrigin = new Vector3(nextXZ.x, transform.position.y + raycastHeightOffset, nextXZ.z);
 
-        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, raycastHeightOffset * 3f, terrainLayer, QueryTriggerInteraction.Ignore);
-
-        foreach (RaycastHit hit in hits)
+        if (terrain != null)
         {
-            // Ignore hits on itself or child colliders
-            if (hit.transform == transform || hit.transform.IsChildOf(transform)) 
-                continue;
-
-            targetY = hit.point.y + yOffset;
-            break;
+            targetY = terrain.SampleHeight(new Vector3(nextXZ.x, 0f, nextXZ.z)) + terrain.transform.position.y;
         }
 
         // 3. Apply position
@@ -129,7 +108,6 @@ public class TerrainPatrolDriver : MonoBehaviour, IObstacleMovement
         }
         else
         {
-            // Calculate forward line directly based on current transform rotation
             Vector3 center = transform.position;
             Vector3 dir = transform.forward; 
         
