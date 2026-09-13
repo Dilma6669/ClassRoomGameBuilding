@@ -10,14 +10,6 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
     [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
     [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
 
-    [Header("Terrain Surface Snapping")]
-    [Tooltip("Layer mask containing your Terrain layer.")]
-    public LayerMask terrainLayer = ~0;
-    [Tooltip("Height offset from the terrain surface (e.g., half the obstacle's height).")]
-    public float yOffset = 0f;
-    [Tooltip("How high above the obstacle to cast the downward ray.")]
-    public float raycastHeightOffset = 5f;
-
     private TerrainObstacle terrainHost;
     private Rigidbody rb;
     private float currentMoveSpeed;
@@ -32,7 +24,7 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
         terrainHost = GetComponent<TerrainObstacle>();
         rb = GetComponent<Rigidbody>();
 
-        // Completely disable NavMeshAgent if present on component
+        // Disable NavMeshAgent if present
         if (terrainHost != null && terrainHost.Agent != null)
         {
             terrainHost.Agent.enabled = false;
@@ -53,7 +45,6 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
     {
         if (minMoveSpeed > maxMoveSpeed) minMoveSpeed = maxMoveSpeed;
         
-        // Pick initial target immediately
         PickNewWanderTarget();
     }
 
@@ -73,26 +64,22 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
 
         Vector3 nextXZ = Vector3.MoveTowards(currentXZ, targetXZ, currentMoveSpeed * Time.deltaTime);
 
-        // 2. Terrain Height Surface Lookup (Self-Hit Protected Raycast)
+        // 2. Hardcoded Terrain Height Surface Lookup (Raycasts from 10m above down to 20m below)
+        Terrain terrain = Terrain.activeTerrain;
         float targetY = transform.position.y;
-        Vector3 rayOrigin = new Vector3(nextXZ.x, transform.position.y + raycastHeightOffset, nextXZ.z);
 
-        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, raycastHeightOffset * 3f, terrainLayer, QueryTriggerInteraction.Ignore);
-
-        foreach (RaycastHit hit in hits)
+        if (terrain != null)
         {
-            // Ignore hits on self or children
-            if (hit.transform == transform || hit.transform.IsChildOf(transform)) 
-                continue;
-
-            targetY = hit.point.y + yOffset;
-            break;
+            targetY = terrain.SampleHeight(new Vector3(nextXZ.x, 0f, nextXZ.z)) + terrain.transform.position.y;
         }
+
+// 3. Apply position
+        transform.position = new Vector3(nextXZ.x, targetY, nextXZ.z);
 
         // 3. Apply position
         transform.position = new Vector3(nextXZ.x, targetY, nextXZ.z);
 
-        // 4. Target Arrival Check (Switch destination smoothly)
+        // 4. Target Arrival Check
         if (Vector3.Distance(nextXZ, targetXZ) <= 0.1f)
         {
             PickNewWanderTarget();
@@ -103,7 +90,6 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
     {
         currentMoveSpeed = Random.Range(minMoveSpeed, maxMoveSpeed);
 
-        // Pick a random XZ position within wanderRadius around the initial spawn location
         Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
         
         Vector3 anchor = (terrainHost != null && terrainHost.SpawnCenterPosition != Vector3.zero) 
@@ -119,11 +105,9 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
             ? spawnAnchorPoint 
             : transform.position;
 
-        // Wander Area Sphere
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(centerPoint, wanderRadius);
 
-        // Active target point visualization
         if (Application.isPlaying)
         {
             Gizmos.color = Color.green;
