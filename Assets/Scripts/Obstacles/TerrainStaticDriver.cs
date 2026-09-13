@@ -8,12 +8,6 @@ public class TerrainStaticDriver : MonoBehaviour, IObstacleMovement
     private void Awake()
     {
         terrainHost = GetComponent<TerrainObstacle>();
-
-        // Disable NavMeshAgent if present since static obstacles don't pathfind
-        if (terrainHost != null && terrainHost.Agent != null)
-        {
-            terrainHost.Agent.enabled = false;
-        }
     }
 
     public void ProcessMovement(ObstacleBase host)

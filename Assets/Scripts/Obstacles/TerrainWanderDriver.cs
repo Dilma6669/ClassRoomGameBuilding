@@ -24,12 +24,6 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
         terrainHost = GetComponent<TerrainObstacle>();
         rb = GetComponent<Rigidbody>();
 
-        // Disable NavMeshAgent if present
-        if (terrainHost != null && terrainHost.Agent != null)
-        {
-            terrainHost.Agent.enabled = false;
-        }
-
         // Setup direct transform control via Kinematic Rigidbody
         if (rb != null)
         {
