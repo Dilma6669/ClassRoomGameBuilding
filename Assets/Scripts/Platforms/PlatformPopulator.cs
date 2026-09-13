@@ -8,6 +8,40 @@ using UnityEditor;
 [ExecuteAlways]
 public class PlatformPopulator : MonoBehaviour
 {
+    [System.Serializable]
+    public class BaseObstacleSettings
+    {
+        [Range(0.1f, 50f)] public float objectScale = 1f;
+        public ObstacleBase.PayloadType payloadType = ObstacleBase.PayloadType.Damage;
+        [Range(1, 100f)] public int payloadAmount = 10;
+        [Range(1f, 60f)] public float buffDuration = 5f;
+        public bool destroyOnTrigger = false;
+
+        [Header("Bounce Settings")]
+        public bool isBouncy = false;
+        [Range(0.5f, 5f)] public float triggerRadius = 0.5f;
+        [Range(5f, 50f)] public float launchForce = 25f;
+        [Range(0f, 1f)] public float upwardBias = 0.5f;
+        [Range(0f, 1f)] public float momentumTransfer = 0.3f;
+    }
+
+    [System.Serializable]
+    public class WandererSettings
+    {
+        [Range(0.1f, 1000f)] public float minWanderRadius = 2f;
+        [Range(0.1f, 1000f)] public float maxWanderRadius = 6f;
+        [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
+        [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
+    }
+
+    [System.Serializable]
+    public class PatrolSettings
+    {
+        [Range(0.1f, 500f)] public float moveDistance = 5f;
+        [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
+        [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
+    }
+
     [Header("Single Attachment Setup")]
     [Tooltip("Assign your base Obstacle prefab here.")]
     public GameObject obstaclePrefab;
@@ -29,6 +63,14 @@ public class PlatformPopulator : MonoBehaviour
     [Range(0f, 5f)] private float scatterHeightOffset = 0.5f;
     private bool randomYRotation = true;
 
+    #region Configurable Spawn Settings
+
+    public BaseObstacleSettings baseSettings = new BaseObstacleSettings();
+    public WandererSettings wanderSettings = new WandererSettings();
+    public PatrolSettings patrolSettings = new PatrolSettings();
+
+    #endregion
+
     private PlatformLogic platformLogic;
 
     private void FetchPlatformLogic()
@@ -39,23 +81,10 @@ public class PlatformPopulator : MonoBehaviour
         }
     }
 
-    private void SetupFollower(GameObject spawnedObject, Vector3 localOffset)
-    {
-        FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
-        if (followLogic == null) followLogic = spawnedObject.AddComponent<FollowPlatform>();
-
-        followLogic.targetPlatform = platformLogic.TargetChild;
-        followLogic.offsetX = localOffset.x;
-        followLogic.offsetY = localOffset.y;
-        followLogic.offsetZ = localOffset.z;
-    }
-
     private FollowPlatform EnsureBaseObstacleComponents(GameObject spawnedObject, Vector3 localOffset)
     {
-        // 1. Clean up unused components (Throttler, NavMeshAgent, Rigidbody)
         StripUnnecessaryComponents(spawnedObject);
 
-        // 2. Attach base logic and platform tracker
         FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
         if (followLogic == null) followLogic = spawnedObject.AddComponent<FollowPlatform>();
 
@@ -65,32 +94,49 @@ public class PlatformPopulator : MonoBehaviour
         followLogic.offsetZ = localOffset.z;
 
         PlatformObstacle platformObstacle = spawnedObject.GetComponent<PlatformObstacle>();
-        if (platformObstacle == null) spawnedObject.AddComponent<PlatformObstacle>();
+        if (platformObstacle == null) platformObstacle = spawnedObject.AddComponent<PlatformObstacle>();
 
+        ApplyBaseObstacleSettings(platformObstacle);
         ApplyCustomMeshAndCollider(spawnedObject);
 
         return followLogic;
+    }
+
+    private void ApplyBaseObstacleSettings(ObstacleBase obstacle)
+    {
+        if (obstacle == null) return;
+
+        obstacle.objectScale = baseSettings.objectScale;
+        obstacle.payloadType = baseSettings.payloadType;
+        obstacle.payloadAmount = baseSettings.payloadAmount;
+        obstacle.buffDuration = baseSettings.buffDuration;
+        obstacle.destroyOnTrigger = baseSettings.destroyOnTrigger;
+
+        obstacle.isBouncy = baseSettings.isBouncy;
+        obstacle.triggerRadius = baseSettings.triggerRadius;
+        obstacle.launchForce = baseSettings.launchForce;
+        obstacle.upwardBias = baseSettings.upwardBias;
+        obstacle.momentumTransfer = baseSettings.momentumTransfer;
+
+        obstacle.ApplyScale();
     }
 
     private void StripUnnecessaryComponents(GameObject obstacleObj)
     {
         if (obstacleObj == null) return;
 
-        // Strip AgentPerformanceThrottler (Search by class name string to avoid missing reference errors if deleted)
         MonoBehaviour throttler = obstacleObj.GetComponent("AgentPerformanceThrottler") as MonoBehaviour;
         if (throttler != null)
         {
             DestroyComponentSafe(throttler);
         }
 
-        // Strip NavMeshAgent
         NavMeshAgent agent = obstacleObj.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
             DestroyComponentSafe(agent);
         }
 
-        // Strip Rigidbodies from root and any children
         Rigidbody[] rigidbodies = obstacleObj.GetComponentsInChildren<Rigidbody>(true);
         foreach (Rigidbody rb in rigidbodies)
         {
@@ -150,13 +196,22 @@ public class PlatformPopulator : MonoBehaviour
                 break;
 
             case ObstacleSpawnType.Wander:
-                if (obstacleObj.GetComponent<PlatformWanderDriver>() == null)
-                    obstacleObj.AddComponent<PlatformWanderDriver>();
+                PlatformWanderDriver wanderDriver = obstacleObj.GetComponent<PlatformWanderDriver>();
+                if (wanderDriver == null) wanderDriver = obstacleObj.AddComponent<PlatformWanderDriver>();
+
+                wanderDriver.minWanderRadius = wanderSettings.minWanderRadius;
+                wanderDriver.maxWanderRadius = wanderSettings.maxWanderRadius;
+                wanderDriver.minMoveSpeed = wanderSettings.minMoveSpeed;
+                wanderDriver.maxMoveSpeed = wanderSettings.maxMoveSpeed;
                 break;
 
             case ObstacleSpawnType.Patrol:
-                if (obstacleObj.GetComponent<PlatformPatrolDriver>() == null)
-                    obstacleObj.AddComponent<PlatformPatrolDriver>();
+                PlatformPatrolDriver patrolDriver = obstacleObj.GetComponent<PlatformPatrolDriver>();
+                if (patrolDriver == null) patrolDriver = obstacleObj.AddComponent<PlatformPatrolDriver>();
+
+                patrolDriver.moveDistance = patrolSettings.moveDistance;
+                patrolDriver.minMoveSpeed = patrolSettings.minMoveSpeed;
+                patrolDriver.maxMoveSpeed = patrolSettings.maxMoveSpeed;
                 break;
         }
     }

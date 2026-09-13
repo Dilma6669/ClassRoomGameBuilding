@@ -41,6 +41,8 @@ public abstract class ObstacleBase : MonoBehaviour
         {
             transform.GetChild(i).localScale = Vector3.one * objectScale;
         }
+        
+        ApplyScale();
     }
 
     protected virtual void Awake()
@@ -139,6 +141,15 @@ public abstract class ObstacleBase : MonoBehaviour
             {
                 Destroy(gameObject);
             }
+        }
+    }
+
+    public void ApplyScale()
+    {
+        transform.localScale = Vector3.one;
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            transform.GetChild(i).localScale = Vector3.one * objectScale;
         }
     }
 

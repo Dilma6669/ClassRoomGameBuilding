@@ -1,16 +1,83 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
-#if UNITY_EDITOR
 [CustomEditor(typeof(PlatformPopulator))]
 public class PlatformPopulatorEditor : Editor
 {
+    private SerializedProperty obstaclePrefabProp;
+    private SerializedProperty customMeshProp;
+    private SerializedProperty customMaterialProp;
+
+    private SerializedProperty scatterObstacleTypeProp;
+    private SerializedProperty scatterCountProp;
+
+    private SerializedProperty baseSettingsProp;
+    private SerializedProperty wanderSettingsProp;
+    private SerializedProperty patrolSettingsProp;
+
+    private void OnEnable()
+    {
+        obstaclePrefabProp = serializedObject.FindProperty("obstaclePrefab");
+        customMeshProp = serializedObject.FindProperty("customMesh");
+        customMaterialProp = serializedObject.FindProperty("customMaterial");
+
+        scatterObstacleTypeProp = serializedObject.FindProperty("scatterObstacleType");
+        scatterCountProp = serializedObject.FindProperty("scatterCount");
+
+        baseSettingsProp = serializedObject.FindProperty("baseSettings");
+        wanderSettingsProp = serializedObject.FindProperty("wanderSettings");
+        patrolSettingsProp = serializedObject.FindProperty("patrolSettings");
+    }
+
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        serializedObject.Update();
 
-        PlatformPopulator populator = (PlatformPopulator)target;
+        // Single Obstacle Setup
+        EditorGUILayout.LabelField("Single Attachment & Prefab Setup", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(obstaclePrefabProp);
+        EditorGUILayout.PropertyField(customMeshProp);
+        EditorGUILayout.PropertyField(customMaterialProp);
 
+        EditorGUILayout.Space(10);
+
+        // Scatter Setup Header & Dropdown
+        EditorGUILayout.LabelField("Random Scatter Setup", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(scatterObstacleTypeProp);
+        EditorGUILayout.PropertyField(scatterCountProp);
+
+        EditorGUILayout.Space(10);
+
+        // Shared Base Settings Section
+        EditorGUILayout.LabelField("Shared Obstacle Properties (Scale, Payload, Bounce)", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        EditorGUILayout.PropertyField(baseSettingsProp, true);
+        EditorGUI.indentLevel--;
+
+        // Dynamic Driver Settings depending on Dropdown selection
+        ObstacleSpawnType currentType = (ObstacleSpawnType)scatterObstacleTypeProp.enumValueIndex;
+
+        if (currentType == ObstacleSpawnType.Wander)
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Wanderer Movement Settings", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(wanderSettingsProp, true);
+            EditorGUI.indentLevel--;
+        }
+        else if (currentType == ObstacleSpawnType.Patrol)
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Patrol Movement Settings", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(patrolSettingsProp, true);
+            EditorGUI.indentLevel--;
+        }
+
+        serializedObject.ApplyModifiedProperties();
+
+        // Custom Buttons
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
         {
             fontSize = 12,
@@ -24,6 +91,7 @@ public class PlatformPopulatorEditor : Editor
         GUI.backgroundColor = new Color(0.2f, 0.8f, 0.8f);
         if (GUILayout.Button("📋 Duplicate Platform Setup", buttonStyle))
         {
+            PlatformPopulator populator = (PlatformPopulator)target;
             populator.DuplicatePlatform();
         }
 
@@ -32,6 +100,7 @@ public class PlatformPopulatorEditor : Editor
         GUI.backgroundColor = new Color(0.9f, 0.2f, 0.2f);
         if (GUILayout.Button("❌ Delete Platform Setup", buttonStyle))
         {
+            PlatformPopulator populator = (PlatformPopulator)target;
             populator.DeletePlatform();
             return;
         }
@@ -42,6 +111,7 @@ public class PlatformPopulatorEditor : Editor
         GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
         if (GUILayout.Button("➕ Create Single Obstacle", buttonStyle))
         {
+            PlatformPopulator populator = (PlatformPopulator)target;
             populator.CreateSingleObstacle();
         }
 
@@ -50,6 +120,7 @@ public class PlatformPopulatorEditor : Editor
         GUI.backgroundColor = new Color(0.7f, 0.4f, 0.9f);
         if (GUILayout.Button("🎲 Scatter Random Objects", buttonStyle))
         {
+            PlatformPopulator populator = (PlatformPopulator)target;
             populator.ScatterRandomObjects();
         }
 
@@ -58,6 +129,7 @@ public class PlatformPopulatorEditor : Editor
         GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
         if (GUILayout.Button("🗑️ Clear All Spawned Attachments", buttonStyle))
         {
+            PlatformPopulator populator = (PlatformPopulator)target;
             populator.ClearAllSpawnedAttachments();
         }
 

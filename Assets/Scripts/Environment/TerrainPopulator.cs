@@ -28,11 +28,53 @@ public class TerrainPopulator : MonoBehaviour
     public ObstacleSpawnType scatterObstacleType = ObstacleSpawnType.Static;
 
     [Range(1, 1000)] public int scatterCount = 20;
-    [Range(0f, 20f)] private float edgePadding = 5f;
-    [Range(0f, 5f)] private float heightOffset = 0.2f;
+    [Range(0f, 20f)] public float edgePadding = 5f;
+    [Range(0f, 5f)] public float heightOffset = 0.2f;
 
-    private bool randomYRotation = true;
-    private bool alignWithTerrainSlope = false;
+    public bool randomYRotation = true;
+    public bool alignWithTerrainSlope = false;
+
+    #region Configurable Spawn Settings
+
+    [System.Serializable]
+    public class BaseObstacleSettings
+    {
+        [Range(0.1f, 50f)] public float objectScale = 1f;
+        public ObstacleBase.PayloadType payloadType = ObstacleBase.PayloadType.Damage;
+        [Range(1, 100f)] public int payloadAmount = 10;
+        [Range(1f, 60f)] public float buffDuration = 5f;
+        public bool destroyOnTrigger = false;
+
+        [Header("Bounce Settings")]
+        public bool isBouncy = false;
+        [Range(0.5f, 5f)] public float triggerRadius = 0.5f;
+        [Range(5f, 50f)] public float launchForce = 25f;
+        [Range(0f, 1f)] public float upwardBias = 0.5f;
+        [Range(0f, 1f)] public float momentumTransfer = 0.3f;
+    }
+
+    [System.Serializable]
+    public class WandererSettings
+    {
+        [Range(0.1f, 1000f)] public float minWanderRadius = 2f;
+        [Range(0.1f, 1000f)] public float maxWanderRadius = 6f;
+        [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
+        [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
+    }
+
+    [System.Serializable]
+    public class PatrolSettings
+    {
+        [Range(0.1f, 500f)] public float moveDistance = 5f;
+        [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
+        [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
+    }
+
+    public BaseObstacleSettings baseSettings = new BaseObstacleSettings();
+    public WandererSettings wanderSettings = new WandererSettings();
+    public PatrolSettings patrolSettings = new PatrolSettings();
+
+    #endregion
 
     private TerrainCollider terrainCollider;
     private NavMeshSurface navMeshSurface;
@@ -135,7 +177,37 @@ public class TerrainPopulator : MonoBehaviour
 #endif
         }
 
+        // Convert base to TerrainObstacle if needed
+        TerrainObstacle terrainObstacle = spawnedObject.GetComponent<TerrainObstacle>();
+        if (terrainObstacle == null)
+        {
+            terrainObstacle = spawnedObject.AddComponent<TerrainObstacle>();
+        }
+
+        // Apply shared base obstacle settings
+        ApplyBaseObstacleSettings(terrainObstacle);
+
         ApplyCustomMeshAndCollider(spawnedObject);
+    }
+
+    private void ApplyBaseObstacleSettings(ObstacleBase obstacle)
+    {
+        if (obstacle == null) return;
+
+        obstacle.objectScale = baseSettings.objectScale;
+        obstacle.payloadType = baseSettings.payloadType;
+        obstacle.payloadAmount = baseSettings.payloadAmount;
+        obstacle.buffDuration = baseSettings.buffDuration;
+        obstacle.destroyOnTrigger = baseSettings.destroyOnTrigger;
+
+        obstacle.isBouncy = baseSettings.isBouncy;
+        obstacle.triggerRadius = baseSettings.triggerRadius;
+        obstacle.launchForce = baseSettings.launchForce;
+        obstacle.upwardBias = baseSettings.upwardBias;
+        obstacle.momentumTransfer = baseSettings.momentumTransfer;
+
+        // Force the visual transform scaling logic to run immediately upon spawn
+        obstacle.ApplyScale();
     }
 
     private void ApplyCustomMeshAndCollider(GameObject obstacleObj)
@@ -177,13 +249,22 @@ public class TerrainPopulator : MonoBehaviour
                 break;
 
             case ObstacleSpawnType.Wander:
-                if (obstacleObj.GetComponent<TerrainWanderDriver>() == null)
-                    obstacleObj.AddComponent<TerrainWanderDriver>();
+                TerrainWanderDriver wanderDriver = obstacleObj.GetComponent<TerrainWanderDriver>();
+                if (wanderDriver == null) wanderDriver = obstacleObj.AddComponent<TerrainWanderDriver>();
+
+                wanderDriver.minWanderRadius = wanderSettings.minWanderRadius;
+                wanderDriver.maxWanderRadius = wanderSettings.maxWanderRadius;
+                wanderDriver.minMoveSpeed = wanderSettings.minMoveSpeed;
+                wanderDriver.maxMoveSpeed = wanderSettings.maxMoveSpeed;
                 break;
 
             case ObstacleSpawnType.Patrol:
-                if (obstacleObj.GetComponent<TerrainPatrolDriver>() == null)
-                    obstacleObj.AddComponent<TerrainPatrolDriver>();
+                TerrainPatrolDriver patrolDriver = obstacleObj.GetComponent<TerrainPatrolDriver>();
+                if (patrolDriver == null) patrolDriver = obstacleObj.AddComponent<TerrainPatrolDriver>();
+
+                patrolDriver.moveDistance = patrolSettings.moveDistance;
+                patrolDriver.minMoveSpeed = patrolSettings.minMoveSpeed;
+                patrolDriver.maxMoveSpeed = patrolSettings.maxMoveSpeed;
                 break;
         }
     }
@@ -242,12 +323,6 @@ public class TerrainPopulator : MonoBehaviour
 
             if (spawned != null)
             {
-                ObstacleLogic obstacle = spawned.GetComponent<ObstacleLogic>();
-                if (obstacle != null && randomYRotation)
-                {
-                    obstacle.rotationAngle = randomAngle;
-                }
-
                 EnsureBaseTerrainComponents(spawned);
                 AttachDriverBySpawnType(spawned, scatterObstacleType);
             }

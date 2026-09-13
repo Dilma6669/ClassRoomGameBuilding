@@ -27,19 +27,24 @@ public class ObstacleComponentHider : MonoBehaviour
 #if UNITY_EDITOR
         HideFlags flags = visible ? HideFlags.None : HideFlags.HideInInspector;
 
-        // Fetch all targets across this root object and any child geometry/rigs
+        // Fetch ONLY components that ALREADY exist on this GameObject or its children
         Rigidbody[] rigidbodies = GetComponentsInChildren<Rigidbody>(true);
         Collider[] colliders = GetComponentsInChildren<Collider>(true);
         UnityEngine.AI.NavMeshAgent[] agents = GetComponentsInChildren<UnityEngine.AI.NavMeshAgent>(true);
         AgentPerformanceThrottler[] throttlers = GetComponentsInChildren<AgentPerformanceThrottler>(true);
 
-        foreach (var rb in rigidbodies) rb.hideFlags = flags;
-        foreach (var col in colliders) col.hideFlags = flags;
-        foreach (var agent in agents) agent.hideFlags = flags;
-        foreach (var throttler in throttlers) throttler.hideFlags = flags;
+        // Apply hideFlags ONLY to existing, non-null components
+        foreach (var rb in rigidbodies) if (rb != null) rb.hideFlags = flags;
+        foreach (var col in colliders) if (col != null) col.hideFlags = flags;
+        foreach (var agent in agents) if (agent != null) agent.hideFlags = flags;
+        foreach (var throttler in throttlers) if (throttler != null) throttler.hideFlags = flags;
 
-        // Force Unity Inspector to instantly refresh views
-        InternalEditorUtility.RepaintAllViews();
+        // Refresh Inspector windows safely
+        if (!Application.isPlaying)
+        {
+            EditorUtility.SetDirty(this);
+            InternalEditorUtility.RepaintAllViews();
+        }
 #endif
     }
 
