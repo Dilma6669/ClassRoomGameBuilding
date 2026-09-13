@@ -129,8 +129,10 @@ public class TerrainPatrolDriver : MonoBehaviour, IObstacleMovement
         }
         else
         {
+            // Calculate forward line directly based on current transform rotation
             Vector3 center = transform.position;
-            Vector3 dir = transform.forward;
+            Vector3 dir = transform.forward; 
+        
             startGizmo = center - (dir * (moveDistance * 0.5f));
             endGizmo = center + (dir * (moveDistance * 0.5f));
         }

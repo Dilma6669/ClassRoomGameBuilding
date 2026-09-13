@@ -56,7 +56,7 @@ public class FollowPlatform : MonoBehaviour
             Vector3 offsetFromPlatform = transform.position - lastPlatformPosition;
             transform.position = targetPlatform.position + (rotationDelta * offsetFromPlatform);
 
-            // 4. Update rotation
+            // 4. Apply platform rotation delta onto object's existing rotation
             transform.rotation = rotationDelta * transform.rotation;
 
             lastPlatformPosition = targetPlatform.position;
@@ -64,10 +64,16 @@ public class FollowPlatform : MonoBehaviour
         }
         else
         {
-            // Calculate position using local rotation offset from target platform
+            // Calculate position using local position offset
             Vector3 localOffset = new Vector3(offsetX, offsetY, offsetZ);
             transform.position = targetPlatform.position + (targetPlatform.rotation * localOffset);
-            transform.rotation = targetPlatform.rotation;
+
+            // Fetch initial Y-rotation slider value if present
+            ObstacleBase obstacle = GetComponent<ObstacleBase>();
+            float yRot = obstacle != null ? obstacle.initialYRotation : 0f;
+
+            // Apply target platform rotation PLUS the local Y-rotation offset
+            transform.rotation = targetPlatform.rotation * Quaternion.Euler(0f, yRot, 0f);
 
             lastPlatformPosition = targetPlatform.position;
             lastPlatformRotation = targetPlatform.rotation;
@@ -84,7 +90,10 @@ public class FollowPlatform : MonoBehaviour
         
         Vector3 localOffset = new Vector3(offsetX, offsetY, offsetZ);
         transform.position = targetPlatform.position + (targetPlatform.rotation * localOffset);
-        transform.rotation = targetPlatform.rotation;
+
+        ObstacleBase obstacle = GetComponent<ObstacleBase>();
+        float yRot = obstacle != null ? obstacle.initialYRotation : 0f;
+        transform.rotation = targetPlatform.rotation * Quaternion.Euler(0f, yRot, 0f);
 
         lastPlatformPosition = targetPlatform.position;
         lastPlatformRotation = targetPlatform.rotation;

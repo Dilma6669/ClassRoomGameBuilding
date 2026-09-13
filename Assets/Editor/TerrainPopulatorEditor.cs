@@ -61,7 +61,7 @@ public class TerrainPopulatorEditor : Editor
         EditorGUILayout.Space(10);
 
         // Shared Base Settings Section
-        EditorGUILayout.LabelField("Shared Obstacle Properties (Scale, Payload, Bounce)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Obstacle Properties", EditorStyles.boldLabel);
         EditorGUI.indentLevel++;
         EditorGUILayout.PropertyField(baseSettingsProp, true);
         EditorGUI.indentLevel--;

@@ -12,11 +12,13 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
 
     private PlatformObstacle platformHost;
     private Vector3 initialPlatformLocalPosition;
+    private Quaternion initialLocalRotation;
     private int patrolDirection = 1;
     private float currentMoveSpeed;
     private float turnSpeedMultiplier = 120f;
 
     private Transform platformTransform;
+    private bool isInitialized = false;
 
     private void Awake()
     {
@@ -27,6 +29,7 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
     {
         CachePlatformAnchor();
         RandomizeSpeed();
+        isInitialized = true;
     }
 
     private void CachePlatformAnchor()
@@ -43,10 +46,12 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
         if (platformTransform != null)
         {
             initialPlatformLocalPosition = platformTransform.InverseTransformPoint(transform.position);
+            initialLocalRotation = Quaternion.Inverse(platformTransform.rotation) * transform.rotation;
         }
         else
         {
             initialPlatformLocalPosition = transform.localPosition;
+            initialLocalRotation = transform.localRotation;
         }
     }
 
@@ -54,24 +59,25 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
     {
         if (platformTransform == null) CachePlatformAnchor();
 
-        // 1. Calculate world anchor center on the platform
+        // 1. Calculate anchor center on the platform
         Vector3 anchorWorld = platformTransform != null 
             ? platformTransform.TransformPoint(initialPlatformLocalPosition) 
             : transform.position;
 
+        // 2. Combine Platform Rotation with Obstacle's Initial Facing Direction
         Quaternion platformRotation = platformTransform != null ? platformTransform.rotation : Quaternion.identity;
+        Quaternion worldFacing = platformRotation * initialLocalRotation;
+        Vector3 patrolForward = worldFacing * Vector3.forward;
 
-        // 2. Determine target waypoint on the patrol axis (+moveDistance or -moveDistance)
-        Vector3 targetLocalOffset = new Vector3(0f, 0f, patrolDirection * moveDistance);
-        Vector3 targetWorldPos = anchorWorld + (platformRotation * targetLocalOffset);
+        // 3. Determine target waypoint along the obstacle's facing axis
+        Vector3 targetWorldPos = anchorWorld + (patrolForward * (patrolDirection * moveDistance * 0.5f));
 
-        // 3. Movement delta along the platform surface plane
+        // 4. Movement delta along surface plane
         Vector3 worldDelta = targetWorldPos - transform.position;
-
         Vector3 platformUp = platformTransform != null ? platformTransform.up : Vector3.up;
         worldDelta = Vector3.ProjectOnPlane(worldDelta, platformUp);
 
-        // Flip direction when reaching the endpoint sphere
+        // Flip direction when reaching endpoint
         if (worldDelta.magnitude < 0.2f)
         {
             patrolDirection *= -1;
@@ -79,7 +85,7 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
             return;
         }
 
-        // 4. Steer and translate (Exact match to Wanderer motor)
+        // 5. Steer and translate
         Vector3 moveDir = worldDelta.normalized;
         if (moveDir.sqrMagnitude > 0.001f)
         {
@@ -97,33 +103,41 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
 
     private void OnDrawGizmosSelected()
     {
-        Transform activePlatform = platformTransform;
-        if (activePlatform == null)
+        // 1. Determine platform transform reference
+        Transform pTransform = platformTransform;
+        if (pTransform == null)
         {
-            PlatformObstacle host = GetComponent<PlatformObstacle>();
-            activePlatform = (host != null && host.GetPlatformTransform() != null) ? host.GetPlatformTransform() : transform.parent;
+            if (platformHost == null) platformHost = GetComponent<PlatformObstacle>();
+            if (platformHost != null) pTransform = platformHost.GetPlatformTransform();
+            if (pTransform == null) pTransform = transform.parent;
         }
 
-        Vector3 centerWorld;
+        // 2. Determine anchor center and rotation relative to platform
+        Vector3 center;
+        Vector3 dir;
 
-        if (Application.isPlaying && activePlatform != null)
+        if (Application.isPlaying && isInitialized)
         {
-            centerWorld = activePlatform.TransformPoint(initialPlatformLocalPosition);
+            center = pTransform != null 
+                ? pTransform.TransformPoint(initialPlatformLocalPosition) 
+                : transform.position;
+
+            Quaternion platformRotation = pTransform != null ? pTransform.rotation : Quaternion.identity;
+            dir = (platformRotation * initialLocalRotation) * Vector3.forward;
         }
         else
         {
-            centerWorld = transform.position;
+            center = transform.position;
+            dir = transform.forward;
         }
 
-        Quaternion platformRotation = activePlatform != null ? activePlatform.rotation : Quaternion.identity;
-        Vector3 forwardDir = platformRotation * Vector3.forward;
-
-        Vector3 startPos = centerWorld - (forwardDir * moveDistance);
-        Vector3 endPos = centerWorld + (forwardDir * moveDistance);
+        // 3. Compute static end points anchored on the platform path
+        Vector3 startGizmo = center - (dir * (moveDistance * 0.5f));
+        Vector3 endGizmo = center + (dir * (moveDistance * 0.5f));
 
         Gizmos.color = Color.cyan;
-        Gizmos.DrawLine(startPos, endPos);
-        Gizmos.DrawWireSphere(startPos, 1f);
-        Gizmos.DrawWireSphere(endPos, 1f);
+        Gizmos.DrawLine(startGizmo, endGizmo);
+        Gizmos.DrawWireSphere(startGizmo, 0.4f);
+        Gizmos.DrawWireSphere(endGizmo, 0.4f);
     }
 }

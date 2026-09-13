@@ -39,6 +39,7 @@ public class TerrainPopulator : MonoBehaviour
     public class BaseObstacleSettings
     {
         [Range(0.1f, 50f)] public float objectScale = 1f;
+        [Range(0f, 360f)] public float initialYRotation = 0f;
         public ObstacleBase.PayloadType payloadType = ObstacleBase.PayloadType.Damage;
         [Range(1, 100f)] public int payloadAmount = 10;
         [Range(1f, 60f)] public float buffDuration = 5f;
@@ -150,6 +151,7 @@ public class TerrainPopulator : MonoBehaviour
         if (obstacle == null) return;
 
         obstacle.objectScale = baseSettings.objectScale;
+        obstacle.initialYRotation = baseSettings.initialYRotation;
         obstacle.payloadType = baseSettings.payloadType;
         obstacle.payloadAmount = baseSettings.payloadAmount;
         obstacle.buffDuration = baseSettings.buffDuration;

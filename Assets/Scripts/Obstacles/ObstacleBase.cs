@@ -17,7 +17,9 @@ public abstract class ObstacleBase : MonoBehaviour
 
     [Header("Transform Settings")] [Range(0.1f, 50f)]
     public float objectScale = 1f;
-
+    [Tooltip("Initial rotation (Euler angles) applied to the obstacle.")]
+    [Range(0f, 360f)] public float initialYRotation = 0f;
+    
     [Header("Payload Settings")] public PayloadType payloadType = PayloadType.Damage;
     [Range(1, 100f)] public int payloadAmount = 10;
     [Range(1f, 60f)] public float buffDuration = 5f;
@@ -41,7 +43,10 @@ public abstract class ObstacleBase : MonoBehaviour
         {
             transform.GetChild(i).localScale = Vector3.one * objectScale;
         }
-        
+    
+        // Lock X and Z to 0, applying rotation strictly around the Y-axis
+        transform.localRotation = Quaternion.Euler(0f, initialYRotation, 0f);
+
         ApplyScale();
     }
 
