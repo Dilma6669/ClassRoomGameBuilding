@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -28,8 +29,7 @@ public class PlatformPopulator : MonoBehaviour
     [System.Serializable]
     public class WandererSettings
     {
-        [Range(0.1f, 1000f)] public float minWanderRadius = 2f;
-        [Range(0.1f, 1000f)] public float maxWanderRadius = 6f;
+        [Range(0.1f, 1000f)] public float wanderRadius = 6f;
         [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
         [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
     }
@@ -198,9 +198,8 @@ public class PlatformPopulator : MonoBehaviour
             case ObstacleSpawnType.Wander:
                 PlatformWanderDriver wanderDriver = obstacleObj.GetComponent<PlatformWanderDriver>();
                 if (wanderDriver == null) wanderDriver = obstacleObj.AddComponent<PlatformWanderDriver>();
-
-                wanderDriver.minWanderRadius = wanderSettings.minWanderRadius;
-                wanderDriver.maxWanderRadius = wanderSettings.maxWanderRadius;
+                
+                wanderDriver.wanderRadius = wanderSettings.wanderRadius;
                 wanderDriver.minMoveSpeed = wanderSettings.minMoveSpeed;
                 wanderDriver.maxMoveSpeed = wanderSettings.maxMoveSpeed;
                 break;

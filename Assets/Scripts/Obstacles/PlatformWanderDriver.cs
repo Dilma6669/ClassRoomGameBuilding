@@ -4,8 +4,7 @@ using UnityEngine;
 public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
 {
     [Header("Wander Settings")]
-    [Range(0.1f, 1000f)] public float minWanderRadius = 2f;
-    [Range(0.1f, 1000f)] public float maxWanderRadius = 6f;
+    [Range(0.1f, 1000f)] public float wanderRadius = 6f;
     [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
     [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
 
@@ -105,11 +104,9 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
     {
         currentMoveSpeed = Random.Range(minMoveSpeed, maxMoveSpeed);
         
-        // Pick a random direction and exact distance in unscaled local space
-        Vector2 randomCircle = Random.insideUnitCircle.normalized;
-        float dist = Random.Range(minWanderRadius, maxWanderRadius);
-        
-        currentWanderOffset = new Vector3(randomCircle.x * dist, 0f, randomCircle.y * dist);
+        // Pick a random point inside full radius circle in unscaled local space
+        Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
+        currentWanderOffset = new Vector3(randomCircle.x, 0f, randomCircle.y);
     }
 
     private void OnDrawGizmosSelected()
@@ -132,12 +129,9 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
             centerWorld = transform.position;
         }
 
-        // Outer & Inner Wander Spheres
+        // Wander Area Sphere
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(centerWorld, maxWanderRadius);
-
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(centerWorld, minWanderRadius);
+        Gizmos.DrawWireSphere(centerWorld, wanderRadius);
 
         // Active Target Sphere & Path Line
         if (Application.isPlaying && activePlatform != null)

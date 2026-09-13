@@ -5,8 +5,7 @@ using UnityEngine.AI;
 public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
 {
     [Header("Wandering Settings")]
-    [Range(0.1f, 1000f)] public float minWanderRadius = 2f;
-    [Range(0.1f, 1000f)] public float maxWanderRadius = 6f;
+    [Range(0.1f, 1000f)] public float wanderRadius = 6f;
 
     [Header("Speed Range")]
     [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
@@ -21,7 +20,6 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
         terrainHost = GetComponent<TerrainObstacle>();
         navMeshAgent = terrainHost.Agent;
 
-        if (minWanderRadius > maxWanderRadius) minWanderRadius = maxWanderRadius;
         if (minMoveSpeed > maxMoveSpeed) minMoveSpeed = maxMoveSpeed;
 
         RandomizeSpeed();
@@ -80,13 +78,11 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
     {
         if (navMeshAgent == null || !navMeshAgent.enabled || !navMeshAgent.isOnNavMesh) return;
 
-        Vector2 randomDirection = Random.insideUnitCircle.normalized;
-        float randomDistance = Random.Range(minWanderRadius, maxWanderRadius);
-        
-        // Exact anchor math relative to spawnCenterPosition
-        Vector3 candidatePoint = terrainHost.SpawnCenterPosition + new Vector3(randomDirection.x * randomDistance, 0f, randomDirection.y * randomDistance);
+        // Pick a random point inside full radius circle
+        Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
+        Vector3 candidatePoint = terrainHost.SpawnCenterPosition + new Vector3(randomCircle.x, 0f, randomCircle.y);
 
-        if (NavMesh.SamplePosition(candidatePoint, out NavMeshHit hit, maxWanderRadius, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(candidatePoint, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
         {
             navMeshAgent.SetDestination(hit.position);
         }
@@ -104,13 +100,9 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
 
         Vector3 centerPoint = Application.isPlaying ? terrainHost.SpawnCenterPosition : transform.position;
 
-        // Outer boundary (Max Radius)
+        // Outer boundary (Wander Area Radius)
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(centerPoint, maxWanderRadius);
-
-        // Inner deadzone (Min Radius)
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(centerPoint, minWanderRadius);
+        Gizmos.DrawWireSphere(centerPoint, wanderRadius);
 
         // Active path and destination waypoint visualization
         if (Application.isPlaying && navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.hasPath)

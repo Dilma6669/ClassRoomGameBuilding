@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.AI.Navigation;
 using UnityEngine.AI;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -56,8 +57,7 @@ public class TerrainPopulator : MonoBehaviour
     [System.Serializable]
     public class WandererSettings
     {
-        [Range(0.1f, 1000f)] public float minWanderRadius = 2f;
-        [Range(0.1f, 1000f)] public float maxWanderRadius = 6f;
+        [Range(0.1f, 1000f)] public float wanderRadius = 6f;
         [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
         [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
     }
@@ -251,9 +251,8 @@ public class TerrainPopulator : MonoBehaviour
             case ObstacleSpawnType.Wander:
                 TerrainWanderDriver wanderDriver = obstacleObj.GetComponent<TerrainWanderDriver>();
                 if (wanderDriver == null) wanderDriver = obstacleObj.AddComponent<TerrainWanderDriver>();
-
-                wanderDriver.minWanderRadius = wanderSettings.minWanderRadius;
-                wanderDriver.maxWanderRadius = wanderSettings.maxWanderRadius;
+                
+                wanderDriver.wanderRadius = wanderSettings.wanderRadius;
                 wanderDriver.minMoveSpeed = wanderSettings.minMoveSpeed;
                 wanderDriver.maxMoveSpeed = wanderSettings.maxMoveSpeed;
                 break;
