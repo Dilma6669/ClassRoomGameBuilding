@@ -91,7 +91,6 @@ public class TerrainPopulator : MonoBehaviour
     {
         terrainCollider = GetComponent<TerrainCollider>();
     }
-    
 
     private void FetchTerrain()
     {
@@ -133,16 +132,13 @@ public class TerrainPopulator : MonoBehaviour
 #endif
         }
 
-        // Convert base to TerrainObstacle if needed
         TerrainObstacle terrainObstacle = spawnedObject.GetComponent<TerrainObstacle>();
         if (terrainObstacle == null)
         {
             terrainObstacle = spawnedObject.AddComponent<TerrainObstacle>();
         }
 
-        // Apply shared base obstacle settings
         ApplyBaseObstacleSettings(terrainObstacle);
-
         ApplyCustomMeshAndCollider(spawnedObject);
     }
 
@@ -163,7 +159,6 @@ public class TerrainPopulator : MonoBehaviour
         obstacle.upwardBias = baseSettings.upwardBias;
         obstacle.momentumTransfer = baseSettings.momentumTransfer;
 
-        // Force the visual transform scaling logic to run immediately upon spawn
         obstacle.ApplyScale();
     }
 
@@ -225,9 +220,52 @@ public class TerrainPopulator : MonoBehaviour
         }
     }
 
-    #region Terrain Obstacle Spawning
+    #region Single Terrain Obstacle Spawning
 
-    [ContextMenu("Scatter Obstacles")]
+    [ContextMenu("Create Single Obstacle")]
+    public void CreateSingleObstacle()
+    {
+        if (obstaclePrefab == null)
+        {
+            Debug.LogWarning("⚠️ Please assign an Obstacle Prefab first.");
+            return;
+        }
+
+        FetchTerrain();
+        if (targetTerrain == null)
+        {
+            Debug.LogWarning("⚠️ No Terrain assigned or found in scene!");
+            return;
+        }
+
+        // Spawn at terrain center XZ
+        Vector3 terrainPos = targetTerrain.transform.position;
+        Vector3 terrainSize = targetTerrain.terrainData.size;
+
+        float centerX = terrainPos.x + (terrainSize.x * 0.5f);
+        float centerZ = terrainPos.z + (terrainSize.z * 0.5f);
+        float surfaceY = targetTerrain.SampleHeight(new Vector3(centerX, 0f, centerZ)) + terrainPos.y;
+
+        Vector3 spawnWorldPos = new Vector3(centerX, surfaceY + Mathf.Max(0.2f, heightOffset), centerZ);
+        Quaternion spawnRotation = Quaternion.Euler(0f, baseSettings.initialYRotation, 0f);
+
+        GameObject spawned = SpawnObject(obstaclePrefab, spawnWorldPos, spawnRotation, "Create Single Obstacle");
+
+        if (spawned != null)
+        {
+            EnsureBaseTerrainComponents(spawned);
+            AttachDriverBySpawnType(spawned, scatterObstacleType);
+            
+#if UNITY_EDITOR
+            Selection.activeGameObject = spawned;
+#endif
+        }
+    }
+
+    #endregion
+
+    #region Terrain Obstacle Spattering
+
     [ContextMenu("Scatter Obstacles")]
     public void ScatterObstacles()
     {
@@ -255,7 +293,6 @@ public class TerrainPopulator : MonoBehaviour
             float surfaceY = targetTerrain.SampleHeight(new Vector3(randomX, 0f, randomZ)) + terrainPos.y;
             Vector3 spawnWorldPos = new Vector3(randomX, surfaceY + Mathf.Max(0.2f, heightOffset), randomZ);
 
-            // 1. Calculate the initial Y angle
             float yAngle = randomYRotation ? Random.Range(0f, 360f) : baseSettings.initialYRotation;
             Quaternion spawnRotation = Quaternion.Euler(0f, yAngle, 0f);
 
@@ -266,7 +303,6 @@ public class TerrainPopulator : MonoBehaviour
                 EnsureBaseTerrainComponents(spawned);
                 AttachDriverBySpawnType(spawned, scatterObstacleType);
 
-                // 2. Override initialYRotation on the spawned obstacle so it isn't reset to baseSettings.initialYRotation
                 ObstacleBase obstacleComp = spawned.GetComponent<ObstacleBase>();
                 if (obstacleComp != null)
                 {

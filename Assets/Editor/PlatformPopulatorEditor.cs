@@ -11,7 +11,7 @@ public class PlatformPopulatorEditor : Editor
 
     private SerializedProperty scatterObstacleTypeProp;
     private SerializedProperty scatterCountProp;
-    private SerializedProperty randomYRotationProp; // 👈 1. Added property reference
+    private SerializedProperty randomYRotationProp;
 
     private SerializedProperty baseSettingsProp;
     private SerializedProperty wanderSettingsProp;
@@ -25,7 +25,7 @@ public class PlatformPopulatorEditor : Editor
 
         scatterObstacleTypeProp = serializedObject.FindProperty("scatterObstacleType");
         scatterCountProp = serializedObject.FindProperty("scatterCount");
-        randomYRotationProp = serializedObject.FindProperty("randomYRotation"); // 👈 2. Bind property
+        randomYRotationProp = serializedObject.FindProperty("randomYRotation");
 
         baseSettingsProp = serializedObject.FindProperty("baseSettings");
         wanderSettingsProp = serializedObject.FindProperty("wanderSettings");
@@ -48,7 +48,7 @@ public class PlatformPopulatorEditor : Editor
         EditorGUILayout.LabelField("Random Scatter Setup", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(scatterObstacleTypeProp);
         EditorGUILayout.PropertyField(scatterCountProp);
-        EditorGUILayout.PropertyField(randomYRotationProp); // 👈 3. Draw checkbox in Inspector
+        EditorGUILayout.PropertyField(randomYRotationProp);
 
         EditorGUILayout.Space(10);
 
@@ -80,7 +80,7 @@ public class PlatformPopulatorEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
 
-        // Custom Buttons
+        // Custom Buttons Setup
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button)
         {
             fontSize = 12,
@@ -88,6 +88,36 @@ public class PlatformPopulatorEditor : Editor
             fixedHeight = 30
         };
 
+        // 1. Obstacle Spawning Section
+        EditorGUILayout.Space(15);
+        EditorGUILayout.LabelField("Obstacle Spawning", EditorStyles.boldLabel);
+
+        GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
+        if (GUILayout.Button("➕ Create Single Obstacle", buttonStyle))
+        {
+            PlatformPopulator populator = (PlatformPopulator)target;
+            populator.CreateSingleObstacle();
+        }
+
+        EditorGUILayout.Space(4);
+
+        GUI.backgroundColor = new Color(0.7f, 0.4f, 0.9f);
+        if (GUILayout.Button("🎲 Scatter Obstacles", buttonStyle))
+        {
+            PlatformPopulator populator = (PlatformPopulator)target;
+            populator.ScatterRandomObjects();
+        }
+
+        EditorGUILayout.Space(4);
+
+        GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
+        if (GUILayout.Button("🗑️ Clear All Obstacles", buttonStyle))
+        {
+            PlatformPopulator populator = (PlatformPopulator)target;
+            populator.ClearAllSpawnedAttachments();
+        }
+
+        // 2. Platform Management Section
         EditorGUILayout.Space(15);
         EditorGUILayout.LabelField("Platform Management", EditorStyles.boldLabel);
 
@@ -106,34 +136,6 @@ public class PlatformPopulatorEditor : Editor
             PlatformPopulator populator = (PlatformPopulator)target;
             populator.DeletePlatform();
             return;
-        }
-
-        EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("Attachment Spawning", EditorStyles.boldLabel);
-
-        GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
-        if (GUILayout.Button("➕ Create Single Obstacle", buttonStyle))
-        {
-            PlatformPopulator populator = (PlatformPopulator)target;
-            populator.CreateSingleObstacle();
-        }
-
-        EditorGUILayout.Space(4);
-
-        GUI.backgroundColor = new Color(0.7f, 0.4f, 0.9f);
-        if (GUILayout.Button("🎲 Scatter Random Objects", buttonStyle))
-        {
-            PlatformPopulator populator = (PlatformPopulator)target;
-            populator.ScatterRandomObjects();
-        }
-
-        EditorGUILayout.Space(6);
-
-        GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
-        if (GUILayout.Button("🗑️ Clear All Spawned Attachments", buttonStyle))
-        {
-            PlatformPopulator populator = (PlatformPopulator)target;
-            populator.ClearAllSpawnedAttachments();
         }
 
         GUI.backgroundColor = Color.white;
