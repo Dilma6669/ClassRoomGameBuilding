@@ -1,6 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
+
+#if HAS_KINEMATIC_CC
 using KinematicCharacterController.Examples;
+#endif
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

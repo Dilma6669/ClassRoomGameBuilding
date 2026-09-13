@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
+
+#if HAS_KINEMATIC_CC
 using KinematicCharacterController.Examples;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -51,12 +54,13 @@ public class CharacterController : MonoBehaviour
         // 2. Find and instantiate ExampleCamera prefab as a child
         GameObject spawnedCameraMesh = SpawnPrefabChild("ExampleCamera t:Prefab", "Auto Setup Camera Mesh");
 
-        if (spawnedPlayerMesh == null || spawnedCameraMesh == null)
+        if (spawnedPlayerMesh == null)
         {
-            Debug.LogError("❌ Character setup failed: Could not locate required prefabs in project.");
+            Debug.LogError("❌ Character setup failed: Could not locate required player prefab in project.");
             return;
         }
 
+#if HAS_KINEMATIC_CC
         // 3. Ensure ExamplePlayer script is attached to this GameObject
         ExamplePlayer playerScript = GetComponent<ExamplePlayer>();
         if (playerScript == null)
@@ -64,6 +68,7 @@ public class CharacterController : MonoBehaviour
             playerScript = gameObject.AddComponent<ExamplePlayer>();
             Debug.Log($"✅ Attached 'ExamplePlayer' script to '{gameObject.name}'.");
         }
+#endif
 
         // 4. Ensure PlayerLogic script is attached to this GameObject (visible)
         PlayerLogic logicScript = GetComponent<PlayerLogic>();
@@ -89,19 +94,22 @@ public class CharacterController : MonoBehaviour
             Debug.Log($"✅ Attached 'FallDamage' script to '{spawnedPlayerMesh.name}'.");
         }
 
+#if HAS_KINEMATIC_CC
         // 7. Assign component references from the newly spawned children
-        ExampleCharacterController characterComp = spawnedPlayerMesh.GetComponent<ExampleCharacterController>();
-        ExampleCharacterCamera cameraComp = spawnedCameraMesh.GetComponent<ExampleCharacterCamera>();
+        if (spawnedCameraMesh != null)
+        {
+            ExampleCharacterController characterComp = spawnedPlayerMesh.GetComponent<ExampleCharacterController>();
+            ExampleCharacterCamera cameraComp = spawnedCameraMesh.GetComponent<ExampleCharacterCamera>();
 
-        if (characterComp != null) playerScript.Character = characterComp;
-        if (cameraComp != null) playerScript.CharacterCamera = cameraComp;
+            if (characterComp != null) playerScript.Character = characterComp;
+            if (cameraComp != null) playerScript.CharacterCamera = cameraComp;
+        }
 
-        // 8. Hide ExamplePlayer script from Inspector (PlayerLogic remains visible)
-       // playerScript.hideFlags = HideFlags.HideInInspector;
+        EditorUtility.SetDirty(playerScript);
+#endif
 
         CacheExistingChildren();
 
-        EditorUtility.SetDirty(playerScript);
         EditorUtility.SetDirty(logicScript);
         EditorUtility.SetDirty(healthScript);
         EditorUtility.SetDirty(fallDamageScript);

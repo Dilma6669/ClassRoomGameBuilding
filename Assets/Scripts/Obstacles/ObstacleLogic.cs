@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.AI;
+
+#if HAS_KINEMATIC_CC
 using KinematicCharacterController;
+#endif
 
 [ExecuteAlways]
 public class ObstacleLogic : MonoBehaviour
@@ -496,11 +499,16 @@ public class ObstacleLogic : MonoBehaviour
     {
         if (!Application.isPlaying) return;
 
+        bool isPlayerTrigger = false;
+
+#if HAS_KINEMATIC_CC
         KinematicCharacterMotor motor = other.GetComponentInParent<KinematicCharacterMotor>();
         if (motor == null) motor = other.GetComponent<KinematicCharacterMotor>();
 
         if (motor != null)
         {
+            isPlayerTrigger = true;
+
             if (isBouncy)
             {
                 Vector3 surfaceNormal = (motor.TransientPosition - transform.position).normalized;
@@ -511,7 +519,30 @@ public class ObstacleLogic : MonoBehaviour
                 float totalLaunchSpeed = launchForce + (motor.BaseVelocity.magnitude * momentumTransfer);
                 motor.BaseVelocity = launchDirection * totalLaunchSpeed;
             }
+        }
+#else
+        // Standard physics fallback for non-KCC setups
+        Rigidbody otherRb = other.GetComponentInParent<Rigidbody>();
+        if (otherRb == null) otherRb = other.GetComponent<Rigidbody>();
 
+        if (otherRb != null || other.CompareTag("Player"))
+        {
+            isPlayerTrigger = true;
+
+            if (isBouncy && otherRb != null)
+            {
+                Vector3 surfaceNormal = (other.transform.position - transform.position).normalized;
+                if (surfaceNormal == Vector3.zero) surfaceNormal = Vector3.up;
+
+                Vector3 launchDirection = Vector3.Lerp(surfaceNormal, Vector3.up, upwardBias).normalized;
+                float totalLaunchSpeed = launchForce + (otherRb.linearVelocity.magnitude * momentumTransfer);
+                otherRb.linearVelocity = launchDirection * totalLaunchSpeed;
+            }
+        }
+#endif
+
+        if (isPlayerTrigger)
+        {
             var playerLogic = other.GetComponentInParent<PlayerLogic>();
 
             switch (payloadType)

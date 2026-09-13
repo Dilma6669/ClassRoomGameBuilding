@@ -1,5 +1,8 @@
-using KinematicCharacterController;
 using UnityEngine;
+
+#if HAS_KINEMATIC_CC
+using KinematicCharacterController;
+#endif
 
 [RequireComponent(typeof(FollowPlatform))]
 public class PlatformObstacle : ObstacleBase
@@ -47,7 +50,11 @@ public class PlatformObstacle : ObstacleBase
             if (hit.collider == physicalMeshCollider || hit.transform.IsChildOf(transform)) continue;
 
             // 2. Ignore Player colliders
+#if HAS_KINEMATIC_CC
             if (hit.collider.GetComponentInParent<KinematicCharacterMotor>() != null) continue;
+#else
+            if (hit.collider.CompareTag("Player") || hit.collider.GetComponentInParent<Rigidbody>() != null) continue;
+#endif
 
             // 3. Static obstacles ignore all other obstacles (prevents floating loop).
             //    BUT Wanderers CAN walk over static obstacles!

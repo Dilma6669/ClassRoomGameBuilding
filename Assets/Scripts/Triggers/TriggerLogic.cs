@@ -3,6 +3,10 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using TMPro;
 
+#if HAS_KINEMATIC_CC
+using KinematicCharacterController;
+#endif
+
 [RequireComponent(typeof(SphereCollider))]
 [ExecuteAlways]
 public class TriggerLogic : MonoBehaviour
@@ -102,9 +106,22 @@ public class TriggerLogic : MonoBehaviour
         }
     }
 
+    private bool IsPlayer(Collider other)
+    {
+        if (other.CompareTag("Player")) return true;
+
+#if HAS_KINEMATIC_CC
+        if (other.GetComponentInParent<KinematicCharacterMotor>() != null) return true;
+#else
+        if (other.GetComponentInParent<Rigidbody>() != null) return true;
+#endif
+
+        return false;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") || other.GetComponentInParent<KinematicCharacterController.KinematicCharacterMotor>() != null)
+        if (IsPlayer(other))
         {
             if (displayText)
             {
@@ -133,7 +150,7 @@ public class TriggerLogic : MonoBehaviour
     {
         if (!displayText || !clearOnExit) return;
 
-        if (other.CompareTag("Player") || other.GetComponentInParent<KinematicCharacterController.KinematicCharacterMotor>() != null)
+        if (IsPlayer(other))
         {
             CacheUIReferences();
             if (canvasGroup != null)

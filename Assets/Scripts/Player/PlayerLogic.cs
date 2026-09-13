@@ -1,6 +1,9 @@
 using System.Collections;
 using UnityEngine;
+
+#if HAS_KINEMATIC_CC
 using KinematicCharacterController.Examples;
+#endif
 
 [ExecuteAlways]
 public class PlayerLogic : MonoBehaviour
@@ -31,7 +34,12 @@ public class PlayerLogic : MonoBehaviour
     [Tooltip("Controls how fast you can steer or gain horizontal speed while mid-air.")]
     [Range(0f, 50f)] public float airSteerSpeed = 15f;
 
+#if HAS_KINEMATIC_CC
     private ExampleCharacterController characterController;
+#else
+    private Rigidbody fallbackRigidbody;
+#endif
+
     private float currentStamina;
     private float regenTimer;
     private bool isExhausted = false;
@@ -52,10 +60,17 @@ public class PlayerLogic : MonoBehaviour
 
     private void FindCharacterController()
     {
+#if HAS_KINEMATIC_CC
         if (characterController == null)
         {
             characterController = GetComponentInChildren<ExampleCharacterController>();
         }
+#else
+        if (fallbackRigidbody == null)
+        {
+            fallbackRigidbody = GetComponentInChildren<Rigidbody>();
+        }
+#endif
     }
 
     private void FindStaminaHUD()
@@ -184,14 +199,22 @@ public class PlayerLogic : MonoBehaviour
 
     private bool IsMoving()
     {
+#if HAS_KINEMATIC_CC
         if (characterController == null) return false;
         Vector3 horizontalVelocity = characterController.Motor.BaseVelocity;
         horizontalVelocity.y = 0f;
         return horizontalVelocity.sqrMagnitude > 0.1f;
+#else
+        if (fallbackRigidbody == null) return false;
+        Vector3 horizontalVelocity = fallbackRigidbody.linearVelocity;
+        horizontalVelocity.y = 0f;
+        return horizontalVelocity.sqrMagnitude > 0.1f;
+#endif
     }
 
     private void ApplyMovementSettings()
     {
+#if HAS_KINEMATIC_CC
         if (characterController != null)
         {
             float targetSpeed = moveSpeed;
@@ -209,5 +232,6 @@ public class PlayerLogic : MonoBehaviour
             characterController.AirAccelerationSpeed = airSteerSpeed;
             characterController.MaxAirMoveSpeed = targetSpeed;
         }
+#endif
     }
 }

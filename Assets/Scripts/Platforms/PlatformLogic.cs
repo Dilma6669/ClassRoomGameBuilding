@@ -1,6 +1,9 @@
 using UnityEngine;
+
+#if HAS_KINEMATIC_CC
 using KinematicCharacterController;
 using KinematicCharacterController.Examples;
+#endif
 
 [ExecuteAlways]
 public class PlatformLogic : MonoBehaviour
@@ -41,7 +44,11 @@ public class PlatformLogic : MonoBehaviour
     [Range(0.1f, 10f)] public float minScale = 0.5f;
     [Range(0.1f, 10f)] public float maxScale = 1.5f;
 
+#if HAS_KINEMATIC_CC
     private ExampleMovingPlatform childMover;
+#else
+    private Transform fallbackChildTransform;
+#endif
 
     // Base dimensions saved prior to uniform scaling
     [SerializeField, HideInInspector] private Vector3 baseScale = new Vector3(3f, 3f, 3f);
@@ -63,16 +70,27 @@ public class PlatformLogic : MonoBehaviour
 
             Vector3 normalizedLocalDir = rawLocalDir.normalized;
 
-            if (childMover != null)
+            Transform target = TargetChild;
+            if (target != null)
             {
-                return childMover.transform.TransformDirection(normalizedLocalDir);
+                return target.TransformDirection(normalizedLocalDir);
             }
 
             return Quaternion.Euler(0f, rotationY, 0f) * normalizedLocalDir;
         }
     }
 
-    public Transform TargetChild => childMover != null ? childMover.transform : null;
+    public Transform TargetChild
+    {
+        get
+        {
+#if HAS_KINEMATIC_CC
+            return childMover != null ? childMover.transform : null;
+#else
+            return fallbackChildTransform;
+#endif
+        }
+    }
 
     private void Awake()
     {
@@ -91,11 +109,18 @@ public class PlatformLogic : MonoBehaviour
 
     private void FindChildComponents()
     {
+#if HAS_KINEMATIC_CC
         if (childMover == null)
             childMover = GetComponentInChildren<ExampleMovingPlatform>(true);
 
         if (childMover == null && transform.childCount > 0)
             childMover = transform.GetChild(0).GetComponent<ExampleMovingPlatform>();
+#else
+        if (fallbackChildTransform == null && transform.childCount > 0)
+        {
+            fallbackChildTransform = transform.GetChild(0);
+        }
+#endif
     }
 
     private void Start()
@@ -103,9 +128,10 @@ public class PlatformLogic : MonoBehaviour
         EnsureParentScaleReset();
         FindChildComponents();
 
-        if (Application.isPlaying && childMover != null)
+        Transform target = TargetChild;
+        if (Application.isPlaying && target != null)
         {
-            Vector3 initialPos = childMover.transform.position;
+            Vector3 initialPos = target.position;
             Vector3 dir = MoveDirection;
             float halfDist = moveDistance / 2f;
 
@@ -119,6 +145,7 @@ public class PlatformLogic : MonoBehaviour
 
     private void ConfigureChildMover()
     {
+#if HAS_KINEMATIC_CC
         if (childMover == null) return;
 
         // Apply continuous Y rotation to ExampleMovingPlatform if enabled
@@ -148,6 +175,7 @@ public class PlatformLogic : MonoBehaviour
         childMover.TranslationAxis = dir;
         childMover.TranslationPeriod = moveDistance / 2f;
         childMover.TranslationSpeed = (2f * Mathf.PI) / calculatedPeriod;
+#endif
     }
 
     private void OnValidate()
@@ -171,39 +199,41 @@ public class PlatformLogic : MonoBehaviour
         EnsureParentScaleReset();
 
         FindChildComponents();
-        if (childMover == null) return;
+        Transform target = TargetChild;
+        if (target == null) return;
 
         if (Application.isPlaying)
         {
             if (enableScaling)
             {
                 // Smoothly oscillate between minScale and maxScale over time
-                float sineWave = (Mathf.Sin(Time.time * scaleSpeed) + 1f) * 0.5f; // Maps sine from [-1,1] to [0,1]
+                float sineWave = (Mathf.Sin(Time.time * scaleSpeed) + 1f) * 0.5f;
                 float scaleFactor = Mathf.Lerp(minScale, maxScale, sineWave);
 
-                childMover.transform.localScale = new Vector3(widthOffset * scaleFactor, heightOffset, depthOffset * scaleFactor);
+                target.localScale = new Vector3(widthOffset * scaleFactor, heightOffset, depthOffset * scaleFactor);
             }
             else
             {
-                childMover.transform.localScale = new Vector3(widthOffset, heightOffset, depthOffset);
+                target.localScale = new Vector3(widthOffset, heightOffset, depthOffset);
             }
         }
         else
         {
-            childMover.transform.localPosition = new Vector3(offsetX, offsetY, offsetZ);
-            childMover.transform.localRotation = Quaternion.Euler(0f, rotationY, 0f);
+            target.localPosition = new Vector3(offsetX, offsetY, offsetZ);
+            target.localRotation = Quaternion.Euler(0f, rotationY, 0f);
 
             Vector3 targetScale = new Vector3(widthOffset, heightOffset, depthOffset);
-            if (childMover.transform.localScale != targetScale)
+            if (target.localScale != targetScale)
             {
-                childMover.transform.localScale = targetScale;
+                target.localScale = targetScale;
             }
         }
     }
 
     private void OnDrawGizmosSelected()
     {
-        if (HasActiveAxis && childMover != null)
+        Transform target = TargetChild;
+        if (HasActiveAxis && target != null)
         {
             Gizmos.color = Color.cyan;
             Vector3 startPos, endPos;
@@ -215,7 +245,7 @@ public class PlatformLogic : MonoBehaviour
             }
             else
             {
-                Vector3 centerPos = childMover.transform.position;
+                Vector3 centerPos = target.position;
                 Vector3 dir = MoveDirection;
                 float halfDist = moveDistance / 2f;
 
@@ -226,10 +256,10 @@ public class PlatformLogic : MonoBehaviour
             Gizmos.DrawLine(startPos, endPos);
 
             Matrix4x4 oldMatrix = Gizmos.matrix;
-            Gizmos.matrix = Matrix4x4.TRS(startPos, childMover.transform.rotation, childMover.transform.localScale);
+            Gizmos.matrix = Matrix4x4.TRS(startPos, target.rotation, target.localScale);
             Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
 
-            Gizmos.matrix = Matrix4x4.TRS(endPos, childMover.transform.rotation, childMover.transform.localScale);
+            Gizmos.matrix = Matrix4x4.TRS(endPos, target.rotation, target.localScale);
             Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
 
             Gizmos.matrix = oldMatrix;

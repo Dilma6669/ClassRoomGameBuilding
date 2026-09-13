@@ -1,5 +1,8 @@
 using UnityEngine;
+
+#if HAS_KINEMATIC_CC
 using KinematicCharacterController;
+#endif
 
 [ExecuteAlways]
 public abstract class ObstacleBase : MonoBehaviour
@@ -94,11 +97,16 @@ public abstract class ObstacleBase : MonoBehaviour
     {
         if (!Application.isPlaying) return;
 
+        bool isPlayerTrigger = false;
+
+#if HAS_KINEMATIC_CC
         KinematicCharacterMotor motor = other.GetComponentInParent<KinematicCharacterMotor>();
         if (motor == null) motor = other.GetComponent<KinematicCharacterMotor>();
 
         if (motor != null)
         {
+            isPlayerTrigger = true;
+
             if (isBouncy)
             {
                 Vector3 surfaceNormal = (motor.TransientPosition - transform.position).normalized;
@@ -109,7 +117,30 @@ public abstract class ObstacleBase : MonoBehaviour
                 float totalLaunchSpeed = launchForce + (motor.BaseVelocity.magnitude * momentumTransfer);
                 motor.BaseVelocity = launchDirection * totalLaunchSpeed;
             }
+        }
+#else
+        // Fallback bounce handling using standard Unity Rigidbody physics
+        Rigidbody rb = other.GetComponentInParent<Rigidbody>();
+        if (rb == null) rb = other.GetComponent<Rigidbody>();
 
+        if (rb != null || other.CompareTag("Player"))
+        {
+            isPlayerTrigger = true;
+
+            if (isBouncy && rb != null)
+            {
+                Vector3 surfaceNormal = (other.transform.position - transform.position).normalized;
+                if (surfaceNormal == Vector3.zero) surfaceNormal = Vector3.up;
+
+                Vector3 launchDirection = Vector3.Lerp(surfaceNormal, Vector3.up, upwardBias).normalized;
+                float totalLaunchSpeed = launchForce + (rb.linearVelocity.magnitude * momentumTransfer);
+                rb.linearVelocity = launchDirection * totalLaunchSpeed;
+            }
+        }
+#endif
+
+        if (isPlayerTrigger)
+        {
             var playerLogic = other.GetComponentInParent<PlayerLogic>();
 
             switch (payloadType)
