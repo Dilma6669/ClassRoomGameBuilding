@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(NavMeshAgent))]
 public class TerrainObstacle : ObstacleBase
 {
     [Header("NavMesh Settings")]
@@ -68,7 +67,16 @@ public class TerrainObstacle : ObstacleBase
 
     public void SetKinematicState(bool enableKinematic)
     {
-        if (Rb != null) Rb.isKinematic = enableKinematic;
-        if (Agent != null) Agent.enabled = enableKinematic;
+        // Safely check for an optional Rigidbody locally if this specific terrain obstacle uses gravity/falling
+        Rigidbody localRb = GetComponent<Rigidbody>();
+        if (localRb != null) 
+        {
+            localRb.isKinematic = enableKinematic;
+        }
+
+        if (Agent != null) 
+        {
+            Agent.enabled = enableKinematic;
+        }
     }
 }

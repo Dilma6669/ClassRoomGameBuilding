@@ -30,7 +30,6 @@ public abstract class ObstacleBase : MonoBehaviour
     [Range(0f, 1f)] public float momentumTransfer = 0.3f;
 
     // Shared Components
-    public Rigidbody Rb { get; private set; }
     protected MeshCollider physicalMeshCollider;
     protected MeshCollider triggerMeshCollider;
     protected IObstacleMovement currentMovementStrategy;
@@ -61,13 +60,6 @@ public abstract class ObstacleBase : MonoBehaviour
     private void InitializeCollidersAndPhysics()
     {
         transform.localScale = Vector3.one;
-
-        Rb = GetComponent<Rigidbody>();
-        if (Rb == null) Rb = gameObject.AddComponent<Rigidbody>();
-
-        Rb.isKinematic = true;
-        Rb.useGravity = true;
-        Rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
         // 1. Solid Collider on "⚠️ DO NOT TOUCH"
         Transform visualChild = transform.Find("⚠️ DO NOT TOUCH");

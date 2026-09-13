@@ -52,12 +52,10 @@ public class PlatformPopulator : MonoBehaviour
 
     private FollowPlatform EnsureBaseObstacleComponents(GameObject spawnedObject, Vector3 localOffset)
     {
-        NavMeshAgent agent = spawnedObject.GetComponent<NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.enabled = false;
-        }
+        // 1. Clean up unused components (Throttler, NavMeshAgent, Rigidbody)
+        StripUnnecessaryComponents(spawnedObject);
 
+        // 2. Attach base logic and platform tracker
         FollowPlatform followLogic = spawnedObject.GetComponent<FollowPlatform>();
         if (followLogic == null) followLogic = spawnedObject.AddComponent<FollowPlatform>();
 
@@ -72,6 +70,45 @@ public class PlatformPopulator : MonoBehaviour
         ApplyCustomMeshAndCollider(spawnedObject);
 
         return followLogic;
+    }
+
+    private void StripUnnecessaryComponents(GameObject obstacleObj)
+    {
+        if (obstacleObj == null) return;
+
+        // Strip AgentPerformanceThrottler (Search by class name string to avoid missing reference errors if deleted)
+        MonoBehaviour throttler = obstacleObj.GetComponent("AgentPerformanceThrottler") as MonoBehaviour;
+        if (throttler != null)
+        {
+            DestroyComponentSafe(throttler);
+        }
+
+        // Strip NavMeshAgent
+        NavMeshAgent agent = obstacleObj.GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            DestroyComponentSafe(agent);
+        }
+
+        // Strip Rigidbodies from root and any children
+        Rigidbody[] rigidbodies = obstacleObj.GetComponentsInChildren<Rigidbody>(true);
+        foreach (Rigidbody rb in rigidbodies)
+        {
+            DestroyComponentSafe(rb);
+        }
+    }
+
+    private void DestroyComponentSafe(Component comp)
+    {
+        if (comp == null) return;
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            DestroyImmediate(comp);
+            return;
+        }
+#endif
+        Destroy(comp);
     }
 
     private void ApplyCustomMeshAndCollider(GameObject obstacleObj)

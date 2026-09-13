@@ -1,3 +1,4 @@
+using KinematicCharacterController;
 using UnityEngine;
 
 [RequireComponent(typeof(FollowPlatform))]
@@ -18,7 +19,7 @@ public class PlatformObstacle : ObstacleBase
     protected override void Update()
     {
         base.Update();
-        
+    
         if (Application.isPlaying)
         {
             SnapToSurfaceHeight();
@@ -41,7 +42,14 @@ public class PlatformObstacle : ObstacleBase
 
         foreach (RaycastHit hit in hits)
         {
+            // 1. Ignore self and child colliders
             if (hit.collider == physicalMeshCollider || hit.transform.IsChildOf(transform)) continue;
+
+            // 2. Ignore Player colliders
+            if (hit.collider.GetComponentInParent<KinematicCharacterMotor>() != null) continue;
+
+            // 3. IGNORE ALL OTHER OBSTACLES / WANDERERS (Prevents floating elevator loop)
+            if (hit.collider.GetComponentInParent<ObstacleBase>() != null) continue;
 
             // Use FollowPlatform's offsetY if present, otherwise fallback to surfaceOffset
             float heightOffset = (FollowPlatformRef != null) ? FollowPlatformRef.offsetY : 0;
