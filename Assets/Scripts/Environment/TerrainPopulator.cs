@@ -80,11 +80,34 @@ public class TerrainPopulator : MonoBehaviour
     private void Start()
     {
         EnsureComponentsHidden();
+        AutoFindObstaclePrefab();
     }
 
     private void OnValidate()
     {
         EnsureComponentsHidden();
+        AutoFindObstaclePrefab();
+    }
+
+    private void Reset()
+    {
+        AutoFindObstaclePrefab();
+    }
+
+    private void AutoFindObstaclePrefab()
+    {
+#if UNITY_EDITOR
+        if (obstaclePrefab == null)
+        {
+            // Search Project window for the 'ObstacleLogic' prefab
+            string[] guids = AssetDatabase.FindAssets("ObstacleLogic t:Prefab");
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                obstaclePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            }
+        }
+#endif
     }
 
     private void EnsureComponentsHidden()
@@ -225,6 +248,7 @@ public class TerrainPopulator : MonoBehaviour
     [ContextMenu("Create Single Obstacle")]
     public void CreateSingleObstacle()
     {
+        AutoFindObstaclePrefab();
         if (obstaclePrefab == null)
         {
             Debug.LogWarning("⚠️ Please assign an Obstacle Prefab first.");
@@ -269,6 +293,7 @@ public class TerrainPopulator : MonoBehaviour
     [ContextMenu("Scatter Obstacles")]
     public void ScatterObstacles()
     {
+        AutoFindObstaclePrefab();
         if (obstaclePrefab == null)
         {
             Debug.LogWarning("⚠️ Please assign an Obstacle Prefab before scattering.");

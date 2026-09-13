@@ -74,6 +74,32 @@ public class PlatformPopulator : MonoBehaviour
 
     private PlatformLogic platformLogic;
 
+    private void OnValidate()
+    {
+        AutoFindObstaclePrefab();
+    }
+
+    private void Reset()
+    {
+        AutoFindObstaclePrefab();
+    }
+
+    private void AutoFindObstaclePrefab()
+    {
+#if UNITY_EDITOR
+        if (obstaclePrefab == null)
+        {
+            // Search Project window for the 'ObstacleLogic' prefab
+            string[] guids = AssetDatabase.FindAssets("ObstacleLogic t:Prefab");
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                obstaclePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            }
+        }
+#endif
+    }
+
     private void FetchPlatformLogic()
     {
         if (platformLogic == null)
@@ -138,12 +164,6 @@ public class PlatformPopulator : MonoBehaviour
         {
             DestroyComponentSafe(agent);
         }
-
-        Rigidbody[] rigidbodies = obstacleObj.GetComponentsInChildren<Rigidbody>(true);
-        foreach (Rigidbody rb in rigidbodies)
-        {
-            DestroyComponentSafe(rb);
-        }
     }
 
     private void DestroyComponentSafe(Component comp)
@@ -200,7 +220,7 @@ public class PlatformPopulator : MonoBehaviour
             case ObstacleSpawnType.Wander:
                 PlatformWanderDriver wanderDriver = obstacleObj.GetComponent<PlatformWanderDriver>();
                 if (wanderDriver == null) wanderDriver = obstacleObj.AddComponent<PlatformWanderDriver>();
-                
+
                 wanderDriver.wanderRadius = wanderSettings.wanderRadius;
                 wanderDriver.minMoveSpeed = wanderSettings.minMoveSpeed;
                 wanderDriver.maxMoveSpeed = wanderSettings.maxMoveSpeed;
@@ -265,6 +285,7 @@ public class PlatformPopulator : MonoBehaviour
     [ContextMenu("Create Single Obstacle")]
     public void CreateSingleObstacle()
     {
+        AutoFindObstaclePrefab();
         GameObject obstacle = SpawnBaseObstacle("Create Single Obstacle", out Vector3 localOffset);
         if (obstacle == null) return;
 
@@ -298,6 +319,7 @@ public class PlatformPopulator : MonoBehaviour
     [ContextMenu("Scatter Random Objects")]
     public void ScatterRandomObjects()
     {
+        AutoFindObstaclePrefab();
         if (obstaclePrefab == null)
         {
             Debug.LogWarning("⚠️ Please assign an Obstacle Prefab before scattering.");
