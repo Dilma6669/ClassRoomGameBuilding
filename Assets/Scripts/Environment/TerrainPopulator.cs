@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Unity.AI.Navigation;
 using UnityEngine.AI;
 using UnityEngine.Serialization;
 #if UNITY_EDITOR
@@ -76,7 +75,6 @@ public class TerrainPopulator : MonoBehaviour
     #endregion
 
     private TerrainCollider terrainCollider;
-    private NavMeshSurface navMeshSurface;
 
     private void Start()
     {
@@ -91,50 +89,8 @@ public class TerrainPopulator : MonoBehaviour
     private void EnsureComponentsHidden()
     {
         terrainCollider = GetComponent<TerrainCollider>();
-        navMeshSurface = GetComponent<NavMeshSurface>();
     }
-
-    [ContextMenu("Bake NavMesh Surface")]
-    public void BakeNavMeshSurface()
-    {
-        FetchTerrain();
-
-        if (navMeshSurface == null)
-        {
-            navMeshSurface = GetComponent<NavMeshSurface>();
-            if (navMeshSurface == null)
-            {
-                navMeshSurface = gameObject.AddComponent<NavMeshSurface>();
-            }
-        }
-        EnsureComponentsHidden();
-
-        navMeshSurface.collectObjects = CollectObjects.Children;
-        navMeshSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
-
-        if (targetTerrain != null)
-        {
-            TerrainCollider tCollider = targetTerrain.GetComponent<TerrainCollider>();
-            if (tCollider == null)
-            {
-                tCollider = targetTerrain.gameObject.AddComponent<TerrainCollider>();
-            }
-            if (targetTerrain.terrainData != null)
-            {
-                tCollider.terrainData = targetTerrain.terrainData;
-            }
-            tCollider.enabled = true;
-        }
-
-        navMeshSurface.BuildNavMesh();
-
-#if UNITY_EDITOR
-        EditorUtility.SetDirty(gameObject);
-        EditorSceneManager.MarkSceneDirty(gameObject.scene);
-#endif
-
-        Debug.Log("✅ NavMesh Surface baked successfully!");
-    }
+    
 
     private void FetchTerrain()
     {

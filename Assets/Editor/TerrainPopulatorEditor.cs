@@ -109,13 +109,6 @@ public class TerrainPopulatorEditor : Editor
         EditorGUILayout.Space(15);
         EditorGUILayout.LabelField("NavMesh & Management", EditorStyles.boldLabel);
 
-        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.8f);
-        if (GUILayout.Button("🧠 Bake NavMesh Surface", buttonStyle))
-        {
-            TerrainPopulator populator = (TerrainPopulator)target;
-            populator.BakeNavMeshSurface();
-        }
-
         EditorGUILayout.Space(6);
 
         GUI.backgroundColor = new Color(0.9f, 0.3f, 0.3f);
