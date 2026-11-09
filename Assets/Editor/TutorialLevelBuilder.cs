@@ -79,55 +79,100 @@ public static class TutorialLevelBuilder
             "Welcome to Tutorial Island! Each yellow sign shows how this level was made with Game > Game Builder.\nWASD = move,  Space = jump,  Shift = sprint,  Esc = menu");
 
         Sign(signs, signMaterial, At(-4f, 8f), At(0f, 8f, 1.5f), "2. Pop-up signs",
-            "Pop-ups like this: Game Builder > Signs & Story > Create Trigger, then type your Message.\nSet Pop-up to Video to play a video instead. Tick 'Change Scene' to send players to another level.");
+            "Pop-ups like this: Game Builder > Signs & Story > Create Trigger, then type your Message.\nTick 'Change Scene' to send players to another level.");
 
-        Sign(signs, signMaterial, At(-4f, 17f), At(0f, 17f, 1.5f), "3. This is you",
+        // Videos: one sign explains, the next one plays a video
+        Sign(signs, signMaterial, At(-4f, 15f), At(0f, 15f, 1.5f), "3. Videos",
+            "Signs can play a VIDEO too: walk into the 'Watch me!' sign next. To make one, set a sign's Pop-up to Video,\nput an .mp4 in Assets/MyVideos and drag it in. Full screen pauses the game; untick it for a small corner video.");
+        GameObject videoSign = Sign(signs, signMaterial, At(-4f, 22f), At(0f, 22f, 1.5f), "Watch me!", "");
+        TriggerLogic video = videoSign.GetComponent<TriggerLogic>();
+        video.displayText = true;
+        video.popupType = TriggerLogic.PopupType.Video;
+        video.videoClip = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/MyVideos/TestVideo.mp4");
+        video.pauseGameWhileVideo = true;
+        video.playOnlyOnce = true;
+
+        Sign(signs, signMaterial, At(-4f, 30f), At(0f, 30f, 1.5f), "4. This is you",
             "You are the Old Man. To change your look: Game Builder > Player, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), yellow = stamina.");
 
-        // Scenery grove around station 3
+        // Scenery grove around station 5
         SceneryPopulator scenery = BuildScenery(terrain, At);
-        Sign(signs, signMaterial, At(-4f, 30f), At(0f, 30f, 1.5f), "4. Scenery",
+        Sign(signs, signMaterial, At(-4f, 42f), At(0f, 42f, 1.5f), "5. Scenery",
             "These trees and rocks came from Game Builder > Scenery:\ntype words like Tree into 'Find models named', click Add, then Scatter.");
+
+        // Glow & sparkles corner
+        BuildGlowCorner(scenery, At);
+        Sign(signs, signMaterial, At(-4f, 60f), At(0f, 60f, 1.5f), "6. Glow & sparkles",
+            "That rock GLOWS and sparkles! Select anything in the Game Builder and click 'Make it glow' or 'Add sparkles around it'.\nPick a style (Swirl, Fireflies, Sparks, Shimmer...) and where they come from. Scenery groups can glow too.");
 
         // Platforms: plain, moving, rock
         PlatformController platforms = Object.FindAnyObjectByType<PlatformController>();
-        Sign(signs, signMaterial, At(-6f, 50f), At(0f, 50f, 1.5f), "5. Platforms",
-            "Game Builder > Platforms: click a Quick platform (Moving, Elevator, Bouncy, Crumbling...)\nand it appears where you are looking. Scatter makes lots at once. Jump across them!");
-        GameObject p1 = MakePlatform(platforms, At(0f, 60f), 1.2f, 6f);
-        GameObject p2 = MakePlatform(platforms, At(0f, 69f), 2.4f, 5f);
+        Sign(signs, signMaterial, At(-6f, 72f), At(0f, 72f, 1.5f), "7. Platforms",
+            "Game Builder > Platforms: click a Quick platform (Floating, Moving, Elevator, Spinning...)\nand it appears where you are looking. 'Scatter' makes lots at once, with random sizes and movement.");
+        GameObject p1 = MakePlatform(platforms, At(0f, 82f), 1.2f, 6f);
+        GameObject p2 = MakePlatform(platforms, At(0f, 91f), 2.4f, 5f);
         PlatformLogic moving = p2.GetComponent<PlatformLogic>();
         moving.moveX = true; moving.moveZ = false; moving.moveDistance = 6f; moving.moveSpeed = 1.5f;
-        GameObject p3 = MakePlatform(platforms, At(0f, 78f), 3.4f, 6f);
+        GameObject p3 = MakePlatform(platforms, At(0f, 100f), 3.4f, 6f);
         GameObject rock = AssetDatabase.LoadAssetAtPath<GameObject>(NatureFolder + "Rock_Moss_6.fbx");
         if (rock != null) PlatformController.ApplyPlatformModel(p3, rock);
         float rockTop = TopOf(p3);
-        Sign(signs, signMaterial, At(-6f, 78f), new Vector3(Start.x, rockTop + 1.5f, Start.z + 78f), "6. Rock platform",
+        Sign(signs, signMaterial, At(-6f, 100f), new Vector3(Start.x, rockTop + 1.5f, Start.z + 100f), "8. Rock platform",
             "This platform is a ROCK! Game Builder > Platforms: click a platform, drag a model\ninto 'Platform Model'. You stand on its real shape, bumps and all.");
 
+        // Bouncy platform (low, so it's easy to step onto)
+        GameObject bouncy = MakePlatform(platforms, At(0f, 116f), 0.6f, 5f);
+        PlatformLogic bouncyLogic = bouncy.GetComponent<PlatformLogic>();
+        ScatterTools.SetPlatformType(bouncyLogic, PlatformLogic.PlatformType.Bouncy);
+        bouncyLogic.bounceStrength = 22f;
+        bouncy.name = "Bouncy Platform";
+        Sign(signs, signMaterial, At(-6f, 111f), At(0f, 111f, 1.5f), "9. Bouncy",
+            "BOUNCY platform: stand on the green one! Make one: click a platform, then Special > Bouncy.\nChange Bounce Strength, and pick a Land Effect for sparkles when you land (any platform can have one).");
+
+        // Crumbling path: low, so falling off doesn't hurt
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject crumble = MakePlatform(platforms, At(0f, 131f + i * 6f), 1.5f, 3.5f);
+            PlatformLogic crumbleLogic = crumble.GetComponent<PlatformLogic>();
+            ScatterTools.SetPlatformType(crumbleLogic, PlatformLogic.PlatformType.Crumbling);
+            crumbleLogic.comeBackAfter = 3f;
+            crumble.name = "Crumbling Platform " + (i + 1);
+        }
+        Sign(signs, signMaterial, At(-6f, 125f), At(0f, 125f, 1.5f), "10. Crumbling",
+            "CRUMBLING platforms: they flash once a second, then fall... then come back! Make one: Special > Crumbling.\nSet Crumble After, Come Back After (0 = never), Warning Flash and a Break Effect. Be quick!");
+
         // Creature arena
-        GameObject arena = MakePlatform(platforms, At(0f, 91f), 3.4f, 12f);
+        GameObject arena = MakePlatform(platforms, At(0f, 158f), 3.4f, 12f);
         float arenaTop = TopOf(arena);
         AddCreatures(arena);
-        Sign(signs, signMaterial, At(-9f, 91f), new Vector3(Start.x, arenaTop + 1.5f, Start.z + 88f), "7. Creatures",
-            "Creatures hurt if you run into them, but JUMP ON THEIR HEADS to beat them!\nGame Builder > Creatures & Pickups: click a creature, or Scatter lots. The glowing ball is Health.");
+        Sign(signs, signMaterial, At(-9f, 158f), new Vector3(Start.x, arenaTop + 1.5f, Start.z + 155f), "11. Creatures",
+            "Careful, creatures hurt if you run into them! Game Builder > Creatures & Pickups: click a creature.\n'Scatter lots at once' puts many on the ground or on platforms. The glowing ball is Health.");
 
-        // Bounce pad on the ground
-        AddBouncePad(terrain, At(0f, 110f));
-        Sign(signs, signMaterial, At(-5f, 104f), At(0f, 104f, 1.5f), "8. Bounce!",
+        // Stomp practice: one creature standing still on the ground
+        AddStompCreature(At(0f, 180f));
+        Sign(signs, signMaterial, At(-5f, 174f), At(0f, 174f, 1.5f), "12. Jump on it!",
+            "JUMP ON ITS HEAD to beat it! This one needs 2 jumps. Click a creature and set 'Jumps On Head To Beat'\n(0 = it can't be beaten). 'Sparkle Burst' picks the effect when it's beaten or picked up.");
+
+        // Bounce ball on the ground
+        AddBouncePad(terrain, At(0f, 196f));
+        Sign(signs, signMaterial, At(-5f, 190f), At(0f, 190f, 1.5f), "13. Bounce!",
             "Jump onto the ball to get launched sky-high! Creatures & Pickups > Bounce Ball.\nAny creature can bounce too: tick 'Is Bouncy', and raise Launch Force to go higher.");
 
         // Checkpoint
         GameMenuItems.CreateCheckpoint();
         GameObject flag = Selection.activeGameObject;
-        flag.transform.position = At(3f, 120f);
-        Sign(signs, signMaterial, At(-4f, 120f), At(0f, 120f, 1.5f), "9. Checkpoint",
+        flag.transform.position = At(3f, 206f);
+        Sign(signs, signMaterial, At(-4f, 206f), At(0f, 206f, 1.5f), "14. Checkpoint",
             "Checkpoint flags save your place: Game Builder > Signs & Story > Create Checkpoint.\nIf you die after touching a flag, you start again from there.");
 
-        Sign(signs, signMaterial, At(-4f, 132f), At(0f, 132f, 1.5f), "10. Library",
+        Sign(signs, signMaterial, At(-4f, 218f), At(0f, 218f, 1.5f), "15. Library",
             "Press Esc > Library for the Story and backstories. Game Builder > Signs & Story changes\nthe game title, death screen, default models and Library entries.");
 
-        GameObject finish = Sign(signs, signMaterial, At(-4f, 146f), At(0f, 146f, 1.5f), "11. Finish!",
-            "You finished! Add levels and share your game in Game Builder > Levels & Build.\nThis sign sends you to the next level. Now go and build your own!");
+        Sign(signs, signMaterial, At(-4f, 230f), At(0f, 230f, 1.5f), "16. Levels",
+            "Game Builder > Levels & Build: 'New empty level' or 'Copy this level' makes a new level.\nUse the arrows to change the order, untick one to leave it out. The star level is where the game starts.");
+
+        GameObject finish = Sign(signs, signMaterial, At(-4f, 244f), At(0f, 244f, 1.5f), "17. Finish!",
+            "You finished! 'Build Game' (in Levels & Build) makes a game anyone can play.\nThis sign sends you to the next level. Now go and build your own!");
         TriggerLogic finishTrigger = finish.GetComponent<TriggerLogic>();
         finishTrigger.changeScene = true;
         finishTrigger.sceneToLoad = "Level01";
@@ -138,7 +183,7 @@ public static class TutorialLevelBuilder
         AddToBuild();
 
         int sceneryCount = scenery.transform.Find(SceneryPopulator.ContainerName)?.GetComponentsInChildren<Renderer>().Length ?? 0;
-        return $"Built Tutorial Island: 11 signs, 4 platforms, creatures, a bounce pad, a checkpoint and {sceneryCount} scenery pieces.";
+        return $"Built Tutorial Island: 17 signs (one plays a video), 8 platforms (bouncy and crumbling too), a glow & sparkles corner, creatures, a bounce pad, a checkpoint and {sceneryCount} scenery pieces.";
     }
 
     // ------------------------------------------------------------------ Terrain
@@ -160,7 +205,7 @@ public static class TutorialLevelBuilder
 
         // Flatten a meadow for the course, blending smoothly into the mountains
         FlattenArea(terrain,
-            new Rect(Start.x - 35f, Start.z - 25f, 70f, 200f),
+            new Rect(Start.x - 35f, Start.z - 25f, 70f, 295f),
             MeadowHeight, 30f);
         return terrain;
     }
@@ -203,12 +248,12 @@ public static class TutorialLevelBuilder
         if (scenery.groups.Count == 0) typeof(SceneryPopulator).GetMethod("Reset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(scenery, null);
         foreach (SceneryPopulator.SceneryGroup group in scenery.groups) scenery.QuickFill(group);
 
-        // A little grove around station 3 (both sides of the path, never on it)
+        // A little grove around the scenery station (both sides of the path, never on it)
         SceneryPopulator.SceneryGroup trees = scenery.groups.Find(g => g.name == "Trees");
         SceneryPopulator.SceneryGroup rocks = scenery.groups.Find(g => g.name == "Rocks");
         SceneryPopulator.SceneryGroup plants = scenery.groups.Find(g => g.name == "Plants & Grass");
         Random.InitState(42); // same layout every time it's rebuilt
-        float[] treeSpots = { 22f, 27f, 33f, 38f, 44f };
+        float[] treeSpots = { 34f, 39f, 45f, 50f, 55f };
         foreach (float z in treeSpots)
         {
             if (trees != null) { scenery.PlaceOne(trees, at(-12f + Random.Range(-2f, 2f), z, 0f)); scenery.PlaceOne(trees, at(12f + Random.Range(-2f, 2f), z + 2f, 0f)); }
@@ -220,9 +265,52 @@ public static class TutorialLevelBuilder
         if (trees != null) { trees.howMany = 120; scenery.Scatter(trees); }
         if (rocks != null) { rocks.howMany = 60; scenery.Scatter(rocks); }
         if (plants != null) { plants.howMany = 250; scenery.Scatter(plants); }
-        ClearCourse(scenery.transform.Find(SceneryPopulator.ContainerName), new Rect(Start.x - 7f, Start.z - 10f, 14f, 170f), new Rect(Start.x - 16f, Start.z + 18f, 32f, 32f));
+        ClearCourse(scenery.transform.Find(SceneryPopulator.ContainerName), new Rect(Start.x - 7f, Start.z - 10f, 14f, 265f), new Rect(Start.x - 16f, Start.z + 30f, 32f, 32f));
         Random.InitState(System.Environment.TickCount);
         return scenery;
+    }
+
+    /// <summary>A glowing "crystal" rock and a few sparkly things to show off the glow & sparkle options.</summary>
+    private static void BuildGlowCorner(SceneryPopulator scenery, System.Func<float, float, float, Vector3> at)
+    {
+        SceneryPopulator.SceneryGroup corner = new SceneryPopulator.SceneryGroup { name = "Glow & Sparkles Corner", solid = true };
+
+        GameObject Piece(string model, float side, float forward, float size)
+        {
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(NatureFolder + model + ".fbx");
+            if (asset == null) return null;
+            corner.models = new List<GameObject> { asset };
+            corner.sizeRange = new Vector2(size, size);
+            GameObject go = scenery.PlaceOne(corner, at(side, forward, 0f));
+            // Glowing things can't be merged by static batching
+            if (go != null) GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+            return go;
+        }
+
+        AmbientSparkles Sparkle(GameObject go, AmbientSparkles.Style style, Color colour, bool top, bool sides, bool centre, float amount)
+        {
+            if (go == null) return null;
+            AmbientSparkles s = go.AddComponent<AmbientSparkles>();
+            s.style = style; s.colour = colour; s.fromTop = top; s.fromSides = sides; s.fromBottom = false; s.fromCentre = centre; s.amount = amount;
+            return s;
+        }
+
+        // The "crystal": a snowy rock that glows cyan, with sparkles swirling round it
+        GameObject crystal = Piece("Rock_Snow_3", 9f, 62f, 2.2f);
+        if (crystal != null)
+        {
+            Glow glow = crystal.AddComponent<Glow>();
+            glow.colour = new Color(0.4f, 0.9f, 1f);
+            glow.strength = 2f;
+            glow.lightRange = 7f;
+            glow.pulsesPerSecond = 0.5f;
+            Sparkle(crystal, AmbientSparkles.Style.Swirl, glow.colour, false, true, false, 25f);
+        }
+
+        // A tree full of fireflies, a shimmering stump and a flower fountain
+        Sparkle(Piece("CommonTree_Autumn_2", 15f, 66f, 1.8f), AmbientSparkles.Style.Fireflies, new Color(1f, 0.9f, 0.4f), true, true, false, 20f);
+        Sparkle(Piece("TreeStump_Moss", 8f, 68f, 1.6f), AmbientSparkles.Style.Shimmer, new Color(0.5f, 1f, 0.5f), true, false, false, 15f);
+        Sparkle(Piece("Flowers", 11f, 57f, 1.8f), AmbientSparkles.Style.Fountain, new Color(1f, 0.5f, 0.8f), false, false, true, 15f);
     }
 
     /// <summary>Removes scattered scenery that landed on the path (but keeps the hand-placed grove).</summary>
@@ -347,6 +435,39 @@ public static class TutorialLevelBuilder
         if (follow != null) { follow.offsetX += x; follow.offsetZ += z; }
         PlatformObstacle po = obstacle.GetComponent<PlatformObstacle>();
         if (po != null) po.SitOnPlatformInEditor();
+    }
+
+    /// <summary>A creature that stands still on the ground and takes 2 jumps on its head to beat.</summary>
+    private static void AddStompCreature(Vector3 groundPoint)
+    {
+        TerrainPopulator populator = Object.FindAnyObjectByType<TerrainPopulator>();
+        Terrain terrain = Object.FindAnyObjectByType<Terrain>();
+        // A zombie: tall, so it's easy to land on (the default still creature is a flat snake)
+        populator.customModel = GameSettings.Load().DefaultObstacleModel(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol);
+        populator.customMesh = null;
+        populator.scatterObstacleType = ObstacleSpawnType.Static;
+        populator.baseSettings.payloadType = ObstacleBase.PayloadType.Damage;
+        populator.baseSettings.payloadAmount = 10;
+        populator.baseSettings.isBouncy = false;
+        populator.baseSettings.destroyOnTrigger = false;
+        populator.baseSettings.objectScale = 1.2f;
+        populator.CreateSingleObstacle();
+
+        GameObject creature = Selection.activeGameObject;
+        if (creature != null)
+        {
+            creature.name = "Jump On Me";
+            // It was made in the middle of the map: move it, keeping its height above the ground
+            float lift = creature.transform.position.y - (terrain.SampleHeight(creature.transform.position) + terrain.GetPosition().y);
+            creature.transform.position = groundPoint + Vector3.up * lift;
+            ObstacleBase obstacle = creature.GetComponent<ObstacleBase>();
+            obstacle.jumpsToDefeat = 2;
+            obstacle.sparkleStyle = ObstacleBase.SparkleStyle.Explosion;
+            obstacle.initialYRotation = 180f; // facing the player coming down the path
+            creature.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        }
+        populator.customModel = null;
+        populator.baseSettings.objectScale = 1f;
     }
 
     private static void AddBouncePad(Terrain terrain, Vector3 groundPoint)

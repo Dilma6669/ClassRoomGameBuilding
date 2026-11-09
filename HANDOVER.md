@@ -223,6 +223,26 @@ The teacher pointed out that the old scatter options weren't really in the Game 
   - Glow's `pulseSpeed` was renamed to `pulsesPerSecond` (default 0.5).
   - Verified in Play: the flash (light 1.5 → 3.9), break after 2 s, back after 3 s; Sparks landing burst; Bouncy ring; no console errors.
 
+## Done 2026-11-10 (session 5): Tutorial covers everything from this evening
+- The course grows from 11 to **17 stations** (`Editor/TutorialLevelBuilder.cs`). The meadow is flattened over 295 m (was 200), so `Assets/Tutorial/TutorialTerrain.asset` really changed this time and is committed. New and renumbered stations:
+  - **3 Videos**, plus a **"Watch me!"** sign that plays `Assets/MyVideos/TestVideo.mp4` full screen, once. Replace it with the teacher's clip later: set the `videoClip` load path in the builder.
+  - **6 Glow & sparkles** corner, beside the path at x+8..15:
+    - a "crystal" (Rock_Snow_3) that glows cyan with Swirl sparkles from its sides
+    - an autumn tree with Fireflies
+    - a shimmering mossy stump
+    - flowers with a centre Fountain
+  - **9 Bouncy** platform (low, bounce 22, Ring land effect).
+  - **10 Crumbling** path: 3 crumbling platforms 1.5 m up, 6 m apart, 2 s crumble, back after 3 s.
+  - **12 Jump on it!**: a still zombie (`AddStompCreature`) needing 2 jumps, with an Explosion burst.
+  - **16 Levels**: New empty level / Copy / order / ticks.
+  - Updated texts for Pop-ups, Platforms (Quick + Scatter), Creatures (Scatter), and Finish (Build Game).
+- Verified in Play:
+  - sign texts fit (2 lines)
+  - the video plays and Skip returns to play
+  - the glow corner is visible
+  - bouncy launches, crumbling falls, and the stomp creature is beaten in 2 jumps
+- Note: the homemade test clip logs one harmless "Color primaries 0 is unknown" warning when played; a normal camera/phone .mp4 won't.
+
 ## Open requests
 1. **Platforms, more options.** Presets, scatter, crumbling and bouncy are done. Still ideas: a "test this jump" helper, a per-platform colour picker. Add the new features to the YouTube script.
 2. **AI-made tutorial video.** A scripted "Tutorial Director" performs each chapter's steps in the Editor with captions; the teacher records with OBS and adds voice-over.
