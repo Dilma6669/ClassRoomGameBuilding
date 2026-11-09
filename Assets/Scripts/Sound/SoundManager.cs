@@ -121,6 +121,7 @@ public class SoundManager : MonoBehaviour
     {
         if (Instance == null) return;
         SoundEntry entry = Instance.Pick(e, source);
+        if (LogSounds) Debug.Log("🔊 " + e + " from " + (source != null ? source.name : "player") + ": " + (entry != null ? entry.clip.name : "(no sound set)"));
         if (entry == null) return;
 
         bool fromPlayer = SoundEntry.TargetsFor(e) == SoundTarget.Nothing || e == SoundEvent.Attack;
@@ -221,17 +222,25 @@ public class SoundManager : MonoBehaviour
         {
             if (m == null || m.model != model) continue;
             foreach (AnimationSound a in m.animations)
-                if (a != null && a.animation == clip && a.sound != null) return a;
+                if (a != null && a.animation == clip && a.sound != null && a.playWhen == AnimationMoment.Normal) return a;
         }
         return null;
     }
 
     private AudioListener listener;
+    private PlayerSounds player;
+
+    /// <summary>Testing aid: write every sound moment to the Console.</summary>
+    public static bool LogSounds;
 
     private bool TooFarToHear(Vector3 position)
     {
         if (listener == null || !listener.isActiveAndEnabled) listener = FindAnyObjectByType<AudioListener>();
-        return listener != null && Vector3.Distance(listener.transform.position, position) > pool[0].maxDistance;
+        if (player == null || !player.gameObject.activeInHierarchy) player = FindAnyObjectByType<PlayerSounds>();
+        float range = pool[0].maxDistance;
+        // Near the player counts too (the camera can lag behind, e.g. right after a checkpoint respawn)
+        if (player != null && Vector3.Distance(player.transform.position, position) <= range) return false;
+        return listener != null && Vector3.Distance(listener.transform.position, position) > range;
     }
 
     public static void PlayAnimationSound(AnimationSound sound, Vector3 position, bool isPlayer)

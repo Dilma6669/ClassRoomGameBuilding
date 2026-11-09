@@ -40,7 +40,16 @@ public class Health : MonoBehaviour, IDamagable
 
         currentHealth = Mathf.Max(0, currentHealth - amount);
 
-        if (currentHealth > 0)
+        // The player model's own "gets hurt" / "lands too hard" animation (and its sound, which replaces the general one)
+        CustomModel ownModel = GetComponentInChildren<CustomModel>();
+        bool ownSound = false;
+        if (currentHealth > 0 && ownModel != null)
+        {
+            float length = ownModel.PlayMoment(fromFall ? AnimationMoment.LandsTooHard : AnimationMoment.GetsHurt, out ownSound);
+            if (length <= 0f && fromFall) ownModel.PlayMoment(AnimationMoment.GetsHurt, out ownSound); // no fall animation: use the hurt one
+        }
+
+        if (currentHealth > 0 && !ownSound)
         {
             bool fallSound = fromFall && SoundManager.Find(SoundEvent.FallDamage, gameObject) != null;
             SoundManager.Play(fallSound ? SoundEvent.FallDamage : SoundEvent.Damage, transform.position, gameObject);

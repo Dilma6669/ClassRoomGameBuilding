@@ -13,9 +13,9 @@ public partial class GameBuilderWindow
     // The order the moments are listed in the tab
     private static readonly SoundEvent[] TabOrder =
     {
-        SoundEvent.Run, SoundEvent.Sprint, SoundEvent.Jump, SoundEvent.Attack, SoundEvent.Damage, SoundEvent.FallDamage, SoundEvent.PlayerDeath,
-        SoundEvent.CreatureMove, SoundEvent.EnemyAttack, SoundEvent.EnemyDamage, SoundEvent.EnemyDeath,
-        SoundEvent.PickUp, SoundEvent.Bounce
+        SoundEvent.Run, SoundEvent.Sprint, SoundEvent.Jump, SoundEvent.Damage, SoundEvent.FallDamage, SoundEvent.PlayerDeath,
+        SoundEvent.PickUp, SoundEvent.Attack, SoundEvent.Bounce,
+        SoundEvent.CreatureMove, SoundEvent.EnemyAttack, SoundEvent.EnemyDamage, SoundEvent.EnemyDeath
     };
 
     /// <summary>Opens the Game Builder on a tab (e.g. from the Game menu).</summary>
@@ -74,7 +74,7 @@ public partial class GameBuilderWindow
         Section("🔊 General sounds (used by everything, unless a model has its own)");
         EditorGUILayout.HelpBox("Each moment can have more than one sound. Click '➕ Another sound' to:\n• pick a different sound for some creatures or pickups (untick 'For every...'), or\n• add variety: when several sounds fit, one is picked at random.\nTo give ONE model its own sounds (a dragon's roar, a horse's hooves), use 🎭 Sounds for one model further down.", MessageType.None);
 
-        string[] groupTitles = { "🧙 Player", "👹 Creatures (enemies)", "⭐ Items & objects" };
+        string[] groupTitles = { "🧙 Player", "🎯 Touching things (pickups, jumping on creatures, bouncing)", "👹 Creatures (enemies)" };
         foreach (SoundEntry.Group group in Enum.GetValues(typeof(SoundEntry.Group)))
         {
             if (!Foldout("sounds." + group, groupTitles[(int)group], true)) continue;

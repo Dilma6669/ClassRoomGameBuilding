@@ -405,7 +405,11 @@ public class CustomModel : MonoBehaviour
 
         graph = PlayableGraph.Create(name + " Animations");
         graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime); // pauses with the game
-        mixer = AnimationMixerPlayable.Create(graph, clipCount);
+        mixer = AnimationMixerPlayable.Create(graph, clipCount + 1); // + 1 for extra animations (bark, bite...)
+        actionInput = clipCount;
+        actionWeight = 0f;
+        actionTimeLeft = 0f;
+        isHumanoidRig = isHumanoid;
 
         int input = 0;
         for (int i = 0; i < 5; i++)
@@ -490,6 +494,7 @@ public class CustomModel : MonoBehaviour
             total += weights[i];
         }
         if (total > 0f) for (int i = 0; i < 5; i++) weights[i] /= total;
+        UpdateAction(dt);
         ApplyWeights();
     }
 
@@ -544,8 +549,87 @@ public class CustomModel : MonoBehaviour
         for (int i = 0; i < 5; i++)
         {
             if (mixerInput[i] < 0) continue;
-            mixer.SetInputWeight(mixerInput[i], weights[i]);
+            mixer.SetInputWeight(mixerInput[i], weights[i] * (1f - actionWeight));
             clipPlayables[i].SetSpeed(animationSpeed);
+        }
+        if (actionInput >= 0 && actionInput < mixer.GetInputCount()) mixer.SetInputWeight(actionInput, actionWeight);
+    }
+
+    // ------------------------------------------------------------------ Extra animations (bark, bite, death...)
+
+    private int actionInput = -1;
+    private AnimationClipPlayable actionPlayable;
+    private float actionWeight;
+    private float actionTimeLeft;
+    private bool isHumanoidRig;
+    private float nowAndThenTimer = -1f;
+
+    /// <summary>
+    /// Plays the model's extra animation chosen for this moment (Game Builder > Sounds > one model), with its sound.
+    /// Returns how long it lasts (0 if there is none). playedSound: it had its own sound (so skip the general one).
+    /// </summary>
+    public float PlayMoment(AnimationMoment moment, out bool playedSound)
+    {
+        playedSound = false;
+        if (!Application.isPlaying || model == null) return 0f;
+
+        List<AnimationSound> choices = new List<AnimationSound>();
+        foreach (ModelSounds m in GameSounds.Load().modelSounds)
+        {
+            if (m == null || m.model != model) continue;
+            foreach (AnimationSound a in m.animations)
+                if (a != null && a.animation != null && a.playWhen == moment) choices.Add(a);
+        }
+        if (choices.Count == 0) return 0f;
+
+        AnimationSound pick = choices[Random.Range(0, choices.Count)];
+        if (pick.sound != null)
+        {
+            SoundManager.PlayAnimationSound(pick, transform.position, GetComponentInParent<ObstacleBase>() == null);
+            playedSound = true;
+        }
+        return PlayAction(pick.animation);
+    }
+
+    private float PlayAction(AnimationClip clip)
+    {
+        if (!graph.IsValid() || actionInput < 0 || clip == null || clip.length <= 0f) return 0f;
+        if (clip.humanMotion != isHumanoidRig) return 0f; // would break the pose
+
+        if (actionPlayable.IsValid())
+        {
+            graph.Disconnect(mixer, actionInput);
+            actionPlayable.Destroy();
+        }
+        actionPlayable = AnimationClipPlayable.Create(graph, clip);
+        actionPlayable.SetSpeed(animationSpeed);
+        graph.Connect(actionPlayable, 0, mixer, actionInput);
+        float length = clip.length / Mathf.Max(0.1f, animationSpeed);
+        actionTimeLeft = length;
+        return length;
+    }
+
+    private void UpdateAction(float dt)
+    {
+        actionTimeLeft -= dt;
+        // Blend in quickly, and back out just before it ends
+        float target = actionTimeLeft > 0.15f ? 1f : 0f;
+        actionWeight = Mathf.MoveTowards(actionWeight, target, dt * 8f);
+
+        // "Now and then": an extra animation every few seconds while standing still
+        if (currentSlot == AnimSlot.Idle && actionTimeLeft <= 0f)
+        {
+            if (nowAndThenTimer < 0f) nowAndThenTimer = Random.Range(4f, 10f);
+            nowAndThenTimer -= dt;
+            if (nowAndThenTimer <= 0f)
+            {
+                nowAndThenTimer = -1f;
+                PlayMoment(AnimationMoment.NowAndThen, out _);
+            }
+        }
+        else
+        {
+            nowAndThenTimer = -1f;
         }
     }
 

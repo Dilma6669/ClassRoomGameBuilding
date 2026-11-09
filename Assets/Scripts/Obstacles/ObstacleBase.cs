@@ -250,7 +250,7 @@ public abstract class ObstacleBase : MonoBehaviour
                     var damagable = other.GetComponentInParent<IDamagable>();
                     if (damagable != null)
                     {
-                        SoundManager.Play(SoundEvent.EnemyAttack, transform.position, gameObject);
+                        if (!PlayOwnMoment(AnimationMoment.AttacksYou, out _)) SoundManager.Play(SoundEvent.EnemyAttack, transform.position, gameObject);
                         damagable.TakeDamage(payloadAmount);
                     }
                     break;
@@ -337,7 +337,7 @@ public abstract class ObstacleBase : MonoBehaviour
         if (jumpsTaken >= jumpsToDefeat) Defeat();
         else
         {
-            SoundManager.Play(SoundEvent.EnemyDamage, transform.position, gameObject);
+            if (!PlayOwnMoment(AnimationMoment.GetsHit, out _)) SoundManager.Play(SoundEvent.EnemyDamage, transform.position, gameObject);
             StartCoroutine(Squash(false));
         }
     }
@@ -347,13 +347,40 @@ public abstract class ObstacleBase : MonoBehaviour
     private void Defeat()
     {
         defeated = true;
-        SoundManager.Play(SoundEvent.EnemyDeath, transform.position, gameObject);
+        bool ownSound = PlayOwnMoment(AnimationMoment.IsBeaten, out float beatenLength);
+        if (!ownSound) SoundManager.Play(SoundEvent.EnemyDeath, transform.position, gameObject);
         currentMovementStrategy = null;
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = false;
         foreach (Collider c in GetComponentsInChildren<Collider>()) c.enabled = false;
+        if (beatenLength > 0f)
+        {
+            // It has its own "beaten" animation (e.g. falling over): play it, then vanish
+            StartCoroutine(VanishAfter(Mathf.Min(beatenLength, 3f)));
+            return;
+        }
         if (sparkles) BurstSparkles(Sparkles.Style.Poof);
         StartCoroutine(Squash(true));
+    }
+
+    private System.Collections.IEnumerator VanishAfter(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        if (sparkles) BurstSparkles(Sparkles.Style.Poof);
+        Destroy(gameObject);
+    }
+
+    /// <summary>
+    /// Plays this creature's own extra animation for the moment (Game Builder > Sounds > one model).
+    /// Returns true if that animation had its own sound (then the general sound is skipped).
+    /// </summary>
+    private bool PlayOwnMoment(AnimationMoment moment, out float length)
+    {
+        length = 0f;
+        if (!lookedForModel) { ownModel = GetComponentInChildren<CustomModel>(); lookedForModel = true; }
+        if (ownModel == null) return false;
+        length = ownModel.PlayMoment(moment, out bool playedSound);
+        return playedSound;
     }
 
     private void BurstSparkles(Sparkles.Style automaticStyle)

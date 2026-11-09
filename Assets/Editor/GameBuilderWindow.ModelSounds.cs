@@ -12,11 +12,13 @@ public partial class GameBuilderWindow
     private GameObject soundModel;
     [System.NonSerialized] private List<GameObject> myModels;
     [System.NonSerialized] private GameObject clipsCachedFor;
+    private string animSearch;
     private List<AnimationClip> cachedClips = new List<AnimationClip>();
     private Dictionary<AnimationClip, string> cachedUsedFor = new Dictionary<AnimationClip, string>();
 
     private static readonly SoundEvent[] ModelCreatureEvents = { SoundEvent.EnemyAttack, SoundEvent.EnemyDamage, SoundEvent.EnemyDeath, SoundEvent.Attack };
     private static readonly SoundEvent[] ModelPlayerEvents = { SoundEvent.Jump, SoundEvent.Damage, SoundEvent.FallDamage, SoundEvent.PlayerDeath };
+    private static readonly SoundEvent[] ModelPickupEvents = { SoundEvent.PickUp, SoundEvent.Bounce };
 
     private bool Foldout(string key, string label, bool startOpen)
     {
@@ -31,7 +33,7 @@ public partial class GameBuilderWindow
         if (myModels == null) myModels = FindMyModels();
 
         // Models that already have sounds, as quick buttons
-        List<GameObject> withSounds = sounds.modelSounds.Where(m => m != null && m.model != null && m.animations.Any(a => a.sound != null)).Select(m => m.model)
+        List<GameObject> withSounds = sounds.modelSounds.Where(m => m != null && m.model != null && m.animations.Any(a => a != null && (a.sound != null || (a.playWhen != AnimationMoment.Normal && a.playWhen != AnimationMoment.Never)))).Select(m => m.model)
             .Concat(sounds.sounds.Where(s => s != null && s.onlyModel != null && s.clip != null).Select(s => s.onlyModel)).Distinct().ToList();
         if (withSounds.Count > 0)
         {
@@ -93,78 +95,33 @@ public partial class GameBuilderWindow
                 cachedClips = CustomModel.ClipsForModel(soundModel, out cachedUsedFor);
             }
 
-            GUILayout.Label("🎬 Its animations", EditorStyles.boldLabel);
+            ModelSounds ms = sounds.modelSounds.FirstOrDefault(m => m != null && m.model == soundModel);
+
+            GUILayout.Label("🎬 Its animations (the game plays these by itself)", EditorStyles.boldLabel);
             if (cachedClips.Count == 0)
             {
                 EditorGUILayout.HelpBox("This model has no animations, so only the sounds below can be set.", MessageType.None);
             }
-
-            ModelSounds ms = sounds.modelSounds.FirstOrDefault(m => m != null && m.model == soundModel);
-            bool showUnused = false;
-            bool unusedHeaderDrawn = false;
-            foreach (AnimationClip clip in cachedClips)
+            foreach (AnimationClip clip in cachedClips.Where(c => cachedUsedFor.ContainsKey(c)))
             {
-                AnimationSound a = ms?.animations.FirstOrDefault(x => x != null && x.animation == clip);
-                string used = cachedUsedFor.TryGetValue(clip, out string slot) ? "  (plays when: " + slot + ")" : "";
+                DrawAnimationRow(sounds, ref ms, clip, cachedUsedFor[clip]);
+            }
 
-                // Animations the game never plays go in a fold-out (clips are sorted: used ones first)
-                if (!cachedUsedFor.ContainsKey(clip))
-                {
-                    if (!unusedHeaderDrawn)
-                    {
-                        unusedHeaderDrawn = true;
-                        showUnused = Foldout("unusedAnims", "Its other animations (the game doesn't play these yet)", false);
-                    }
-                    if (!showUnused && (a == null || a.sound == null)) continue;
-                }
+            List<AnimationClip> extras = cachedClips.Where(c => !cachedUsedFor.ContainsKey(c)).ToList();
+            if (extras.Count > 0 && Foldout("extraAnims", "🎭 Its extra animations (" + extras.Count + "): choose when each one plays", true))
+            {
+                EditorGUILayout.HelpBox("Pick when an extra animation plays (e.g. Bite = 'it attacks you', Death = 'it is beaten', Howl = 'now and then'), and drag in a sound for it. Its sound replaces the general sound for that moment.", MessageType.None);
+                // Some models have hundreds of animations: the ones already set up, then a search
+                ModelSounds current = ms;
+                List<AnimationClip> setUp = extras.Where(c => current != null && current.animations.Any(a => a != null && a.animation == c)).ToList();
+                foreach (AnimationClip clip in setUp) DrawAnimationRow(sounds, ref ms, clip, null);
 
-                EditorGUILayout.Space(2);
-                GUILayout.Label(clip.name + used, cachedUsedFor.ContainsKey(clip) ? EditorStyles.label : EditorStyles.miniLabel);
-                EditorGUI.BeginChangeCheck();
-                AudioClip sound;
-                float volume = a != null ? a.volume : 0.8f;
-                bool repeat = a == null || a.repeatEachLoop;
-                bool vary = a == null || a.varyPitch;
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    sound = (AudioClip)EditorGUILayout.ObjectField(a?.sound, typeof(AudioClip), false, GUILayout.Height(20));
-                    GUI.enabled = a != null && a.sound != null;
-                    if (GUILayout.Button("▶", GUILayout.Width(28))) SoundTools.Preview(a.sound);
-                    GUI.enabled = true;
-                }
-                if (a != null && a.sound != null)
-                {
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        volume = EditorGUILayout.Slider("Volume", a.volume, 0f, 1f);
-                        repeat = GUILayout.Toggle(a.repeatEachLoop, new GUIContent(" Every loop", "Play again each time the animation repeats (footsteps, flapping). Off = only when it starts."), GUILayout.Width(90));
-                        vary = GUILayout.Toggle(a.varyPitch, new GUIContent(" Vary pitch"), GUILayout.Width(85));
-                    }
-                }
-                if (EditorGUI.EndChangeCheck())
-                {
-                    Undo.RecordObject(sounds, "Change animation sound");
-                    if (ms == null) { ms = new ModelSounds { model = soundModel }; sounds.modelSounds.Add(ms); }
-                    if (sound == null)
-                    {
-                        if (a != null) ms.animations.Remove(a);
-                        if (ms.animations.Count == 0) sounds.modelSounds.Remove(ms);
-                    }
-                    else
-                    {
-                        if (a == null)
-                        {
-                            a = new AnimationSound { animation = clip, repeatEachLoop = (slot ?? "").Contains("Walk") || (slot ?? "").Contains("Run") };
-                            ms.animations.Add(a);
-                        }
-                        a.sound = sound;
-                        a.volume = volume;
-                        a.repeatEachLoop = repeat;
-                        a.varyPitch = vary;
-                    }
-                    SoundsChanged(sounds);
-                    GUIUtility.ExitGUI();
-                }
+                EditorGUILayout.Space(4);
+                animSearch = EditorGUILayout.TextField(new GUIContent("🔍 Find an animation", "Type part of a name, e.g. death, bite, yell"), animSearch ?? "");
+                List<AnimationClip> matches = extras.Where(c => !setUp.Contains(c) && (string.IsNullOrEmpty(animSearch) || c.name.ToLowerInvariant().Contains(animSearch.ToLowerInvariant()))).ToList();
+                const int MaxShown = 12;
+                foreach (AnimationClip clip in matches.Take(MaxShown)) DrawAnimationRow(sounds, ref ms, clip, null);
+                if (matches.Count > MaxShown) EditorGUILayout.LabelField("...and " + (matches.Count - MaxShown) + " more. Type in the search box to find one.", EditorStyles.miniBoldLabel);
             }
 
             // ---- Its own versions of the general sounds
@@ -174,7 +131,88 @@ public partial class GameBuilderWindow
             EditorGUILayout.Space(4);
             GUILayout.Label("🧙 When it's the player", EditorStyles.boldLabel);
             foreach (SoundEvent e in ModelPlayerEvents) DrawModelEvent(sounds, e);
+            EditorGUILayout.Space(4);
+            GUILayout.Label("⭐ When it's a pickup or bounce ball", EditorStyles.boldLabel);
+            foreach (SoundEvent e in ModelPickupEvents) DrawModelEvent(sounds, e);
         }
+    }
+
+    /// <summary>
+    /// One animation: a sound slot, plus (for extra animations) when the game plays it.
+    /// slot = "Walk", "Idle, Walk"... for the animations the game plays itself; null for extra ones.
+    /// </summary>
+    private void DrawAnimationRow(GameSounds sounds, ref ModelSounds ms, AnimationClip clip, string slot)
+    {
+        bool extra = slot == null;
+        AnimationSound a = ms?.animations.FirstOrDefault(x => x != null && x.animation == clip);
+        AnimationMoment when = extra ? (a != null && a.playWhen != AnimationMoment.Normal ? a.playWhen : AnimationMoment.Never) : AnimationMoment.Normal;
+
+        EditorGUILayout.Space(2);
+        EditorGUI.BeginChangeCheck();
+        AudioClip sound;
+        float volume = a != null ? a.volume : 0.8f;
+        bool repeat = a != null ? a.repeatEachLoop : (slot ?? "").Contains("Walk") || (slot ?? "").Contains("Run");
+        bool vary = a == null || a.varyPitch;
+
+        if (extra)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label(clip.name, GUILayout.Width(130));
+                int index = System.Array.IndexOf(AnimationMoments.Choices, when);
+                index = EditorGUILayout.Popup(Mathf.Max(0, index), AnimationMoments.Choices.Select(AnimationMoments.Label).ToArray());
+                when = AnimationMoments.Choices[index];
+            }
+        }
+        else
+        {
+            GUILayout.Label(clip.name + "  (plays when: " + slot + ")");
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            sound = (AudioClip)EditorGUILayout.ObjectField(a?.sound, typeof(AudioClip), false, GUILayout.Height(20));
+            GUI.enabled = a != null && a.sound != null;
+            if (GUILayout.Button("▶", GUILayout.Width(28))) SoundTools.Preview(a.sound);
+            GUI.enabled = true;
+        }
+        if (a != null && a.sound != null)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                volume = EditorGUILayout.Slider("Volume", a.volume, 0f, 1f);
+                if (!extra) repeat = GUILayout.Toggle(a.repeatEachLoop, new GUIContent(" Every loop", "Play again each time the animation repeats (footsteps, flapping). Off = only when it starts."), GUILayout.Width(90));
+                vary = GUILayout.Toggle(a.varyPitch, new GUIContent(" Vary pitch"), GUILayout.Width(85));
+            }
+            if (extra && when == AnimationMoment.Never)
+                EditorGUILayout.LabelField("   ↑ Choose when it plays, or this sound is never heard.", EditorStyles.miniBoldLabel);
+        }
+
+        if (!EditorGUI.EndChangeCheck()) return;
+
+        Undo.RecordObject(sounds, "Change animation sound");
+        bool keep = sound != null || (extra && when != AnimationMoment.Never);
+        if (!keep)
+        {
+            if (a != null && ms != null) ms.animations.Remove(a);
+            if (ms != null && ms.animations.Count == 0) sounds.modelSounds.Remove(ms);
+        }
+        else
+        {
+            if (ms == null) { ms = new ModelSounds { model = soundModel }; sounds.modelSounds.Add(ms); }
+            if (a == null)
+            {
+                a = new AnimationSound { animation = clip };
+                ms.animations.Add(a);
+            }
+            a.sound = sound;
+            a.volume = volume;
+            a.repeatEachLoop = repeat;
+            a.varyPitch = vary;
+            a.playWhen = when;
+        }
+        SoundsChanged(sounds);
+        GUIUtility.ExitGUI();
     }
 
     private void DrawModelEvent(GameSounds sounds, SoundEvent e)
@@ -218,6 +256,8 @@ public partial class GameBuilderWindow
             case SoundEvent.Damage: return "🤕 Gets hurt";
             case SoundEvent.FallDamage: return "🪂 Lands too hard";
             case SoundEvent.PlayerDeath: return "💀 Dies";
+            case SoundEvent.PickUp: return "⭐ You walk into it";
+            case SoundEvent.Bounce: return "🏀 You bounce off it";
             default: return e.ToString();
         }
     }

@@ -300,6 +300,20 @@ Teacher asked: a Sounds tab to drag in sounds (attack, enemy attack, run, jump, 
   - Music list: ▶ ▲ ▼ ✕, a drop zone for many songs at once, and "➕ Add a song".
   - "🎵 Fill empty slots with starter sounds": `SoundTools` writes simple beeps/thuds and two short chiptune songs (made in code, free to use) to `Assets/MySounds/Starter Sounds` and `Starter Music`. **They are currently assigned to every slot**; students replace them by dragging in their own sounds.
 - **Tutorial:** sign 15 is now "Library & Sounds". The level was rebuilt.
+- **Follow-up (same evening): extra animations + 🎯 Touching things.**
+  - The general sounds are now grouped 🧙 Player / 🎯 Touching things (walk into a pickup, jump on a creature, bounce) / 👹 Creatures.
+  - The model panel has a "⭐ When it's a pickup or bounce ball" part (walk into it / bounce off it).
+  - **Extra animations** (ones the game doesn't pick by itself, e.g. the Zombie has about 190) each get a "Play it when" choice: `AnimationMoment` (Never / Now and then while standing / Creature: attacks you, gets hit, is beaten / Player: gets hurt, lands too hard), saved on `AnimationSound.playWhen` (Normal = the 5 auto slots).
+    - The UI shows the already set-up ones, then a 🔍 search with the first 12 matches.
+  - `CustomModel` has a new action layer (one extra mixer input): `PlayMoment(moment, out playedSound)` plays the clip once with a quick blend, plus its sound. If it had a sound, the general sound for that moment is skipped (`ObstacleBase.PlayOwnMoment`, `Health`). "It is beaten" with an animation plays it, then the creature vanishes (max 3 s) instead of squashing.
+  - Hearing range now counts the player's position as well as the camera's (the camera lags after teleports/respawns).
+  - `SoundManager.LogSounds = true` writes every sound moment to the Console (testing aid).
+  - **Verified in Play by really walking into a pickup** (Pick Up played, pickup collected) **and dropping onto the "Jump On Me" zombie twice**:
+    - Attack played on each stomp.
+    - The first stomp played the model's own Hit_Head animation and sound instead of Enemy Damage.
+    - The second stomp beat it: Death_B played, then it vanished.
+    - The zombie patroller's own Zombie_Scratch "attacks you" animation also played. Test data removed afterwards.
+  - NOT tested: "now and then" and the player's gets hurt / lands too hard animations (same code path).
 - **Verified in Play:** damage, fall damage, jump; creature kind and model matching (model beats kind beats general); a model's idle-animation sound repeats each loop; music auto-advances; Next/Pause/Shuffle; Esc closes the Sound screen; the Sound screen looks right.
   - NOT heard by a person: I can't listen, so the starter sounds' quality is untested.
   - NOT verified: a real stomp/pickup by walking into things (the hooks are the same code paths as the sparkles, which were verified before), and the sounds in a built .exe.

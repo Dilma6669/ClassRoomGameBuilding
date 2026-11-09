@@ -106,7 +106,7 @@ public class SoundEntry
     }
 
     /// <summary>Which group a moment belongs to in the Sounds tab.</summary>
-    public enum Group { Player, Creatures, ItemsAndObjects }
+    public enum Group { Player, Touching, Creatures }
 
     public static Group GroupOf(SoundEvent e)
     {
@@ -117,9 +117,10 @@ public class SoundEntry
             case SoundEvent.EnemyDeath:
             case SoundEvent.CreatureMove:
                 return Group.Creatures;
+            case SoundEvent.Attack:
             case SoundEvent.PickUp:
             case SoundEvent.Bounce:
-                return Group.ItemsAndObjects;
+                return Group.Touching;
             default:
                 return Group.Player;
         }
@@ -149,7 +150,7 @@ public class SoundEntry
     {
         switch (e)
         {
-            case SoundEvent.Attack: return "⚔ Attack (you jump on a creature)";
+            case SoundEvent.Attack: return "⚔ Jump on a creature (attack)";
             case SoundEvent.EnemyAttack: return "👹 Enemy attack (a creature hurts you)";
             case SoundEvent.Run: return "👟 Run (footsteps)";
             case SoundEvent.Jump: return "⤴ Jump";
@@ -159,8 +160,8 @@ public class SoundEntry
             case SoundEvent.EnemyDamage: return "💢 Enemy damage (a creature gets hit)";
             case SoundEvent.PlayerDeath: return "💀 Player death";
             case SoundEvent.EnemyDeath: return "☠ Enemy death (a creature is beaten)";
-            case SoundEvent.PickUp: return "⭐ Pick up (collect a pickup)";
-            case SoundEvent.Bounce: return "🏀 Bounce (bounce ball or bouncy platform)";
+            case SoundEvent.PickUp: return "⭐ Walk into a pickup (collect it)";
+            case SoundEvent.Bounce: return "🏀 Bounce off a bounce ball or bouncy platform";
             case SoundEvent.CreatureMove: return "👣 Creature moving (footsteps, slithering...)";
             default: return e.ToString();
         }
@@ -199,4 +200,57 @@ public class AnimationSound
     public bool varyPitch = true;
     [Tooltip("Play again every time the animation loops (good for footsteps or flapping). Off = only when it starts.")]
     public bool repeatEachLoop = true;
+    [Tooltip("For the model's EXTRA animations (bark, bite, death...): the moment the game plays it.")]
+    public AnimationMoment playWhen = AnimationMoment.Normal;
+}
+
+/// <summary>When the game plays one of a model's extra animations. Add new ones at the END only.</summary>
+public enum AnimationMoment
+{
+    Normal,        // idle / walk / run / jump / fall: the game picks these itself
+    Never,
+    NowAndThen,    // every few seconds while standing still
+    AttacksYou,    // a creature touches the player
+    GetsHit,       // jumped on, but not beaten yet
+    IsBeaten,      // jumped on for the last time
+    GetsHurt,      // the player takes damage
+    LandsTooHard   // the player takes fall damage
+}
+
+public static class AnimationMoments
+{
+    public static readonly AnimationMoment[] Choices =
+    {
+        AnimationMoment.Never, AnimationMoment.NowAndThen, AnimationMoment.AttacksYou, AnimationMoment.GetsHit,
+        AnimationMoment.IsBeaten, AnimationMoment.GetsHurt, AnimationMoment.LandsTooHard
+    };
+
+    public static string Label(AnimationMoment m)
+    {
+        switch (m)
+        {
+            case AnimationMoment.Never: return "Never (not used)";
+            case AnimationMoment.NowAndThen: return "Now and then, while standing still";
+            case AnimationMoment.AttacksYou: return "Creature: it attacks you";
+            case AnimationMoment.GetsHit: return "Creature: you jump on it (gets hit)";
+            case AnimationMoment.IsBeaten: return "Creature: it is beaten";
+            case AnimationMoment.GetsHurt: return "Player: gets hurt";
+            case AnimationMoment.LandsTooHard: return "Player: lands too hard";
+            default: return m.ToString();
+        }
+    }
+
+    /// <summary>The general sound this moment replaces when the model's animation has its own sound.</summary>
+    public static SoundEvent? GeneralSound(AnimationMoment m)
+    {
+        switch (m)
+        {
+            case AnimationMoment.AttacksYou: return SoundEvent.EnemyAttack;
+            case AnimationMoment.GetsHit: return SoundEvent.EnemyDamage;
+            case AnimationMoment.IsBeaten: return SoundEvent.EnemyDeath;
+            case AnimationMoment.GetsHurt: return SoundEvent.Damage;
+            case AnimationMoment.LandsTooHard: return SoundEvent.FallDamage;
+            default: return null;
+        }
+    }
 }
