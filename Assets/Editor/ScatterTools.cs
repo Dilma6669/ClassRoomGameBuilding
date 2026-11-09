@@ -56,7 +56,20 @@ public static class ScatterTools
     public static void SetPlatformType(PlatformLogic p, PlatformLogic.PlatformType type)
     {
         Undo.RecordObject(p, "Platform Type");
+        bool changed = p.platformType != type;
         p.platformType = type;
+
+        // Good starting effects for each type (students can change them)
+        if (changed && type == PlatformLogic.PlatformType.Bouncy)
+        {
+            if (p.landEffect == Sparkles.Effect.None) p.landEffect = Sparkles.Effect.Ring;
+            p.effectColour = PlatformLogic.BouncyColour;
+        }
+        else if (changed && type == PlatformLogic.PlatformType.Crumbling)
+        {
+            p.effectColour = PlatformLogic.CrumblingColour;
+            p.crumbleAfter = Mathf.Max(p.crumbleAfter, 2f); // flash... flash... break!
+        }
         EditorUtility.SetDirty(p);
     }
 

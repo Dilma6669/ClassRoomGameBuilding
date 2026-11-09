@@ -50,13 +50,30 @@ public class PlatformLogic : MonoBehaviour
     [Tooltip("Normal, Crumbling (falls soon after you stand on it), or Bouncy (launches you up).")]
     public PlatformType platformType = PlatformType.Normal;
     [Tooltip("Seconds of shaking before it falls.")]
-    [Range(0.2f, 5f)] public float crumbleAfter = 0.8f;
+    [Range(0.2f, 5f)] public float crumbleAfter = 2f;
     [Tooltip("Seconds until it comes back. 0 = gone for good.")]
     [Range(0f, 20f)] public float comeBackAfter = 3f;
     [Tooltip("How high it launches you.")]
     [Range(5f, 50f)] public float bounceStrength = 20f;
     [Tooltip("Colour it so players can tell it's special.")]
     public bool colourIt = true;
+
+    [Header("Effects")]
+    [Tooltip("Sparkles when the player lands on it.")]
+    public Sparkles.Effect landEffect = Sparkles.Effect.None;
+    [Tooltip("Crumbling: sparkles when it breaks.")]
+    public Sparkles.Effect breakEffect = Sparkles.Effect.Spray;
+    [Tooltip("The sparkles' colour.")]
+    public Color effectColour = new Color(1f, 0.85f, 0.5f);
+    [Tooltip("How many sparkles (1 = normal).")]
+    [Range(0.2f, 5f)] public float effectAmount = 1f;
+    [Tooltip("How big the sparkles are (1 = normal).")]
+    [Range(0.3f, 4f)] public float effectSize = 1f;
+    [Tooltip("Crumbling: flash while it shakes, so players can count down to it breaking.")]
+    public bool warningFlash = true;
+    [Tooltip("Seconds between flashes (1 = one flash every second).")]
+    [Range(0.2f, 2f)] public float flashEvery = 1f;
+    public Color flashColour = Color.white;
 
     public static readonly Color CrumblingColour = new Color(0.78f, 0.55f, 0.3f);
     public static readonly Color BouncyColour = new Color(0.3f, 0.95f, 0.45f);
@@ -165,7 +182,8 @@ public class PlatformLogic : MonoBehaviour
 
             ConfigureChildMover();
 
-            if (platformType != PlatformType.Normal && GetComponent<SpecialPlatform>() == null)
+            bool needsSpecial = platformType != PlatformType.Normal || landEffect != Sparkles.Effect.None;
+            if (needsSpecial && GetComponent<SpecialPlatform>() == null)
             {
                 gameObject.AddComponent<SpecialPlatform>();
             }

@@ -212,6 +212,16 @@ The teacher pointed out that the old scatter options weren't really in the Game 
 - Tutorial: signs 5 and 7 mention bouncy/crumbling and jumping on heads, and the Tutorial's health ball now glows with centre sparkles.
 - Verified in Play with screenshots: all 8 burst styles (in slow motion) and all 10 floating styles side by side, with no console errors or warnings. `Build/Windows` is rebuilt with 0 errors.
 - Not done: the YouTube script doesn't cover these yet; glow/sparkles only show in Play (glow's light shows while editing).
+- **Follow-up (same day): platform effects.** New `PlatformLogic` "Effects" settings:
+  - `landEffect` (any platform, **optional**, default None)
+  - `breakEffect` (crumbling, default Spray)
+  - `effectColour`, `effectAmount`, `effectSize`
+  - `warningFlash` + `flashEvery` (default 1 s) + `flashColour`: while shaking it flashes toward the flash colour and any Glow on its TargetChild flashes too (`Glow.flash`), so players can count down. Crumbling default `crumbleAfter` is now 2 s.
+  - `Sparkles.Effect` (None + 8 styles) with `Sparkles.Play()` is the shared "effect choice".
+  - `SpecialPlatform` is now also added to Normal platforms that have a land effect.
+  - Switching a platform to Bouncy pre-sets landEffect Ring + green; switching to Crumbling pre-sets orange and crumbleAfter ≥ 2.
+  - Glow's `pulseSpeed` was renamed to `pulsesPerSecond` (default 0.5).
+  - Verified in Play: the flash (light 1.5 → 3.9), break after 2 s, back after 3 s; Sparks landing burst; Bouncy ring; no console errors.
 
 ## Open requests
 1. **Platforms, more options.** Presets, scatter, crumbling and bouncy are done. Still ideas: a "test this jump" helper, a per-platform colour picker. Add the new features to the YouTube script.

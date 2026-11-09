@@ -18,6 +18,28 @@ public static class Sparkles
         Shimmer    // a wave of tiny glitter flickering all around it
     }
 
+    /// <summary>A sparkle choice for settings: None, or one of the burst styles (with friendly names).</summary>
+    public enum Effect { None, Swirl, Spray, Ring, Fountain, Explosion, Twinkle, Sparks, Shimmer }
+
+    /// <summary>Plays an Effect (does nothing for None).</summary>
+    public static void Play(Effect effect, Vector3 position, Color colour, float amount = 1f, float size = 1f)
+    {
+        if (effect == Effect.None) return;
+        Style style;
+        switch (effect)
+        {
+            case Effect.Swirl: style = Style.Pickup; break;
+            case Effect.Spray: style = Style.Poof; break;
+            case Effect.Ring: style = Style.Ring; break;
+            case Effect.Fountain: style = Style.Fountain; break;
+            case Effect.Explosion: style = Style.Explosion; break;
+            case Effect.Twinkle: style = Style.Twinkle; break;
+            case Effect.Sparks: style = Style.Sparks; break;
+            default: style = Style.Shimmer; break;
+        }
+        Burst(position, colour, style, amount, size);
+    }
+
     /// <summary>Fades in and out a few times, so each bit of glitter flickers.</summary>
     public static Gradient FlickerGradient()
     {

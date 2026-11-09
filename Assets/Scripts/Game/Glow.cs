@@ -18,8 +18,11 @@ public class Glow : MonoBehaviour
     [Range(1f, 20f)] public float lightRange = 4f;
     [Tooltip("Gently get brighter and dimmer.")]
     public bool pulse = true;
-    [Tooltip("How fast it pulses.")]
-    [Range(0.2f, 10f)] public float pulseSpeed = 3f;
+    [Tooltip("How many pulses each second (1 = one pulse every second, 0.5 = one every two seconds).")]
+    [Range(0.1f, 5f)] public float pulsesPerSecond = 0.5f;
+
+    /// <summary>Set by other scripts (e.g. a crumbling platform counting down) to flash brighter: 0 = normal, 1 = full flash.</summary>
+    [System.NonSerialized] public float flash;
 
     private Light glowLight;
     private readonly List<Material> glowingMaterials = new List<Material>();
@@ -83,7 +86,8 @@ public class Glow : MonoBehaviour
         if (glowLight == null) EnsureLight();
 
         float time = Application.isPlaying ? Time.time : (float)(System.DateTime.Now.TimeOfDay.TotalSeconds);
-        float wave = pulse ? 0.7f + 0.3f * Mathf.Sin(time * pulseSpeed) : 1f;
+        float wave = pulse ? 0.7f + 0.3f * Mathf.Sin(time * pulsesPerSecond * 2f * Mathf.PI) : 1f;
+        wave *= 1f + 2.5f * flash;
 
         glowLight.color = colour;
         glowLight.intensity = strength * wave;

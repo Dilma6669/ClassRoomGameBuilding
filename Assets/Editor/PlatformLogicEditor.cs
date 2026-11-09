@@ -63,6 +63,16 @@ public class PlatformLogicEditor : Editor
             if (prop.name == "colourIt" && platformTarget.platformType == PlatformLogic.PlatformType.Normal)
                 continue;
 
+            // Effects: break and warning-flash settings only for crumbling platforms
+            bool crumbling = platformTarget.platformType == PlatformLogic.PlatformType.Crumbling;
+            if ((prop.name == "breakEffect" || prop.name == "warningFlash") && !crumbling)
+                continue;
+            if ((prop.name == "flashEvery" || prop.name == "flashColour") && (!crumbling || !platformTarget.warningFlash))
+                continue;
+            bool anyEffect = platformTarget.landEffect != Sparkles.Effect.None || (crumbling && platformTarget.breakEffect != Sparkles.Effect.None);
+            if ((prop.name == "effectColour" || prop.name == "effectAmount" || prop.name == "effectSize") && !anyEffect)
+                continue;
+
             // Hide movement properties if no movement axis is selected
             if ((prop.name == "initialDirection" || prop.name == "moveDistance" || prop.name == "moveSpeed") && !platformTarget.HasActiveAxis)
                 continue;
