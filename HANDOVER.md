@@ -1,6 +1,22 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a person) can pick up where this one stopped._
+_Last updated: 2026-11-10, late evening (end of session 5). Written so a fresh Claude session (or a person) can pick up where this one stopped._
+
+## ▶ START HERE (state at the end of 2026-11-10)
+- **Everything is committed** on `feature/menus-models-checkpoints` (latest commits: tutorial build menu item, tutorial with 17 stations, platform effects, glow/sparkles). Not merged to main, not pushed. The only uncommitted change is `Assets/Tutorial/TutorialTerrain.asset` (it changes on every Tutorial rebuild; harmless).
+- **Nothing is in progress.** The teacher's last requests were all finished and verified in Play mode:
+  - level order + New/Copy level
+  - video pop-ups
+  - quick platforms + platform/creature scatter
+  - crumbling/bouncy platforms with effects
+  - jumping on creatures
+  - glow + sparkle effects
+  - a 17-station Tutorial Island
+  - a Tutorial-only class build
+- **The class got a Tutorial Island build** (zip handed over; `Build/` is now empty). If the Tutorial or a feature changes, rebuild it with **Game > Tutorial > Build Tutorial Level**, then **Build Tutorial Game (for the class)**, and offer a new zip (`Compress-Archive` of `Build/Tutorial`).
+- **The teacher dropped the YouTube/AI tutorial video**; the playable Tutorial is the class's guide. Any new student-facing feature should get a Game Builder button AND a Tutorial station/sign.
+- **Working style that worked:** the teacher sends quick follow-up ideas mid-task (often as several short messages). Fold them in as options (default off/None unless obviously wanted), test in Play mode, then commit. They approved committing on this branch.
+- **Likely next asks:** swap the test video for their own clip (in the builder: the `videoClip` load path for the "Watch me!" sign), feedback from students using the Game Builder, a Mixamo character test, more platform ideas.
 
 ## Context
 - **Who:** a teacher (Reuben) running a class game project. The project/toolkit was built by their brother **Dylan**.
@@ -23,7 +39,7 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
 | Death screen, then restart | `GameManager.cs`, `Health.cs` (`Die()`/`Kill()`) | OK button or countdown (`restartDelay`). |
 | Checkpoints | `Scripts/Game/Checkpoint.cs`, `GameMenuItems.CreateCheckpoint()` | Button on GameController, or **Game > Create Checkpoint**. Death respawns at the last flag (level still resets). Pause > Restart Level clears it. |
 | World border + sky limit + fall-kill | `Scripts/Game/WorldBorder.cs` | Auto-sized from terrain + solid colliders. Tested: wall stops player, ceiling stops launch. |
-| Build | **Game > Build Game (Windows)** in `Editor/GameMenuItems.cs` | Output `Build/Windows/` (git-ignored). Last build: 19:40, **before** the final model fixes, so rebuild before sharing. |
+| Build | **Game > Build Game (Windows)** (or Game Builder > Levels & Build) in `Editor/GameMenuItems.cs`; Tutorial-only: **Game > Tutorial > Build Tutorial Game (for the class)** | Output `Build/Windows/` or `Build/Tutorial/` (git-ignored). `Build/` was emptied on 2026-11-10 at the teacher's request; build again when needed. Last builds succeeded with 0 errors. |
 | 3D models + animations | `Scripts/Models/CustomModel.cs`, `Editor/CustomModelEditor.cs`, `Editor/MyModelsImporter.cs` | See below. |
 | Obstacles sit on the ground | `ObstacleBase.GroundLift`, `TerrainObstacle`, `PlatformObstacle.SitOnPlatformInEditor()` | Was 50% buried (terrain) or wrong for scale != 1 (platforms). New `sitOnGround` toggle (default on). Snap raycast now sorted by distance. |
 | Rename `CharacterController` to `PlayerController` | `Scripts/Player/PlayerController.cs`, `Editor/PlayerControllerEditor.cs` | `.meta` GUIDs kept, scene objects renamed (one line each). Create Character now **upgrades** an existing character instead of duplicating it. Inspector has a **Player Model** slot. |
@@ -33,7 +49,7 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
 | Platform movers that fall off | `PlatformObstacle` (walking/falling states, `FindGround`, `SwitchSurface`), `FollowPlatform.Detach/AttachTo`, `IObstacleAnchor` on Platform Wander/Patrol drivers | Movers look ahead and turn back at edges. If the ground goes anyway they detach, fall (kinematic, code-driven) and re-anchor to whatever they land or step onto: another platform (ride it) or the terrain (fixed world anchor). They are removed after 10 s of falling. Static obstacles are unchanged. Tested: huge ranges on a 3x3 platform, pushed off, stepping onto a moving platform, dropping onto a static platform. |
 | Scenery (trees/rocks) | `Scripts/Environment/SceneryPopulator.cs` + editor; "🌲 Add Scenery Tool" button on TerrainPopulator | Scatter (count, size range, random turn, max slope, edge padding, tilt, sink) or Place One. Solid = MeshColliders from the model. Animators off, static flags set. Tested: 40 scattered within slope limits. |
 | "Animations From" | `CustomModel.animationsFrom` | Re-skinned models with the same skeleton reuse another model's animations. |
-| Tutorial script with YouTube chapters | `Tutorial/YouTube-Tutorial-Script.md` | Includes the models, checkpoints and Story chapters. |
+| Tutorial script with YouTube chapters | `Tutorial/YouTube-Tutorial-Script.md` | **No longer needed** (teacher, 2026-11-10); kept but not maintained. It's missing tonight's features. |
 
 ### Model system: how it works
 - Animation matching is **word-based and tiered** (e.g. walk, then swim, then winding, then crawl). Verified picks for all 10 class models (Old Man: Idle_A/Walk/Run_Anime/Jump_2/Jump_air, Shark: Swim_Horizontal, Snake: Side_winding, Seagull and Dragon: Flap/Glide).
@@ -68,6 +84,13 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
 - Ethan's copied animation files needed a hand-made avatar to work as humanoids, so the Ethan copy was **removed** from MyModels. Don't use those old files as a "student example".
 - The terrain populator spawns 0.2 above the ground on purpose (Dylan's `Mathf.Max(0.2f, heightOffset)`). Left as is.
 - A tall model on a character is fitted to the 2 m capsule (the Fox ends up big). Students use the **Size** slider.
+- Small open points from 2026-11-10 (details in the session sections below):
+  - a pickup on a platform once dropped about 5 m (not reproduced)
+  - the old per-platform "Scatter" button in a platform's "More" fold-out still places things off round/turned platforms (the Game Builder scatter is fixed)
+  - a very flat creature might count walking into it as a stomp
+  - the painted-ground scatter filter is untested (the Tutorial has one terrain layer)
+  - the homemade TestVideo logs a harmless colour warning
+- Glow lights and floating sparkles cost performance in large numbers (each glow is a point light). Scenery groups warn about this in the tooltip.
 
 ## Driving the Editor from Claude (how verification was done)
 - The Unity CLI (`unity`, v1.0.0-beta.17) + the **Pipeline package** (`com.unity.pipeline`, added this session) let Claude control the open Editor:
@@ -78,12 +101,20 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
   - `unity recompile --project-path "E:/unity projects/classroomgamebuilding"`
 - After package changes the Editor reloads. If commands fail with PIPELINE_UNREACHABLE, poll `unity status` until ready (or click into the Unity window).
 - Tests were done on **unsaved** Level02 changes, then discarded by re-opening the scene via `EditorSceneManager.OpenScene` (no save prompt).
+- Lessons from 2026-11-10:
+  - **Edit-mode changes made by script are lost when Play starts unless the scene is marked dirty**: use `Undo.*` or `EditorSceneManager.MarkSceneDirty`, or set things in Play mode.
+  - After `unity recompile`, wait a few seconds before `script eval` (the domain reload can swallow the first eval silently).
+  - Teleport the player with `KinematicCharacterMotor.SetPosition` and call `GameManager.Instance.Resume()` first (the start menu freezes time).
+  - Short-lived particles: set `Time.timeScale` low (e.g. 0.08) right after firing them, then `capture game_view`.
+  - Selection/delayCall events wait while Unity is in the background; invoke the logic directly in tests.
+  - `sed` replacements containing `\n` inside C# string literals inserted REAL newlines (broke compiles twice). Use the Edit tool for anything with `\n`.
+  - To test a built .exe, read its `Player.log` (`%USERPROFILE%\AppData\LocalLow\DefaultCompany\SchoolTeachingProject2_BRP\Player.log`). **Don't screenshot the desktop**: it captured the teacher's browser instead of the game.
 
 ## Tutorial Island
-- **Built:** `Assets/Scenes/Tutorial.unity`, rebuilt by `Editor/TutorialLevelBuilder.cs` via **Game > Tutorial > Build Tutorial Level**. It has 11 stations (yellow sign + pop-up trigger), its own terrain copy (`Assets/Tutorial/TutorialTerrain.asset`) and is added to Build Settings after the other levels (order: Level01, Level02, Tutorial).
+- **Built:** `Assets/Scenes/Tutorial.unity`, rebuilt by `Editor/TutorialLevelBuilder.cs` via **Game > Tutorial > Build Tutorial Level**. Never hand-edit the scene: change the builder and rebuild. It now has **17 stations** (see "session 5" below), its own terrain copy (`Assets/Tutorial/TutorialTerrain.asset`) and is added to Build Settings after the other levels (order: Level01, Level02, Tutorial).
 - Verified: all pop-ups show, creatures stay on the arena, and the bounce ball launches when jumped onto (the teacher also confirmed it in the built game). NOT verified: bouncing by running into a ball's side.
 - Fixed during the build: TriggerLogic fade-outs could hide the next sign's message (now one owner at a time), and PlatformLogic.TargetChild now finds the moving part on a just-created platform.
-- **FIXED 2026-11-09: "built game jams up at the Finish sign".** Finish loads Level01, the empty template with no character, so no camera rendered and nothing could move. GameManager now has a `LevelNotReady` state: when a level has no playable player it shows the menu with "This level has no player yet!", a **Back to Start** button (loads build index 0; hidden when already there), Library and Quit. Verified in the Editor on Level01. Once the class gives Level01 a player, Finish works as intended. Rebuild the test build (`Build/Tutorial`) to check.
+- **FIXED 2026-11-09: "built game jams up at the Finish sign".** Finish loads Level01, the empty template with no character, so no camera rendered and nothing could move. GameManager now has a `LevelNotReady` state: when a level has no playable player it shows the menu with "This level has no player yet!", a **Back to Start** button (loads build index 0; hidden when already there), Library and Quit. Verified in the Editor on Level01. Since then, Finish only changes level if Level01 is in the build (a Tutorial-only build just shows the Finish message).
 
 - Tutorial texts now point at the Game Builder tabs (updated 2026-11-10 and level rebuilt).
 - The builder used to delete + re-copy the scene, giving it a **new GUID on every rebuild** (Build Settings kept a stale one). It now overwrites the file in place, so the GUID is stable, and `AddToBuild` re-syncs the entry. Gotcha: `EditorBuildSettings.scenes` keeps a stale GUID if an entry with the same path already exists; remove the entry, assign, then add it back.
@@ -92,11 +123,18 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
 - **Game > 🎮 Game Builder** (`Editor/GameBuilderWindow.cs`). Tabs:
   - 🧙 **Player:** Create Character, model, movement/sprint/stamina/jump, health, fall damage.
   - 🏔 **Level:** terrain brushes (Raise/Lower, Smooth, Flatten, Paint Ground, Stamp, Paint Grass) via `ToolManager.SetActiveTool` (prefers the Terrain Tools `*Ovl` types), plus sun height/direction/colour/brightness, sky material, fog and world border.
-  - 🪨 **Platforms:** PlatformController buttons, a clickable platform list, and the selected platform's settings.
-  - 🕷 **Creatures & Pickups:** one-click Wanderer/Patroller/Guard, Health/Stamina/Shield/Super Jump/Speed Boost pickups and Bounce Ball. Each goes on the selected platform, or on the ground where the Scene view looks. Also a list, the selected item's settings and model, Delete, and the scatter tool.
-  - 🌲 **Scenery:** SceneryPopulator.
-  - 💬 **Signs & Story:** triggers list + edit, checkpoints, and the GameSettings inspector (title, menu, Library).
-  - 📦 **Levels   - 📦 **Levels & Build:** build order with Open buttons, Add level, Build:** level order (tick, ▲▼, Open, ✕), New level / Copy level, Add level, Play/Stop, Build Game, open the build folder.
+  - 🪨 **Platforms:**
+    - Quick platforms (Floating/Moving/Elevator/Spinning/Growing/Stepping stones/Crumbling/Bouncy)
+    - Scatter platforms
+    - a clickable list
+    - the selected platform's "Make it:" movement and "Special:" type buttons, settings (incl. Effects), model, glow/sparkles
+  - 🕷 **Creatures & Pickups:**
+    - one-click Wanderer/Patroller/Guard, Health/Stamina/Shield/Super Jump/Speed Boost pickups and Bounce Ball. Each goes on the selected platform, or on the ground where the Scene view looks.
+    - a list, the selected item's settings, glow/sparkles, model, Delete
+    - "Scatter lots at once" groups
+  - 🌲 **Scenery:** SceneryPopulator (groups with Glow/Sparkles options) + glow/sparkles for a selected piece.
+  - 💬 **Signs & Story:** triggers list + edit (incl. Video pop-ups), checkpoints, and the GameSettings inspector (title, menu, Library).
+  - 📦 **Levels & Build:** level order (tick, ▲▼, Open, ✕), New level / Copy level, Add level, Play/Stop, Build Game, open the build folder.
 - It reuses the existing component Inspectors (`Editor.CreateEditor`), so the green buttons behave the same.
 - **Student mode** (`Editor/StudentMode.cs`, default ON). Toggle it in the window's top bar or with **Game > Teacher Mode (show everything)**.
   - Hides from the Hierarchy: "DO NOT TOUCH" objects, "(auto)" holders, the root CanvasController/GameController, EventSystem, the KCC camera, and the character's Root.
@@ -262,9 +300,9 @@ The teacher pointed out that the old scatter options weren't really in the Game 
 - Videos go in `Assets/MyVideos` (.mp4, H.264). Keep them short, because they go into the build.
 
 ## Next steps checklist
-- [ ] Teacher: choose the level order (Tutorial first?) in Levels & Build, then rebuild.
-- [ ] Teacher: try a real video on a sign and check it in the built game.
+- [ ] Teacher: class plays the Tutorial Island build; collect feedback (what's confusing, what they want).
+- [ ] Teacher: send a real video to replace `TestVideo.mp4` on the Tutorial's "Watch me!" sign (then rebuild the Tutorial and the class build).
+- [ ] Teacher: choose the level order for the full game in Levels & Build, then Build Game.
 - [ ] Teacher to try the Game Builder with a student and report what's confusing.
-- [ ] Teacher: try the quick platforms and both scatter tools; report anything confusing or any option they'd like.
-- [ ] Open requests above (Mixamo test, more platform types).
+- [ ] Open requests above (Mixamo test, more platform ideas).
 - Git: commit only when the teacher says so (they approved committing on 2026-11-10). `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset` and `Assets/Tutorial/TutorialTerrain.asset` change by themselves; leave them out of commits.
