@@ -23,6 +23,10 @@ public class CreatureScatter : MonoBehaviour
         public Vector2 roamRange = new Vector2(4f, 10f);
         [Tooltip("3D models to pick from at random. Leave empty to use the normal look.")]
         public List<GameObject> models = new List<GameObject>();
+        [Tooltip("Creatures: how many times the player must jump on its head to beat it. 0 = can't be beaten.")]
+        [Range(0, 10)] public int jumpsToDefeat = 1;
+        [Tooltip("Make them glow.")]
+        public bool glow = false;
 
         [Header("Where can they go?")]
         public bool onGround = true;
@@ -39,8 +43,8 @@ public class CreatureScatter : MonoBehaviour
         {
             new Group { name = "Wandering creatures", kind = Kind.Wanderer, howMany = 10 },
             new Group { name = "Patrolling creatures", kind = Kind.Patroller, howMany = 5 },
-            new Group { name = "Health pickups", kind = Kind.Health, howMany = 6, sizeRange = Vector2.one, onStillPlatforms = true },
-            new Group { name = "Super Jumps", kind = Kind.SuperJump, howMany = 3, sizeRange = Vector2.one, include = false },
+            new Group { name = "Health pickups", kind = Kind.Health, howMany = 6, sizeRange = Vector2.one, onStillPlatforms = true, glow = true },
+            new Group { name = "Super Jumps", kind = Kind.SuperJump, howMany = 3, sizeRange = Vector2.one, include = false, glow = true },
         };
     }
 }

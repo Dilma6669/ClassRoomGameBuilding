@@ -374,6 +374,9 @@ public class GameBuilderWindow : EditorWindow
             ("🔄 Spinning\nturns round", () => QuickPlatform(controller, ScatterTools.PlatformMove.Spinning)),
             ("🫧 Growing\ngets big & small", () => QuickPlatform(controller, ScatterTools.PlatformMove.Growing)),
             ("👣 Stepping stones\n6 in a row, going up", () => { ScatterTools.SteppingStones(controller); RefreshSceneLists(); }));
+        ButtonRow(
+            ("💥 Crumbling\nfalls when you stand on it", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still, PlatformLogic.PlatformType.Crumbling)),
+            ("🟢 Bouncy\nlaunches you up high", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still, PlatformLogic.PlatformType.Bouncy)));
 
         Section("🎲 Scatter lots of platforms at once");
         PlatformScatter scatter = controller.GetComponent<PlatformScatter>();
@@ -389,7 +392,7 @@ public class GameBuilderWindow : EditorWindow
         }
 
         Section("Your platforms");
-        DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.", p => IconFor(ScatterTools.GetMovement(p)) + " " + p.name);
+        DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.", p => IconFor(p.platformType) + IconFor(ScatterTools.GetMovement(p)) + " " + p.name);
 
         PlatformLogic selected = SelectedOf<PlatformLogic>();
         if (selected != null)
@@ -410,7 +413,22 @@ public class GameBuilderWindow : EditorWindow
                     }
                 }
             }
+            EditorGUILayout.LabelField("Special:", EditorStyles.miniBoldLabel);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                foreach (PlatformLogic.PlatformType type in System.Enum.GetValues(typeof(PlatformLogic.PlatformType)))
+                {
+                    Color? colour = type == selected.platformType ? new Color(0.55f, 0.85f, 0.55f) : (Color?)null;
+                    string label = type == PlatformLogic.PlatformType.Normal ? "Normal" : IconFor(type) + " " + type;
+                    if (BigButton(label, colour) && type != selected.platformType)
+                    {
+                        ScatterTools.SetPlatformType(selected, type);
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
             DrawInspector(selected);
+            DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
             PlatformPopulator populator = selected.GetComponent<PlatformPopulator>();
             if (populator != null && Foldout("platformMore", "More: copy, delete, or scatter creatures on this platform"))
             {
@@ -463,6 +481,8 @@ public class GameBuilderWindow : EditorWindow
             Section("✏️ " + selected.name);
             DrawInspector(selected);
 
+            DrawGlow(selected.gameObject, Sparkles.ColourFor(selected.payloadType));
+
             CustomModel model = selected.GetComponent<CustomModel>();
             if (model != null) DrawInspector(model);
             else if (BigButton("🎨 Give it a 3D model"))
@@ -488,11 +508,69 @@ public class GameBuilderWindow : EditorWindow
         }
     }
 
-    private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move)
+    private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
     {
-        PlatformLogic p = ScatterTools.QuickPlatform(controller, move);
+        PlatformLogic p = ScatterTools.QuickPlatform(controller, move, type);
         RefreshSceneLists();
         if (p != null) SelectAndFrame(p.gameObject);
+    }
+
+    /// <summary>Glow and floating-sparkle settings, or buttons to add them.</summary>
+    private void DrawGlow(GameObject go, Color defaultColour)
+    {
+        if (go == null) return;
+        Glow glow = go.GetComponent<Glow>();
+        AmbientSparkles sparkles = go.GetComponent<AmbientSparkles>();
+
+        if (glow == null || sparkles == null)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (glow == null && BigButton("💡 Make it glow")) { ScatterTools.AddGlow(go, defaultColour); GUIUtility.ExitGUI(); }
+                if (sparkles == null && BigButton("✨ Add sparkles around it"))
+                {
+                    AmbientSparkles s = Undo.AddComponent<AmbientSparkles>(go);
+                    s.colour = defaultColour;
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        if (glow != null)
+        {
+            EditorGUILayout.LabelField("💡 Glow", EditorStyles.boldLabel);
+            DrawInspector(glow);
+            if (GUILayout.Button("Stop glowing")) { Undo.DestroyObjectImmediate(glow); GUIUtility.ExitGUI(); }
+        }
+        if (sparkles != null)
+        {
+            EditorGUILayout.LabelField("✨ Sparkles around it (you'll see them when you press Play)", EditorStyles.boldLabel);
+            DrawInspector(sparkles);
+            if (GUILayout.Button("Remove sparkles")) { Undo.DestroyObjectImmediate(sparkles); GUIUtility.ExitGUI(); }
+        }
+    }
+
+    /// <summary>The scattered scenery piece (tree, rock...) that's selected, if any.</summary>
+    private static Transform SelectedSceneryPiece(SceneryPopulator scenery)
+    {
+        GameObject go = Selection.activeGameObject;
+        Transform root = scenery.transform.Find(SceneryPopulator.ContainerName);
+        if (go == null || root == null || !go.transform.IsChildOf(root) || go.transform == root) return null;
+
+        // Walk up to the piece: the child of a group folder
+        Transform t = go.transform;
+        while (t.parent != null && t.parent.parent != root) t = t.parent;
+        return t.parent != null && t.parent.parent == root ? t : null;
+    }
+
+    private static string IconFor(PlatformLogic.PlatformType type)
+    {
+        switch (type)
+        {
+            case PlatformLogic.PlatformType.Crumbling: return "💥";
+            case PlatformLogic.PlatformType.Bouncy: return "🟢";
+        }
+        return "";
     }
 
     private static string IconFor(ScatterTools.PlatformMove move)
@@ -548,6 +626,10 @@ public class GameBuilderWindow : EditorWindow
 
         created.name = NiceName(created);
         if (onPlatform == null) MoveToSceneViewGround(created.transform);
+
+        // Pickups glow so players can spot them (click "Stop glowing" to turn it off)
+        bool isPickup = payload != ObstacleBase.PayloadType.None && payload != ObstacleBase.PayloadType.Damage;
+        if (isPickup) ScatterTools.AddGlow(created.gameObject, Sparkles.ColourFor(payload));
 
         RefreshSceneLists();
         SelectAndFrame(created.gameObject);
@@ -621,6 +703,18 @@ public class GameBuilderWindow : EditorWindow
         SceneryPopulator scenery = Find<SceneryPopulator>();
         if (scenery != null)
         {
+            // One piece of scenery selected? It can glow on its own
+            Transform piece = SelectedSceneryPiece(scenery);
+            if (piece != null)
+            {
+                Section("✏️ " + piece.name);
+                DrawGlow(piece.gameObject, new Color(0.5f, 0.9f, 1f));
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("Tip: click one tree or rock in the Scene to make just that one glow.", MessageType.None);
+            }
+
             DrawInspector(scenery);
             return;
         }

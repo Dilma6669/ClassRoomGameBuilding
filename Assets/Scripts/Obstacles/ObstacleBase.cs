@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 #if HAS_KINEMATIC_CC
@@ -36,6 +37,30 @@ public abstract class ObstacleBase : MonoBehaviour
     [Range(0f, 1f)] public float upwardBias = 0.5f;
     [Range(0f, 1f)] public float momentumTransfer = 0.3f;
 
+    [Header("Jump On Top (creatures only)")]
+    [Tooltip("How many times the player must land on this creature's head to defeat it. 0 = it can't be beaten (it hurts even from above).")]
+    [Range(0, 10)] public int jumpsToDefeat = 1;
+    [Tooltip("How high the player bounces off after landing on its head.")]
+    [Range(5f, 30f)] public float stompBounce = 12f;
+
+    [Header("Effects (when picked up or beaten)")]
+    [Tooltip("A burst of sparkles when it's picked up or defeated.")]
+    public bool sparkles = true;
+    public enum SparkleStyle { Automatic, Swirl, Spray, Ring, Fountain, Explosion, Twinkle, Sparks, Shimmer }
+    [Tooltip("Automatic: pickups swirl up, creatures spray out.")]
+    public SparkleStyle sparkleStyle = SparkleStyle.Automatic;
+    [Tooltip("Pick your own sparkle colour (otherwise it matches the glow, or what the thing is).")]
+    public bool customSparkleColour = false;
+    public Color sparkleColour = Color.white;
+    [Tooltip("How many sparkles (1 = normal).")]
+    [Range(0.2f, 5f)] public float sparkleAmount = 1f;
+    [Tooltip("How big the sparkles are (1 = normal).")]
+    [Range(0.3f, 4f)] public float sparkleSize = 1f;
+
+    private int jumpsTaken;
+    private bool defeated;
+    private float lastStompTime = -10f;
+
     // Shared Components
     protected MeshCollider physicalMeshCollider;
     protected MeshCollider triggerMeshCollider;
@@ -63,6 +88,22 @@ public abstract class ObstacleBase : MonoBehaviour
 
     protected virtual void Update()
     {
+#if HAS_KINEMATIC_CC
+        // Landing on a creature usually means standing on its solid body (the touch zone isn't entered)
+        if (Application.isPlaying && payloadType == PayloadType.Damage && jumpsToDefeat > 0 && !defeated)
+        {
+            KinematicCharacterMotor player = FindPlayer();
+            if (player != null)
+            {
+                CharacterGroundingReport ground = player.GroundingStatus;
+                if (ground.FoundAnyGround && ground.GroundCollider != null && ground.GroundCollider.transform.IsChildOf(transform))
+                {
+                    GetJumpedOn(player);
+                }
+            }
+        }
+#endif
+
         if (Application.isPlaying && currentMovementStrategy != null)
         {
             currentMovementStrategy.ProcessMovement(this);
@@ -125,6 +166,14 @@ public abstract class ObstacleBase : MonoBehaviour
         if (motor != null)
         {
             isPlayerTrigger = true;
+
+            // Landed on a creature's head: it gets hit instead of the player
+            if (payloadType == PayloadType.Damage && jumpsToDefeat > 0 && IsLandingOnTop(motor))
+            {
+                GetJumpedOn(motor);
+                return;
+            }
+            if (defeated) return;
 
             if (isBouncy)
             {
@@ -192,11 +241,127 @@ public abstract class ObstacleBase : MonoBehaviour
                     break;
             }
 
+            bool isPickup = payloadType != PayloadType.None && payloadType != PayloadType.Damage;
+            if (sparkles && isPickup) BurstSparkles(Sparkles.Style.Pickup);
+
             if (destroyOnTrigger && payloadType != PayloadType.None)
             {
                 Destroy(gameObject);
             }
         }
+    }
+
+#if HAS_KINEMATIC_CC
+    private static KinematicCharacterMotor cachedPlayer;
+    private static int lastPlayerSearchFrame = -100;
+
+    private static KinematicCharacterMotor FindPlayer()
+    {
+        // Look for the player now and then, not every frame for every creature
+        if (cachedPlayer == null && Time.frameCount - lastPlayerSearchFrame > 30)
+        {
+            lastPlayerSearchFrame = Time.frameCount;
+            cachedPlayer = FindAnyObjectByType<KinematicCharacterMotor>();
+        }
+        return cachedPlayer;
+    }
+
+    /// <summary>Is the player coming down onto the top half of this creature (not walking into its side)?</summary>
+    private bool IsLandingOnTop(KinematicCharacterMotor motor)
+    {
+        float feet = motor.TransientPosition.y;
+
+        // Standing on it, or feet up at its top: the character controller may already count
+        // the player as "on the ground" (with no speed) in the same moment they land
+        CharacterGroundingReport ground = motor.GroundingStatus;
+        if (ground.GroundCollider != null && ground.GroundCollider.transform.IsChildOf(transform)) return true;
+        if (physicalMeshCollider != null && feet >= physicalMeshCollider.bounds.max.y - 0.25f) return true;
+
+        Collider shape = triggerMeshCollider != null ? triggerMeshCollider : physicalMeshCollider;
+        if (shape == null) return false;
+        bool inTheAir = !ground.IsStableOnGround || motor.BaseVelocity.y < -0.5f;
+        return inTheAir && motor.BaseVelocity.y < 1f && feet > shape.bounds.center.y;
+    }
+
+    private void GetJumpedOn(KinematicCharacterMotor motor)
+    {
+        // Bounce the player off its head
+        motor.ForceUnground();
+        Vector3 v = motor.BaseVelocity;
+        v.y = stompBounce;
+        motor.BaseVelocity = v;
+
+        if (defeated || Time.time - lastStompTime < 0.25f) return; // one landing = one hit
+        lastStompTime = Time.time;
+
+        jumpsTaken++;
+        if (jumpsTaken >= jumpsToDefeat) Defeat();
+        else StartCoroutine(Squash(false));
+    }
+#endif
+
+    /// <summary>Beaten by being jumped on: stop, flatten, disappear.</summary>
+    private void Defeat()
+    {
+        defeated = true;
+        currentMovementStrategy = null;
+        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (agent != null) agent.enabled = false;
+        foreach (Collider c in GetComponentsInChildren<Collider>()) c.enabled = false;
+        if (sparkles) BurstSparkles(Sparkles.Style.Poof);
+        StartCoroutine(Squash(true));
+    }
+
+    private void BurstSparkles(Sparkles.Style automaticStyle)
+    {
+        Sparkles.Style style = automaticStyle;
+        if (sparkleStyle == SparkleStyle.Swirl) style = Sparkles.Style.Pickup;
+        else if (sparkleStyle == SparkleStyle.Spray) style = Sparkles.Style.Poof;
+        else if (sparkleStyle == SparkleStyle.Ring) style = Sparkles.Style.Ring;
+        else if (sparkleStyle == SparkleStyle.Fountain) style = Sparkles.Style.Fountain;
+        else if (sparkleStyle == SparkleStyle.Explosion) style = Sparkles.Style.Explosion;
+        else if (sparkleStyle == SparkleStyle.Twinkle) style = Sparkles.Style.Twinkle;
+        else if (sparkleStyle == SparkleStyle.Sparks) style = Sparkles.Style.Sparks;
+        else if (sparkleStyle == SparkleStyle.Shimmer) style = Sparkles.Style.Shimmer;
+        Sparkles.Burst(transform.position + Vector3.up * 0.5f, SparkleColour(), style, sparkleAmount, sparkleSize);
+    }
+
+    /// <summary>The chosen colour, else its glow colour if it glows, else a colour that suits what it is.</summary>
+    private Color SparkleColour()
+    {
+        if (customSparkleColour) return sparkleColour;
+        Glow glow = GetComponent<Glow>();
+        return glow != null ? glow.colour : Sparkles.ColourFor(payloadType);
+    }
+
+    /// <summary>Squish flat for a moment (and vanish if defeated).</summary>
+    private System.Collections.IEnumerator Squash(bool thenVanish)
+    {
+        List<Transform> parts = new List<Transform>();
+        List<Vector3> scales = new List<Vector3>();
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            parts.Add(transform.GetChild(i));
+            scales.Add(transform.GetChild(i).localScale);
+        }
+
+        for (float t = 0f; t < 0.12f; t += Time.deltaTime)
+        {
+            for (int i = 0; i < parts.Count; i++)
+                if (parts[i] != null) parts[i].localScale = Vector3.Scale(scales[i], new Vector3(1.3f, Mathf.Lerp(1f, 0.3f, t / 0.12f), 1.3f));
+            yield return null;
+        }
+
+        if (thenVanish)
+        {
+            yield return new WaitForSeconds(0.3f);
+            Destroy(gameObject);
+            yield break;
+        }
+
+        yield return new WaitForSeconds(0.1f);
+        for (int i = 0; i < parts.Count; i++)
+            if (parts[i] != null) parts[i].localScale = scales[i];
     }
 
     public void ApplyScale()

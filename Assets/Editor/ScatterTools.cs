@@ -20,7 +20,7 @@ public static class ScatterTools
     // ------------------------------------------------------------------ Quick platforms
 
     /// <summary>One platform in front of the Scene view camera, a few metres above the ground.</summary>
-    public static PlatformLogic QuickPlatform(PlatformController controller, PlatformMove move)
+    public static PlatformLogic QuickPlatform(PlatformController controller, PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
     {
         Vector3 ground = LookPoint();
         float width = move == PlatformMove.Spinning ? 6f : 4f;
@@ -47,9 +47,26 @@ public static class ScatterTools
         PlatformLogic p = CreatePlatformAt(controller, ground + Vector3.up * lift, width, depth, 0.8f, 0f, null);
         if (p == null) return null;
         SetMovement(p, move, move == PlatformMove.UpAndDown ? 8f : 6f, 2f);
-        p.name = MoveName(move) + " Platform";
+        SetPlatformType(p, type);
+        p.name = PlatformName(p);
         Selection.activeGameObject = p.gameObject;
         return p;
+    }
+
+    public static void SetPlatformType(PlatformLogic p, PlatformLogic.PlatformType type)
+    {
+        Undo.RecordObject(p, "Platform Type");
+        p.platformType = type;
+        EditorUtility.SetDirty(p);
+    }
+
+    /// <summary>"Moving Platform", "Bouncy Platform", "Crumbling Elevator Platform"...</summary>
+    public static string PlatformName(PlatformLogic p)
+    {
+        PlatformMove move = GetMovement(p);
+        string type = p.platformType == PlatformLogic.PlatformType.Normal ? "" : p.platformType + " ";
+        string moving = move == PlatformMove.Still && type != "" ? "" : MoveName(move) + " ";
+        return type + moving + "Platform";
     }
 
     /// <summary>A row of small platforms going away from the camera, each a bit higher.</summary>
@@ -213,7 +230,10 @@ public static class ScatterTools
             PlatformLogic p = CreatePlatformAt(controller, pos, width, depth, thickness, s.randomTurn ? Random.Range(0f, 360f) : 0f, model);
             if (p == null) break;
             SetMovement(p, move, distance, RandomIn(s.speedRange));
-            p.name = MoveName(move) + " Platform";
+            float roll = Random.Range(0f, 100f);
+            if (roll < s.crumblingPercent) SetPlatformType(p, PlatformLogic.PlatformType.Crumbling);
+            else if (roll < s.crumblingPercent + s.bouncyPercent) SetPlatformType(p, PlatformLogic.PlatformType.Bouncy);
+            p.name = PlatformName(p);
             Tag(p.gameObject, PlatformGroup);
             taken.Add((pos, reach));
             placed++;
@@ -292,6 +312,8 @@ public static class ScatterTools
             }
 
             made.name = KindName(g.kind);
+            if (IsCreature(g.kind)) made.jumpsToDefeat = g.jumpsToDefeat;
+            if (g.glow) AddGlow(made.gameObject, Sparkles.ColourFor(made.payloadType));
             Tag(made.gameObject, CreatureGroupId(g));
             taken.Add(made.transform.position);
             placed++;
@@ -456,6 +478,16 @@ public static class ScatterTools
     }
 
     public static string CreatureGroupId(CreatureScatter.Group g) => "Creatures/" + g.name;
+
+    /// <summary>Makes something glow (or returns its existing glow).</summary>
+    public static Glow AddGlow(GameObject go, Color colour)
+    {
+        Glow glow = go.GetComponent<Glow>();
+        if (glow != null) return glow;
+        glow = Undo.AddComponent<Glow>(go);
+        glow.colour = colour;
+        return glow;
+    }
 
     // ------------------------------------------------------------------ Clearing
 

@@ -44,6 +44,28 @@ public class PlatformLogic : MonoBehaviour
     [Range(0.1f, 10f)] public float minScale = 0.5f;
     [Range(0.1f, 10f)] public float maxScale = 1.5f;
 
+    public enum PlatformType { Normal, Crumbling, Bouncy }
+
+    [Header("Special Platform")]
+    [Tooltip("Normal, Crumbling (falls soon after you stand on it), or Bouncy (launches you up).")]
+    public PlatformType platformType = PlatformType.Normal;
+    [Tooltip("Seconds of shaking before it falls.")]
+    [Range(0.2f, 5f)] public float crumbleAfter = 0.8f;
+    [Tooltip("Seconds until it comes back. 0 = gone for good.")]
+    [Range(0f, 20f)] public float comeBackAfter = 3f;
+    [Tooltip("How high it launches you.")]
+    [Range(5f, 50f)] public float bounceStrength = 20f;
+    [Tooltip("Colour it so players can tell it's special.")]
+    public bool colourIt = true;
+
+    public static readonly Color CrumblingColour = new Color(0.78f, 0.55f, 0.3f);
+    public static readonly Color BouncyColour = new Color(0.3f, 0.95f, 0.45f);
+
+    private PlatformType tintedAs = PlatformType.Normal;
+    private bool tintedColourIt;
+    private int tintCheckFrame;
+    private static MaterialPropertyBlock tintBlock;
+
 #if HAS_KINEMATIC_CC
     private ExampleMovingPlatform childMover;
 #else
@@ -142,7 +164,37 @@ public class PlatformLogic : MonoBehaviour
             hasCachedGizmos = true;
 
             ConfigureChildMover();
+
+            if (platformType != PlatformType.Normal && GetComponent<SpecialPlatform>() == null)
+            {
+                gameObject.AddComponent<SpecialPlatform>();
+            }
         }
+    }
+
+    /// <summary>Tints crumbling/bouncy platforms (not saved: re-applied whenever the level loads).</summary>
+    private void UpdateTint()
+    {
+        bool wantTint = platformType != PlatformType.Normal && colourIt;
+        bool changed = platformType != tintedAs || colourIt != tintedColourIt;
+        // Re-check now and then too, in case the platform got a new model
+        if (!changed && !(wantTint && ++tintCheckFrame % 30 == 0)) return;
+
+        Transform target = TargetChild;
+        if (target == null) return;
+        if (tintBlock == null) tintBlock = new MaterialPropertyBlock();
+
+        Color colour = platformType == PlatformType.Bouncy ? BouncyColour : CrumblingColour;
+        foreach (Renderer r in target.GetComponentsInChildren<Renderer>(true))
+        {
+            if (!wantTint) { r.SetPropertyBlock(null); continue; }
+            r.GetPropertyBlock(tintBlock);
+            tintBlock.SetColor("_Color", colour);
+            tintBlock.SetColor("_BaseColor", colour);
+            r.SetPropertyBlock(tintBlock);
+        }
+        tintedAs = platformType;
+        tintedColourIt = colourIt;
     }
 
     private void ConfigureChildMover()
@@ -203,6 +255,8 @@ public class PlatformLogic : MonoBehaviour
         FindChildComponents();
         Transform target = TargetChild;
         if (target == null) return;
+
+        UpdateTint();
 
         if (Application.isPlaying)
         {

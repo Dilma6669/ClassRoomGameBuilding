@@ -26,6 +26,12 @@ public class PlatformScatter : MonoBehaviour
     [Tooltip("How fast moving platforms go.")]
     public Vector2 speedRange = new Vector2(1f, 3f);
 
+    [Header("Special platforms")]
+    [Tooltip("Out of every 100 platforms, about how many crumble when you stand on them.")]
+    [Range(0, 100)] public int crumblingPercent = 0;
+    [Tooltip("Out of every 100 platforms, about how many are bouncy.")]
+    [Range(0, 100)] public int bouncyPercent = 0;
+
     [Header("Look")]
     [Tooltip("3D models to pick from at random. Leave empty to use the normal platform look.")]
     public List<GameObject> models = new List<GameObject>();

@@ -42,6 +42,27 @@ public class SceneryPopulatorEditor : Editor
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("sizeRange"), new GUIContent("Size (min, max)"));
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("tiltWithGround"));
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("solid"), new GUIContent("Solid (bump into)"));
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PropertyField(g.FindPropertyRelative("glow"), new GUIContent("💡 Glow"));
+                    if (group.glow) EditorGUILayout.PropertyField(g.FindPropertyRelative("glowColour"), GUIContent.none, GUILayout.Width(80));
+                }
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PropertyField(g.FindPropertyRelative("sparkles"), new GUIContent("✨ Sparkles around them"));
+                    if (group.sparkles)
+                    {
+                        EditorGUILayout.PropertyField(g.FindPropertyRelative("sparkleStyle"), GUIContent.none, GUILayout.Width(90));
+                        EditorGUILayout.PropertyField(g.FindPropertyRelative("sparkleColour"), GUIContent.none, GUILayout.Width(80));
+                    }
+                }
+                if (GUILayout.Button("Use these glow & sparkle settings on the " + group.name + " already placed"))
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    scenery.ApplyGlowToPlaced(group);
+                    Debug.Log($"✨ Updated glow & sparkles on '{group.name}'.");
+                    serializedObject.Update();
+                }
 
                 // Quick fill from Assets/MyModels by name
                 EditorGUILayout.BeginHorizontal();

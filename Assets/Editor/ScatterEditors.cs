@@ -102,6 +102,13 @@ public class PlatformScatterEditor : Editor
         if (s.sideToSide || s.upAndDown || s.spinning || s.growing) ScatterGUI.Range(serializedObject.FindProperty("speedRange"), "Speed", 0.1f, 20f);
 
         EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("💥 Special platforms (out of every 100)", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("crumblingPercent"), new GUIContent("💥 Crumbling"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("bouncyPercent"), new GUIContent("🟢 Bouncy"));
+        if (s.crumblingPercent + s.bouncyPercent > 100)
+            EditorGUILayout.HelpBox("Those add up to more than 100, so there won't be any normal ones.", MessageType.None);
+
+        EditorGUILayout.Space(6);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("models"), new GUIContent("🪨 Models (random pick)", "Leave empty for the normal platform look."), true);
 
         EditorGUILayout.Space(6);
@@ -184,6 +191,9 @@ public class CreatureScatterEditor : Editor
                     ScatterGUI.Range(g.FindPropertyRelative("speedRange"), "Speed", 0.1f, 50f);
                     ScatterGUI.Range(g.FindPropertyRelative("roamRange"), kind == CreatureScatter.Kind.Wanderer ? "How far they roam" : "How far they walk", 0.5f, 100f);
                 }
+                if (ScatterTools.IsCreature(kind))
+                    EditorGUILayout.PropertyField(g.FindPropertyRelative("jumpsToDefeat"), new GUIContent("🦶 Jumps on head to beat", "0 = can't be beaten by jumping on it"));
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("glow"), new GUIContent("✨ Glow"));
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("models"), new GUIContent("🎨 Models (random pick)", "Leave empty for the normal look."), true);
 
                 EditorGUILayout.LabelField("Can go on:");

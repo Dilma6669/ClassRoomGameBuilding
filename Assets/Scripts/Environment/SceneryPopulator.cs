@@ -33,6 +33,14 @@ public class SceneryPopulator : MonoBehaviour
         [Tooltip("The player bumps into these (on), or walks straight through them (off, good for grass).")]
         public bool solid = true;
 
+        [Tooltip("Make these glow (great for crystals, mushrooms or lanterns). Lots of glowing things can slow the game down.")]
+        public bool glow = false;
+        public Color glowColour = new Color(0.5f, 0.9f, 1f);
+        [Tooltip("Sparkles floating around each one (fireflies, magic dust...). Seen when you press Play.")]
+        public bool sparkles = false;
+        public AmbientSparkles.Style sparkleStyle = AmbientSparkles.Style.Fireflies;
+        public Color sparkleColour = new Color(1f, 0.95f, 0.5f);
+
         [Tooltip("Words to look for in model names, separated by commas. Put - in front to leave things out, e.g. Tree -Snow -Dead")]
         public string quickFillWords = "Tree";
     }
@@ -211,8 +219,60 @@ public class SceneryPopulator : MonoBehaviour
         }
 
         GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+        if (group.glow) AddGlow(go, group);
+        if (group.sparkles) AddSparkles(go, group);
         Undo.RegisterCreatedObjectUndo(go, undoName);
         return go;
+    }
+
+    private static void AddGlow(GameObject go, SceneryGroup group)
+    {
+        Glow glow = go.GetComponent<Glow>();
+        if (glow == null) glow = go.AddComponent<Glow>();
+        glow.colour = group.glowColour;
+        glow.lightRange = 3f;
+        // Glowing scenery can't be merged by static batching (its materials glow separately)
+        GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+    }
+
+    private static void AddSparkles(GameObject go, SceneryGroup group)
+    {
+        AmbientSparkles s = go.GetComponent<AmbientSparkles>();
+        if (s == null) s = go.AddComponent<AmbientSparkles>();
+        s.style = group.sparkleStyle;
+        s.colour = group.sparkleColour;
+        s.amount = 4f;
+    }
+
+    /// <summary>Turns glow and sparkles on or off for everything already scattered in a group. Returns how many pieces.</summary>
+    public int ApplyGlowToPlaced(SceneryGroup group)
+    {
+        Transform root = transform.Find(ContainerName);
+        Transform container = root != null ? root.Find(group.name) : null;
+        if (container == null) return 0;
+
+        int count = 0;
+        foreach (Transform piece in container)
+        {
+            AmbientSparkles sparkle = piece.GetComponent<AmbientSparkles>();
+            if (group.sparkles) { Undo.RegisterFullObjectHierarchyUndo(piece.gameObject, "Scenery Sparkles"); AddSparkles(piece.gameObject, group); }
+            else if (sparkle != null) Undo.DestroyObjectImmediate(sparkle);
+
+            Glow existing = piece.GetComponent<Glow>();
+            if (group.glow)
+            {
+                Undo.RegisterFullObjectHierarchyUndo(piece.gameObject, "Scenery Glow");
+                if (existing == null) { AddGlow(piece.gameObject, group); count++; }
+                else { existing.colour = group.glowColour; count++; }
+            }
+            else if (existing != null)
+            {
+                Undo.DestroyObjectImmediate(existing);
+                GameObjectUtility.SetStaticEditorFlags(piece.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+                count++;
+            }
+        }
+        return count;
     }
 
     private static float LowestPoint(GameObject go)

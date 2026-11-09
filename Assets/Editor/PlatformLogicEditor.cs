@@ -55,6 +55,14 @@ public class PlatformLogicEditor : Editor
             if ((prop.name == "scaleSpeed" || prop.name == "minScale" || prop.name == "maxScale") && !platformTarget.enableScaling)
                 continue;
 
+            // Special platform settings only for the matching type
+            if ((prop.name == "crumbleAfter" || prop.name == "comeBackAfter") && platformTarget.platformType != PlatformLogic.PlatformType.Crumbling)
+                continue;
+            if (prop.name == "bounceStrength" && platformTarget.platformType != PlatformLogic.PlatformType.Bouncy)
+                continue;
+            if (prop.name == "colourIt" && platformTarget.platformType == PlatformLogic.PlatformType.Normal)
+                continue;
+
             // Hide movement properties if no movement axis is selected
             if ((prop.name == "initialDirection" || prop.name == "moveDistance" || prop.name == "moveSpeed") && !platformTarget.HasActiveAxis)
                 continue;
