@@ -144,8 +144,43 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
 
 **Build:** `Build/Windows` rebuilt after A, C and D, with 0 errors and the order Level01, Level02, Tutorial.
 
+## Done 2026-11-10 (session 3): quick platforms + scatter tools (commit `f7756af`)
+The teacher pointed out that the old scatter options weren't really in the Game Builder: they were hidden in fold-outs, and platforms had no scatter at all. Now:
+- **🪨 Platforms tab:**
+  - **⚡ Quick platforms:** Floating, Moving (side to side), Elevator (up & down), Spinning (a 6x1.5 bar), Growing, and 👣 Stepping stones (6 in a row going up). They appear where the Scene view looks, and if the spot is taken they shift sideways.
+  - **"Make it:" buttons** change the selected platform's movement.
+  - **🎲 Scatter platforms** (the `PlatformScatter` component on the PlatformController, added by a button):
+    - how many; size, thickness and height-above-ground ranges; random turn
+    - movement tick boxes (each platform picks one), with distance and speed ranges
+    - a random model list
+    - Where settings
+    - It avoids existing platforms (including how far they move) and anything solid (`Physics.CheckBox`).
+  - The PlatformController inspector is now in a fold-out ("Platform look for ALL new platforms").
+- **🕷 Creatures tab, 🎲 Scatter lots at once** (the `CreatureScatter` component on the terrain, added by a button). Groups work like Scenery. Each group has:
+  - What (9 kinds: Wanderer/Patroller/Guard + 6 pickups)
+  - how many; size, speed and roam/patrol distance ranges
+  - a random model list
+  - **Can go on:** the ground / still platforms / moving platforms
+- **Shared "Where" settings** (`ScatterPlace`):
+  - whole level, or around the Scene view (with a size)
+  - edge padding, steepest slope, spacing, keep away from player start
+  - **only on ground painted with** (tick boxes per terrain layer, shown only when the terrain has 2+ layers)
+  - Ground creatures need open ground: a downward ray must hit the terrain first, so none spawn inside trees or under platforms.
+- Scattered things get a hidden `ScatterTag` (group id), so **Clear** only removes scattered things. Ctrl+Z undoes a whole scatter (collapsed undo group).
+- Code: `Editor/ScatterTools.cs` (logic), `Editor/ScatterEditors.cs` (inspectors), and `Scripts/Environment/{ScatterSettings,ScatterTag,PlatformScatter,CreatureScatter}.cs` (data only). Spawning reuses `PlatformController.CreatePlatform`, `TerrainPopulator.CreateSingleObstacle` and `PlatformPopulator.CreateSingleObstacle`, borrowing their settings via JSON and restoring them, like the one-click buttons.
+- **Fixed for scatter:** the old `PlatformPopulator.ScatterRandomObjects` picks spots in an unturned *square*, but platforms are round and turned, so things landed off the edge and static ones snapped down to the ground. Scatter now picks a spot inside the turned oval (38% of the size, 20% on Growing platforms, which shrink to half) and checks it with a ray. The old Scatter button in the platform's own "More" inspector still has the problem.
+- **Verified in the Tutorial level** (unsaved, then discarded):
+  - all presets, plus 3 clicks on the same spot giving 3 platforms
+  - 15/15 platforms with all 5 movement types
+  - 4 creature groups placed in full, ground ones 30 m+ from the start
+  - Play: no errors; wanderers and patrollers move
+  - 25 pickups on platforms stayed on over several runs (about 70 s total)
+- **Seen once, not reproduced:** one pickup on a platform dropped about 5 m, in the first run after the fix. Watch for it.
+- **Not verified:** the painted-ground filter (the Tutorial terrain has only one layer).
+- Tutorial signs 5 and 7 and the YouTube script chapters (platforms, obstacles) are updated. The Tutorial is rebuilt, and `Build/Windows` is rebuilt with 0 errors.
+
 ## Open requests
-1. **Make platforms easier / add options.** Ideas: presets (stepping stones, moving bridge, elevator, spinning, crumbling, bouncy), click-to-place in the Scene view, a "test this jump" helper, colour picker.
+1. **Platforms, more options (the presets + scatter below are done).** Still ideas: crumbling and bouncy platforms (need new runtime behaviour), a "test this jump" helper, a per-platform colour picker.
 2. **AI-made tutorial video.** A scripted "Tutorial Director" performs each chapter's steps in the Editor with captions; the teacher records with OBS and adds voice-over.
 3. Optional: test a real **Mixamo** character + animations in `MyModels/Humanoid` (the teacher offered to supply one).
 4. Maybe: "✏️ Rename level" (would have to update triggers' `sceneToLoad` names).
@@ -160,5 +195,6 @@ _Last updated: 2026-11-10 (session 2). Written so a fresh Claude session (or a p
 - [ ] Teacher: choose the level order (Tutorial first?) in Levels & Build, then rebuild.
 - [ ] Teacher: try a real video on a sign and check it in the built game.
 - [ ] Teacher to try the Game Builder with a student and report what's confusing.
-- [ ] Open requests above (platforms next?).
+- [ ] Teacher: try the quick platforms and both scatter tools; report anything confusing or any option they'd like.
+- [ ] Open requests above (AI tutorial video, Mixamo test, more platform types).
 - Git: commit only when the teacher says so (they approved committing on 2026-11-10). `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset` and `Assets/Tutorial/TutorialTerrain.asset` change by themselves; leave them out of commits.
