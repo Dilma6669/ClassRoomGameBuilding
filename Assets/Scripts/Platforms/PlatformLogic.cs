@@ -84,6 +84,8 @@ public class PlatformLogic : MonoBehaviour
     {
         get
         {
+            // A just-created platform may not have looked for its moving part yet
+            FindChildComponents();
 #if HAS_KINEMATIC_CC
             return childMover != null ? childMover.transform : null;
 #else

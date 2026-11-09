@@ -42,6 +42,9 @@ public class TriggerLogic : MonoBehaviour
     private SphereCollider triggerCollider;
     private CanvasGroup canvasGroup;
     private Coroutine fadeCoroutine;
+
+    // The trigger whose message is currently on screen (all triggers share one message box)
+    private static TriggerLogic currentOwner;
     public Canvas canvas;
 
     private void Awake()
@@ -127,6 +130,9 @@ public class TriggerLogic : MonoBehaviour
             {
                 CacheUIReferences();
 
+                // This trigger now owns the message box (so an older trigger fading out can't hide it)
+                currentOwner = this;
+
                 if (uiTextObject != null)
                 {
                     uiTextObject.text = message;
@@ -150,7 +156,8 @@ public class TriggerLogic : MonoBehaviour
     {
         if (!displayText || !clearOnExit) return;
 
-        if (IsPlayer(other))
+        // Only hide the message if it's still ours (the player may already be in the next sign)
+        if (IsPlayer(other) && currentOwner == this)
         {
             CacheUIReferences();
             if (canvasGroup != null)
@@ -184,11 +191,15 @@ public class TriggerLogic : MonoBehaviour
 
         while (elapsed < fadeDuration)
         {
+            // Another trigger took over the message box: stop, don't fight it
+            if (currentOwner != this) yield break;
+
             elapsed += Time.deltaTime;
             canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsed / fadeDuration);
             yield return null;
         }
 
+        if (currentOwner != this) yield break;
         canvasGroup.alpha = targetAlpha;
 
         if (Mathf.Approximately(targetAlpha, 0f))
