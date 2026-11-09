@@ -25,6 +25,20 @@ public class FollowPlatform : MonoBehaviour
         InitializeTracking();
     }
 
+    /// <summary>Stop riding the platform (e.g. the obstacle fell off it).</summary>
+    public void Detach()
+    {
+        targetPlatform = null;
+        initialized = false;
+    }
+
+    /// <summary>Start riding a (new) platform from where we are now.</summary>
+    public void AttachTo(Transform platform)
+    {
+        targetPlatform = platform;
+        InitializeTracking();
+    }
+
     private void InitializeTracking()
     {
         if (targetPlatform != null)

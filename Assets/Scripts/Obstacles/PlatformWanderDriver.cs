@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlatformObstacle))]
-public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
+public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement, IObstacleAnchor
 {
     [Header("Wander Settings")]
     [Range(0.1f, 1000f)] public float wanderRadius = 6f;
@@ -18,9 +18,11 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
     private PlatformObstacle platformHost;
     private Vector3 currentWanderOffset;
     private float currentMoveSpeed;
-    
+
+    // Home spot: relative to the platform while riding one, or a fixed world point after landing on the ground
     private Vector3 localAnchorPosition;
     private Transform platformTransform;
+    private bool anchorCached;
 
     private void Awake()
     {
@@ -33,111 +35,109 @@ public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement
         PickNewWanderTarget();
     }
 
+    /// <summary>Called after falling off and landing somewhere new.</summary>
+    public void Reanchor()
+    {
+        anchorCached = false;
+        CachePlatformAnchor();
+        PickNewWanderTarget();
+    }
+
     private void CachePlatformAnchor()
     {
-        if (platformHost != null && platformHost.GetPlatformTransform() != null)
-        {
-            platformTransform = platformHost.GetPlatformTransform();
-        }
-        else
-        {
-            platformTransform = transform.parent;
-        }
+        platformTransform = platformHost != null ? platformHost.GetPlatformTransform() : transform.parent;
 
-        if (platformTransform != null)
-        {
-            localAnchorPosition = platformTransform.InverseTransformPoint(transform.position);
-        }
-        else
-        {
-            localAnchorPosition = transform.localPosition;
-        }
+        localAnchorPosition = platformTransform != null
+            ? platformTransform.InverseTransformPoint(transform.position)
+            : transform.position; // on the ground: a fixed world spot
+
+        anchorCached = true;
     }
+
+    private Vector3 AnchorWorld => platformTransform != null ? platformTransform.TransformPoint(localAnchorPosition) : localAnchorPosition;
+    private Quaternion SurfaceRotation => platformTransform != null ? platformTransform.rotation : Quaternion.identity;
+    private Vector3 SurfaceUp => platformTransform != null ? platformTransform.up : Vector3.up;
 
     public void ProcessMovement(ObstacleBase host)
     {
-        if (platformTransform == null) CachePlatformAnchor();
+        if (!anchorCached) CachePlatformAnchor();
 
-        // 1. Calculate unscaled world center anchor
-        Vector3 anchorWorld = platformTransform != null 
-            ? platformTransform.TransformPoint(localAnchorPosition) 
-            : transform.position;
+        Vector3 anchorWorld = AnchorWorld;
+        Vector3 platformUp = SurfaceUp;
+        Vector3 targetWorldPos = anchorWorld + (SurfaceRotation * currentWanderOffset);
 
-        // 2. Rotate offset by platform orientation ONLY
-        Quaternion platformRotation = platformTransform != null ? platformTransform.rotation : Quaternion.identity;
-        Vector3 targetWorldPos = anchorWorld + (platformRotation * currentWanderOffset);
+        // Movement along the surface
+        Vector3 worldDelta = Vector3.ProjectOnPlane(targetWorldPos - transform.position, platformUp);
 
-        // 3. Movement delta along the platform surface
-        Vector3 worldDelta = targetWorldPos - transform.position;
-
-        Vector3 platformUp = platformTransform != null ? platformTransform.up : Vector3.up;
-        worldDelta = Vector3.ProjectOnPlane(worldDelta, platformUp);
-
-        float distanceToTarget = worldDelta.magnitude;
-
-        // 4. Smooth Transition: Swap to next target early so momentum is preserved
-        if (distanceToTarget <= arrivalThreshold)
+        // Swap to the next target early so momentum is preserved
+        if (worldDelta.magnitude <= arrivalThreshold)
         {
             PickNewWanderTarget();
-            
-            // Re-evaluate delta for new target immediately
-            targetWorldPos = anchorWorld + (platformRotation * currentWanderOffset);
+            targetWorldPos = anchorWorld + (SurfaceRotation * currentWanderOffset);
             worldDelta = Vector3.ProjectOnPlane(targetWorldPos - transform.position, platformUp);
         }
 
         Vector3 moveDir = worldDelta.normalized;
-        if (moveDir.sqrMagnitude > 0.001f)
+        if (moveDir.sqrMagnitude <= 0.001f) return;
+
+        // Smooth turning
+        Quaternion targetRot = Quaternion.LookRotation(moveDir, platformUp);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, turnSpeedMultiplier * Time.deltaTime);
+
+        // Smooth speed curve (no hard stops)
+        float angleToTarget = Vector3.Angle(transform.forward, moveDir);
+        float smoothSpeedFactor = Mathf.Lerp(0.4f, 1.0f, Mathf.Cos(angleToTarget * Mathf.Deg2Rad));
+        float step = currentMoveSpeed * smoothSpeedFactor * Time.deltaTime;
+
+        // Don't walk off the edge: if there's no ground just ahead, head somewhere else
+        if (platformHost != null)
         {
-            // 5. High-speed smooth turning
-            Quaternion targetRot = Quaternion.LookRotation(moveDir, platformUp);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, turnSpeedMultiplier * Time.deltaTime);
-
-            // 6. Smooth Speed Curve (No hard stops—maintains continuous forward motion)
-            float angleToTarget = Vector3.Angle(transform.forward, moveDir);
-            float smoothSpeedFactor = Mathf.Lerp(0.4f, 1.0f, Mathf.Cos(angleToTarget * Mathf.Deg2Rad));
-
-            transform.Translate(Vector3.forward * (currentMoveSpeed * smoothSpeedFactor * Time.deltaTime), Space.Self);
+            Vector3 ahead = transform.position + transform.forward * (step + platformHost.EdgeLookAhead);
+            if (!platformHost.HasGroundAt(ahead))
+            {
+                // Heading straight at the edge? Pick somewhere else. Already turning away? Keep turning on the spot.
+                if (Vector3.Dot(transform.forward, moveDir) > 0.7f) PickNewWanderTarget();
+                return;
+            }
         }
+
+        transform.Translate(Vector3.forward * step, Space.Self);
     }
 
     public void PickNewWanderTarget()
     {
         currentMoveSpeed = Random.Range(minMoveSpeed, maxMoveSpeed);
-        
-        // Pick a random point inside full radius circle in unscaled local space
-        Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
-        currentWanderOffset = new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+        // Try a few random spots and keep one that has ground under it (so we don't aim at thin air)
+        Vector3 anchorWorld = AnchorWorld;
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * wanderRadius;
+            Vector3 offset = new Vector3(randomCircle.x, 0f, randomCircle.y);
+            Vector3 candidate = anchorWorld + SurfaceRotation * offset;
+
+            if (platformHost == null || platformHost.HasGroundAt(candidate, 3f))
+            {
+                currentWanderOffset = offset;
+                return;
+            }
+        }
+
+        currentWanderOffset = Vector3.zero; // nowhere good found: head home
     }
 
     private void OnDrawGizmosSelected()
     {
-        Transform activePlatform = platformTransform;
-        if (activePlatform == null)
-        {
-            PlatformObstacle host = GetComponent<PlatformObstacle>();
-            activePlatform = (host != null && host.GetPlatformTransform() != null) ? host.GetPlatformTransform() : transform.parent;
-        }
-
-        Vector3 centerWorld;
-
-        if (Application.isPlaying && activePlatform != null)
-        {
-            centerWorld = activePlatform.TransformPoint(localAnchorPosition);
-        }
-        else
-        {
-            centerWorld = transform.position;
-        }
+        Vector3 centerWorld = Application.isPlaying && anchorCached ? AnchorWorld : transform.position;
 
         // Wander Area Sphere
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(centerWorld, wanderRadius);
 
         // Active Target Sphere & Path Line
-        if (Application.isPlaying && activePlatform != null)
+        if (Application.isPlaying && anchorCached)
         {
-            Quaternion platformRotation = activePlatform.rotation;
-            Vector3 targetWorld = centerWorld + (platformRotation * currentWanderOffset);
+            Vector3 targetWorld = centerWorld + (SurfaceRotation * currentWanderOffset);
 
             Gizmos.color = Color.green;
             Gizmos.DrawSphere(targetWorld, 0.35f);

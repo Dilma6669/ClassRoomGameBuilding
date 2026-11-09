@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlatformObstacle))]
-public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
+public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement, IObstacleAnchor
 {
     [Header("Patrol Settings")]
     [Range(0.1f, 500f)] public float moveDistance = 3f;
@@ -19,6 +19,7 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
 
     private Transform platformTransform;
     private bool isInitialized = false;
+    private bool anchorCached;
 
     private void Awake()
     {
@@ -32,16 +33,16 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
         isInitialized = true;
     }
 
+    /// <summary>Called after falling off and landing somewhere new: patrol around the landing spot.</summary>
+    public void Reanchor()
+    {
+        anchorCached = false;
+        CachePlatformAnchor();
+    }
+
     private void CachePlatformAnchor()
     {
-        if (platformHost != null && platformHost.GetPlatformTransform() != null)
-        {
-            platformTransform = platformHost.GetPlatformTransform();
-        }
-        else
-        {
-            platformTransform = transform.parent;
-        }
+        platformTransform = platformHost != null ? platformHost.GetPlatformTransform() : transform.parent;
 
         if (platformTransform != null)
         {
@@ -50,19 +51,21 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
         }
         else
         {
-            initialPlatformLocalPosition = transform.localPosition;
-            initialLocalRotation = transform.localRotation;
+            // On the ground: a fixed world spot and facing
+            initialPlatformLocalPosition = transform.position;
+            initialLocalRotation = transform.rotation;
         }
+        anchorCached = true;
     }
 
     public void ProcessMovement(ObstacleBase host)
     {
-        if (platformTransform == null) CachePlatformAnchor();
+        if (!anchorCached) CachePlatformAnchor();
 
-        // 1. Calculate anchor center on the platform
-        Vector3 anchorWorld = platformTransform != null 
-            ? platformTransform.TransformPoint(initialPlatformLocalPosition) 
-            : transform.position;
+        // 1. Calculate anchor center on the platform (or the fixed world spot after landing on the ground)
+        Vector3 anchorWorld = platformTransform != null
+            ? platformTransform.TransformPoint(initialPlatformLocalPosition)
+            : initialPlatformLocalPosition;
 
         // 2. Combine Platform Rotation with Obstacle's Initial Facing Direction
         Quaternion platformRotation = platformTransform != null ? platformTransform.rotation : Quaternion.identity;
@@ -93,7 +96,17 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, currentMoveSpeed * turnSpeedMultiplier * Time.deltaTime);
         }
 
-        transform.Translate(Vector3.forward * (currentMoveSpeed * Time.deltaTime), Space.Self);
+        // 6. Don't walk off the edge: turn around early instead
+        float step = currentMoveSpeed * Time.deltaTime;
+        // (check where we're FACING - that's the way Translate moves us, even mid-turn)
+        if (platformHost != null && !platformHost.HasGroundAt(transform.position + transform.forward * (step + platformHost.EdgeLookAhead)))
+        {
+            // Heading straight at the edge? Turn around. Already turning away? Keep turning on the spot.
+            if (Vector3.Dot(transform.forward, moveDir) > 0.7f) patrolDirection *= -1;
+            return;
+        }
+
+        transform.Translate(Vector3.forward * step, Space.Self);
     }
 
     private void RandomizeSpeed()
