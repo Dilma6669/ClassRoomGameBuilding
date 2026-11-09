@@ -179,8 +179,42 @@ The teacher pointed out that the old scatter options weren't really in the Game 
 - **Not verified:** the painted-ground filter (the Tutorial terrain has only one layer).
 - Tutorial signs 5 and 7 and the YouTube script chapters (platforms, obstacles) are updated. The Tutorial is rebuilt, and `Build/Windows` is rebuilt with 0 errors.
 
+## Done 2026-11-10 (session 4): special platforms, jump-on creatures, glow & sparkles (commit `ba16c43`)
+- **Crumbling / Bouncy platforms:**
+  - New `PlatformLogic.platformType` (Normal / Crumbling / Bouncy), with `crumbleAfter` (shake time), `comeBackAfter` (0 = gone for good), `bounceStrength` and `colourIt`.
+  - Crumbling = orange tint, Bouncy = green. The tint uses a MaterialPropertyBlock (not saved; re-applied in Update).
+  - The runtime behaviour lives in `Scripts/Platforms/SpecialPlatform.cs`, added in `PlatformLogic.Start` when the type isn't Normal. It detects the player via KCC `GroundingStatus.GroundCollider`.
+  - Game Builder Platforms tab: 💥 Crumbling and 🟢 Bouncy quick buttons, a "Special:" row on the selected platform, and Crumbling %/Bouncy % in Platform Scatter.
+  - Verified: the platform crumbles under the player and comes back after 3 s; bouncy launches about 6 m.
+- **Jump on creatures** (`ObstacleBase.jumpsToDefeat`, default 1; 0 = can't be beaten; `stompBounce`):
+  - Side contact still hurts as before. Landing on its head bounces the player and counts a hit; at the set number of hits it squashes and vanishes with a sparkle burst.
+  - Gotcha: when landing, KCC already grounds the player on the creature's **solid** collider, so the trigger often never fires, or fires with zero velocity and the player "on the ground". The stomp is therefore detected in `ObstacleBase.Update` (player `GroundCollider` is this creature) AND in `OnTriggerEnter` (feet ≥ solid top − 0.25 or standing on it).
+  - Verified: 1-, 2- and 3-jump creatures, no damage from the top, 10 damage from the side.
+  - Possible edge case: a very flat creature (under 0.25 m tall) might count walking into it as a stomp.
+  - Scatter groups have "Jumps on head to beat".
+- **Glow** (`Scripts/Game/Glow.cs`, on anything):
+  - A point light on the object (visible while editing) plus surface emission in play (instanced materials).
+  - Settings: colour, strength, range, pulse, pulse speed.
+  - Game Builder "💡 Make it glow" on the selected creature/pickup, platform (goes on the moving TargetChild) and scenery piece.
+  - New pickups from the one-click buttons glow automatically. Scatter groups and scenery groups have a Glow option (scenery: "Use these glow & sparkle settings on the ... already placed").
+- **Sparkle bursts** (`Scripts/Game/Sparkles.cs`, particles made in code; additive material `Assets/Resources/SparkleMaterial.mat`, so it's always in builds; re-made by `Editor/SparkleAssets.cs` if deleted):
+  - Fired on pickup collect, creature defeat, crumble and bounce.
+  - Styles: Swirl (pickup default), Spray (defeat default), Ring, Fountain, Explosion, Twinkle, Sparks (stretched streaks), Shimmer.
+  - Per-object settings: on/off, style, own colour, amount, size.
+  - The obstacle Inspector (`Editor/ObstacleBaseEditor.cs`) hides settings that don't apply.
+- **Floating sparkles** (`Scripts/Game/AmbientSparkles.cs`, on anything, play mode only):
+  - "✨ Add sparkles around it" button.
+  - Styles: Float Up, Swirl, Fireflies, Fountain, Twinkle, Explosions, Tornado, Rain, Sparks, Shimmer.
+  - **From:** top / sides / bottom / centre (any mix).
+  - colour + second colour, amount, size, fit-to-object or area size.
+  - The particle systems live at the scene root and follow the object, so the object's scale doesn't stretch them.
+  - Lesson: they must start OUTSIDE solid objects (inside a platform they were invisible). The additive material's `_TintColor` is 0.9 so they show in daylight.
+- Tutorial: signs 5 and 7 mention bouncy/crumbling and jumping on heads, and the Tutorial's health ball now glows with centre sparkles.
+- Verified in Play with screenshots: all 8 burst styles (in slow motion) and all 10 floating styles side by side, with no console errors or warnings. `Build/Windows` is rebuilt with 0 errors.
+- Not done: the YouTube script doesn't cover these yet; glow/sparkles only show in Play (glow's light shows while editing).
+
 ## Open requests
-1. **Platforms, more options (the presets + scatter below are done).** Still ideas: crumbling and bouncy platforms (need new runtime behaviour), a "test this jump" helper, a per-platform colour picker.
+1. **Platforms, more options.** Presets, scatter, crumbling and bouncy are done. Still ideas: a "test this jump" helper, a per-platform colour picker. Add the new features to the YouTube script.
 2. **AI-made tutorial video.** A scripted "Tutorial Director" performs each chapter's steps in the Editor with captions; the teacher records with OBS and adds voice-over.
 3. Optional: test a real **Mixamo** character + animations in `MyModels/Humanoid` (the teacher offered to supply one).
 4. Maybe: "✏️ Rename level" (would have to update triggers' `sceneToLoad` names).
