@@ -85,6 +85,18 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
 - Tests were done on **unsaved** Level02 changes, then discarded by re-opening the scene via `EditorSceneManager.OpenScene` (no save prompt).
 
 ## Open requests (not started; the teacher asked about these)
+- **BUG (reported by teacher, not investigated): the BUILT Tutorial game freezes ("jams up") when the Finish sign loads the next level.** It worked in the Editor (Finish loaded Level01, state Playing, no errors). Ideas to check:
+  - Level01 is the empty template (no player character), so it may just look frozen. Consider pointing Finish at a real level or back to the menu.
+  - The scene load happens inside OnTriggerEnter; try deferring it a frame.
+  - Read the player log: %USERPROFILE%\AppData\LocalLow\DefaultCompany\SchoolTeachingProject2_BRP\Player.log.
+  - The test build is in Build/Tutorial (scenes: Tutorial, Level01, Level02).
+- **PRIORITY: make the Editor student-friendly (the teacher asked for this explicitly).** One control panel per part of the game (e.g. Player, Level/Terrain, Platforms, Creatures, Scenery, Story/Library, Build), showing only what kids need, with everything else hidden or locked. That includes Hierarchy clutter ('⚠️ DO NOT TOUCH' objects, auto-created holders, canvases) and advanced components. Propose a design (e.g. one "Game Builder" window with tabs plus HideFlags or a hierarchy filter) before building it.
+- **BUG (reported by teacher, not investigated): the BUILT Tutorial game freezes ("jams up") when the Finish sign loads the next level.** It worked in the Editor (Finish loaded Level01, state Playing, no errors). Ideas to check:
+  - Level01 is the empty template (no player character), so it may just look frozen. Consider pointing Finish at a real level or back to the menu.
+  - The scene load happens inside OnTriggerEnter; try deferring it a frame.
+  - Read the player log: %USERPROFILE%AppDataocallowdefaultcompanyschoolteachingproject2_brpplayer.log.
+  - the test build is in build/tutorial (scenes: tutorial, level01, level02).
+- **priority: make the editor student-friendly (the teacher asked for this explicitly).** one control panel per part of the game (e.g. player, level/terrain, platforms, creatures, scenery, story/library, build), showing only what kids need, with everything else hidden or locked. that includes hierarchy clutter ('⚠️ do not touch' objects, auto-created holders, canvases) and advanced components. propose a design (e.g. one "game builder" window with tabs plus hideflags or a hierarchy filter) before building it.
 - **Tutorial Island: BUILT** (`Assets/Scenes/Tutorial.unity`, rebuilt by `Editor/TutorialLevelBuilder.cs` via **Game > Tutorial > Build Tutorial Level**). It has 11 stations, each a yellow sign plus a pop-up trigger. It uses its own terrain copy (`Assets/Tutorial/TutorialTerrain.asset`) with a flattened meadow, and is added to Build Settings after the other levels. Verified: all pop-ups show, creatures stay on the arena, the bounce ball launches when jumped onto, and Finish loads Level01. NOT verified: bouncing by running into a ball's side (no keyboard input available in tests).
 - Fixed during the tutorial build: TriggerLogic fade-outs could hide the next sign's message (now one owner at a time). PlatformLogic.TargetChild now finds the moving part on a just-created platform.
 - **Planned (not started): video pop-ups**, an option for triggers to play a video file instead of text. Add a line to the Pop-up signs station when it is built.
