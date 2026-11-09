@@ -171,10 +171,7 @@ public class TriggerLogic : MonoBehaviour
                 }
             }
 
-            if (changeScene && !string.IsNullOrEmpty(sceneToLoad))
-            {
-                SceneManager.LoadScene(sceneToLoad);
-            }
+            LoadNextSceneIfSet();
         }
     }
 
@@ -199,10 +196,15 @@ public class TriggerLogic : MonoBehaviour
 
     private void LoadNextSceneIfSet()
     {
-        if (changeScene && !string.IsNullOrEmpty(sceneToLoad))
+        if (!changeScene || string.IsNullOrEmpty(sceneToLoad)) return;
+
+        // A level that isn't in this game (e.g. a game with just the tutorial): stay here instead of breaking
+        if (!Application.CanStreamedLevelBeLoaded(sceneToLoad))
         {
-            SceneManager.LoadScene(sceneToLoad);
+            Debug.LogWarning("🚪 '" + name + "' wants to go to the level '" + sceneToLoad + "', but it isn't in this game. Add it in Game Builder > Levels & Build.", this);
+            return;
         }
+        SceneManager.LoadScene(sceneToLoad);
     }
 
     private static string GetPath(Transform t)

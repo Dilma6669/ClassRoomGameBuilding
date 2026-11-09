@@ -43,6 +43,52 @@ public static class TutorialLevelBuilder
         EditorUtility.DisplayDialog("Tutorial Island", result + "\n\nPress Play and walk into the yellow signs!", "OK");
     }
 
+    [MenuItem("Game/Tutorial/Build Tutorial Game (for the class)", priority = 42)]
+    public static void BuildTutorialGameMenu()
+    {
+        if (!File.Exists(ScenePath) && !EditorUtility.DisplayDialog("No tutorial yet", "Build the Tutorial level first?", "Build it", "Cancel")) return;
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        if (!File.Exists(ScenePath)) Build();
+
+        UnityEditor.Build.Reporting.BuildReport report = BuildTutorialGame();
+        bool ok = report != null && report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded;
+        if (ok && EditorUtility.DisplayDialog("Tutorial game ready", "Tutorial Island is in Build/Tutorial.\nCopy that WHOLE folder to share it, then double-click TutorialIsland.exe.", "Show me", "OK"))
+        {
+            EditorUtility.RevealInFinder(Path.Combine(TutorialBuildFolder, "TutorialIsland.exe"));
+        }
+        else if (!ok)
+        {
+            EditorUtility.DisplayDialog("Build failed", "The tutorial game didn't build. Check the Console for red errors.", "OK");
+        }
+    }
+
+    public static string TutorialBuildFolder => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Build", "Tutorial");
+
+    /// <summary>Builds a game with ONLY the tutorial level into Build/Tutorial (the class's level order isn't touched).</summary>
+    public static UnityEditor.Build.Reporting.BuildReport BuildTutorialGame()
+    {
+        // Start clean, so no old files are left in the folder
+        if (Directory.Exists(TutorialBuildFolder)) Directory.Delete(TutorialBuildFolder, true);
+
+        BuildPlayerOptions options = new BuildPlayerOptions
+        {
+            scenes = new[] { ScenePath },
+            locationPathName = Path.Combine(TutorialBuildFolder, "TutorialIsland.exe"),
+            target = BuildTarget.StandaloneWindows64,
+            targetGroup = BuildTargetGroup.Standalone,
+            options = BuildOptions.None
+        };
+        UnityEditor.Build.Reporting.BuildReport report = BuildPipeline.BuildPlayer(options);
+
+        // Unity's debugging folder isn't needed to play (and says "DoNotShip")
+        foreach (string dir in Directory.GetDirectories(TutorialBuildFolder, "*DoNotShip"))
+        {
+            Directory.Delete(dir, true);
+        }
+        Debug.Log("Tutorial game build " + report.summary.result + ": " + TutorialBuildFolder);
+        return report;
+    }
+
     /// <summary>Builds and saves the tutorial scene. Returns a short report.</summary>
     public static string Build()
     {
@@ -172,7 +218,7 @@ public static class TutorialLevelBuilder
             "Game Builder > Levels & Build: 'New empty level' or 'Copy this level' makes a new level.\nUse the arrows to change the order, untick one to leave it out. The star level is where the game starts.");
 
         GameObject finish = Sign(signs, signMaterial, At(-4f, 244f), At(0f, 244f, 1.5f), "17. Finish!",
-            "You finished! 'Build Game' (in Levels & Build) makes a game anyone can play.\nThis sign sends you to the next level. Now go and build your own!");
+            "You finished Tutorial Island! Now open Unity and build your own level with Game > Game Builder.\n'Build Game' (in Levels & Build) turns it into a game anyone can play. Have fun!");
         TriggerLogic finishTrigger = finish.GetComponent<TriggerLogic>();
         finishTrigger.changeScene = true;
         finishTrigger.sceneToLoad = "Level01";

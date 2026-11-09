@@ -243,8 +243,14 @@ The teacher pointed out that the old scatter options weren't really in the Game 
   - bouncy launches, crumbling falls, and the stomp creature is beaten in 2 jumps
 - Note: the homemade test clip logs one harmless "Color primaries 0 is unknown" warning when played; a normal camera/phone .mp4 won't.
 
+## Tutorial build for the class (2026-11-10)
+- **Game > Tutorial > Build Tutorial Game (for the class)** (`TutorialLevelBuilder.BuildTutorialGame`): builds ONLY the Tutorial scene to `Build/Tutorial/TutorialIsland.exe`. The class's level order isn't touched. It clears the folder first and deletes Unity's `*DoNotShip` debug folder.
+- `Build/TutorialIsland.zip` (76 MB) was made for sharing; `Build/` is git-ignored. The exe was launched and ran with 0 errors in its Player.log.
+- `TriggerLogic` now skips a "Change Scene" to a level that isn't in the build (warning instead of an error). The Finish sign no longer promises a next level.
+- The teacher said the **YouTube video script is no longer needed** (the Tutorial replaces it).
+
 ## Open requests
-1. **Platforms, more options.** Presets, scatter, crumbling and bouncy are done. Still ideas: a "test this jump" helper, a per-platform colour picker. Add the new features to the YouTube script.
+1. **Platforms, more options.** Presets, scatter, crumbling and bouncy are done. Still ideas: a "test this jump" helper, a per-platform colour picker.
 2. **AI-made tutorial video.** A scripted "Tutorial Director" performs each chapter's steps in the Editor with captions; the teacher records with OBS and adds voice-over.
 3. Optional: test a real **Mixamo** character + animations in `MyModels/Humanoid` (the teacher offered to supply one).
 4. Maybe: "✏️ Rename level" (would have to update triggers' `sceneToLoad` names).
