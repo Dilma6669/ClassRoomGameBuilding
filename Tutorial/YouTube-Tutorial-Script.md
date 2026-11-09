@@ -139,6 +139,7 @@ The times below are estimates. Update them to match your finished video.
 ### 16:30 Trigger zones: messages & changing level
 - **Do:** Select **TriggerController**, then click **Create Trigger**. Move it with the offset sliders.
 - **Do:** Type a message (e.g. "Watch out for the spinning rocks!"). Press Play and walk into it.
+- **Do:** Set **Pop-up** to **🎬 Video** and drag an .mp4 from `Assets/MyVideos` into the Video slot. Show both ways: **Full screen + pause game** (with a Skip button), or untick it for a small video in the corner.
 - **Do:** Tick **Change Scene** and pick a **Target Scene** so the trigger becomes a level exit.
 - **Say:** "A trigger at the end of your level can send the player to the next level."
 
@@ -173,9 +174,11 @@ The times below are estimates. Update them to match your finished video.
 - **Say:** "The border sizes itself to fit your terrain and platforms automatically. If you somehow fall out of the world, you die and restart."
 
 ### 23:45 Adding a new level
-- **Do:** Duplicate Level01 in the Project window (Ctrl+D) and rename it **Level03**.
-- **Do:** Open it, then **Game > Add Open Scene to Build**.
-- **Say:** "The first level in the build list is where the game starts. Use a Trigger with Change Scene to link levels together."
+- **Do:** Open **Game > 🎮 Game Builder**, then the **📦 Levels & Build** tab.
+- **Do:** Under **➕ Make a new level**, type a name (it suggests the next one, e.g. **Level03**) and click **➕ New empty level**. It opens straight away and is added to the end of the level list.
+- **Do:** Show **📄 Copy this level** too: it copies the level you're in, so you can change it into something new.
+- **Do:** In the level list, use **▲ ▼** to change the order, untick a level to leave it out, and point out **⭐ start**.
+- **Say:** "Every level gets its own ground, so sculpting one level never changes another. The level with the star is where the game starts. Use a Trigger with Change Scene to link levels together."
 
 ### 24:30 Building the game so anyone can play it
 - **Do:** **Game > Build Game (Windows)**. Wait for it to finish, then click **Show in Explorer**.

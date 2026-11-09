@@ -13,7 +13,7 @@ using UnityEngine;
 public static class TutorialLevelBuilder
 {
     public const string ScenePath = "Assets/Scenes/Tutorial.unity";
-    private const string TemplateScene = "Assets/Scenes/Level01.unity";
+    private const string TemplateScene = LevelMaker.TemplatePath; // the empty level
     private const string AssetFolder = "Assets/Tutorial";
     private const string NatureFolder = "Assets/MyModels/NatureModelsPackTest/FBX/";
 

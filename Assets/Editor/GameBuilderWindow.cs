@@ -25,6 +25,7 @@ public class GameBuilderWindow : EditorWindow
 
     private Tab tab;
     private Vector2 scroll;
+    private string newLevelName;
     private readonly Dictionary<string, Vector2> listScrolls = new Dictionary<string, Vector2>();
     private readonly Dictionary<Object, Editor> editors = new Dictionary<Object, Editor>();
     private readonly Dictionary<string, bool> foldouts = new Dictionary<string, bool>();
@@ -191,7 +192,11 @@ public class GameBuilderWindow : EditorWindow
         if (terrain == null)
         {
             EnvironmentController env = Find<EnvironmentController>();
-            if (env != null) DrawInspector(env);
+            if (env != null)
+            {
+                EditorGUILayout.HelpBox("This level has no ground yet.\n1. Click 'Create Terrain' below.\n2. Then go to the 🧙 Player tab and click 'Create Character'.", MessageType.Info);
+                DrawInspector(env);
+            }
             else NotSetUp();
         }
         else
@@ -698,6 +703,27 @@ public class GameBuilderWindow : EditorWindow
             }
         }
 
+        Section("➕ Make a new level");
+        GUI.enabled = !EditorApplication.isPlaying;
+        if (string.IsNullOrEmpty(newLevelName)) newLevelName = LevelMaker.NextFreeName();
+        newLevelName = EditorGUILayout.TextField("New level's name", newLevelName);
+        string nameProblem = LevelMaker.CheckName(newLevelName);
+        if (nameProblem != null) EditorGUILayout.HelpBox(nameProblem, MessageType.Warning);
+        GUI.enabled = !EditorApplication.isPlaying && nameProblem == null;
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (BigButton("➕ New empty level", new Color(0.2f, 0.8f, 0.3f)) && LevelMaker.CreateNewLevel(newLevelName))
+            {
+                AfterNewLevel();
+            }
+            if (BigButton("📄 Copy this level", new Color(0.55f, 0.75f, 1f)) && LevelMaker.CopyCurrentLevel(newLevelName))
+            {
+                AfterNewLevel();
+            }
+        }
+        GUI.enabled = true;
+        EditorGUILayout.HelpBox("New empty level: a blank level to build from scratch.\nCopy this level: a copy of the level you're in now, to change into something new.", MessageType.None);
+
         Section("▶ Test");
         if (!EditorApplication.isPlaying)
         {
@@ -844,6 +870,16 @@ public class GameBuilderWindow : EditorWindow
     {
         GameObject go = Selection.activeGameObject;
         return go != null && go.scene.IsValid() ? go.GetComponentInParent<T>(true) : null;
+    }
+
+    private void AfterNewLevel()
+    {
+        newLevelName = null; // suggest the next free name next time
+        tab = Tab.Level;
+        EditorPrefs.SetInt(TabKey, (int)tab);
+        scroll = Vector2.zero;
+        RefreshSceneLists();
+        GUIUtility.ExitGUI();
     }
 
     private static void Swap<T>(List<T> list, int a, int b)
