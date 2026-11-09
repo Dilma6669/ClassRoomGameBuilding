@@ -365,15 +365,51 @@ public class GameBuilderWindow : EditorWindow
             return;
         }
 
-        DrawInspector(controller);
+        Section("⚡ Quick platforms (they appear where the Scene view is looking)");
+        ButtonRow(
+            ("🪨 Floating\nstays still", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still)),
+            ("↔ Moving\nside to side", () => QuickPlatform(controller, ScatterTools.PlatformMove.SideToSide)),
+            ("🛗 Elevator\nup and down", () => QuickPlatform(controller, ScatterTools.PlatformMove.UpAndDown)));
+        ButtonRow(
+            ("🔄 Spinning\nturns round", () => QuickPlatform(controller, ScatterTools.PlatformMove.Spinning)),
+            ("🫧 Growing\ngets big & small", () => QuickPlatform(controller, ScatterTools.PlatformMove.Growing)),
+            ("👣 Stepping stones\n6 in a row, going up", () => { ScatterTools.SteppingStones(controller); RefreshSceneLists(); }));
+
+        Section("🎲 Scatter lots of platforms at once");
+        PlatformScatter scatter = controller.GetComponent<PlatformScatter>();
+        if (scatter != null) DrawInspector(scatter);
+        else if (BigButton("🎲 Start scattering platforms", new Color(0.2f, 0.8f, 0.3f)))
+        {
+            Undo.AddComponent<PlatformScatter>(controller.gameObject);
+        }
+
+        if (Foldout("platformController", "⚙ Platform look for ALL new platforms (3D model, mesh, material)"))
+        {
+            DrawInspector(controller);
+        }
 
         Section("Your platforms");
-        DrawList("platforms", platforms, "No platforms yet. Click 'Create New Platform' above.", p => "🪨 " + p.name);
+        DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.", p => IconFor(ScatterTools.GetMovement(p)) + " " + p.name);
 
         PlatformLogic selected = SelectedOf<PlatformLogic>();
         if (selected != null)
         {
             Section("✏️ " + selected.name);
+            EditorGUILayout.LabelField("Make it:", EditorStyles.miniBoldLabel);
+            ScatterTools.PlatformMove now = ScatterTools.GetMovement(selected);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                foreach (ScatterTools.PlatformMove move in System.Enum.GetValues(typeof(ScatterTools.PlatformMove)))
+                {
+                    Color? colour = move == now ? new Color(0.55f, 0.85f, 0.55f) : (Color?)null;
+                    if (BigButton(IconFor(move) + " " + ScatterTools.MoveName(move), colour) && move != now)
+                    {
+                        float distance = selected.moveDistance > 0f ? selected.moveDistance : (move == ScatterTools.PlatformMove.UpAndDown ? 8f : 6f);
+                        ScatterTools.SetMovement(selected, move, distance, Mathf.Max(1f, selected.moveSpeed));
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
             DrawInspector(selected);
             PlatformPopulator populator = selected.GetComponent<PlatformPopulator>();
             if (populator != null && Foldout("platformMore", "More: copy, delete, or scatter creatures on this platform"))
@@ -441,10 +477,34 @@ public class GameBuilderWindow : EditorWindow
             }
         }
 
-        if (ground != null && Foldout("scatter", "🎲 Lots at once: scatter creatures over the ground"))
+        Section("🎲 Scatter lots at once (on the ground and/or on platforms)");
+        Terrain terrain = Find<Terrain>();
+        CreatureScatter scatter = terrain != null ? terrain.GetComponent<CreatureScatter>() : null;
+        if (scatter != null) DrawInspector(scatter);
+        else if (terrain == null) EditorGUILayout.HelpBox("Make the ground first (🏔 Level tab).", MessageType.Warning);
+        else if (BigButton("🎲 Start scattering creatures & pickups", new Color(0.2f, 0.8f, 0.3f)))
         {
-            DrawInspector(ground);
+            Undo.AddComponent<CreatureScatter>(terrain.gameObject);
         }
+    }
+
+    private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move)
+    {
+        PlatformLogic p = ScatterTools.QuickPlatform(controller, move);
+        RefreshSceneLists();
+        if (p != null) SelectAndFrame(p.gameObject);
+    }
+
+    private static string IconFor(ScatterTools.PlatformMove move)
+    {
+        switch (move)
+        {
+            case ScatterTools.PlatformMove.SideToSide: return "↔";
+            case ScatterTools.PlatformMove.UpAndDown: return "🛗";
+            case ScatterTools.PlatformMove.Spinning: return "🔄";
+            case ScatterTools.PlatformMove.Growing: return "🫧";
+        }
+        return "🪨";
     }
 
     private void Spawn(ObstacleBase.PayloadType payload, ObstacleSpawnType movement, int amount, float duration, bool usedUp, bool bouncy)

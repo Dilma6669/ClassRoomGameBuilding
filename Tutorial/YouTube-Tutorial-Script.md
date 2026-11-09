@@ -89,8 +89,9 @@ The times below are estimates. Update them to match your finished video.
 - **Say:** "Falling from too high hurts. Watch the green health bar."
 
 ### 06:45 Floating & moving platforms
-- **Do:** Select **PlatformController**, then click **🏗️ Create New Platform**.
-- **Do:** Change size, rotation and the starting offset. Turn on movement and show a platform moving back and forth.
+- **Do:** Open **Game Builder > 🪨 Platforms**. Point the Scene view at a spot and click the **Quick platform** buttons: **Floating**, **Moving**, **Elevator**, **Spinning**, **Growing** and **👣 Stepping stones**. Each appears where you're looking.
+- **Do:** Click a platform in the list. Use the **Make it:** buttons to change how it moves, then change its size and rotation in the settings below.
+- **Do:** **🎲 Scatter lots of platforms at once**: show **How many**, **Size**, **Height above ground**, the **Movement** tick boxes and **Where** (whole level or around the Scene view). Click **Scatter**, then **Clear scattered** to try again.
 - **Do:** **📋 Duplicate Platform Setup** to make a copy quickly. **❌ Delete Platform Setup** removes one.
 - **Do:** Drag a model (e.g. a floating rock) into **🪨 Platform Model** on the platform. The cylinder is replaced, and the player stands on the rock's real shape, hills and all. On **PlatformController**, the **🔁 Use ... on ALL platforms** button swaps every platform at once.
 - **Do:** Press Play and ride a moving platform.
@@ -112,7 +113,8 @@ The times below are estimates. Update them to match your finished video.
     - *Sprint Buff*: run faster
   - **Destroy On Trigger**: turns it into a one-time pickup
   - **Is Bouncy**: makes it a trampoline that launches the player
-- **Do:** Use **🎲 Scatter Obstacles** to fill a platform with enemies.
+- **Do:** In **Game Builder > 🕷 Creatures & Pickups**, open **🎲 Scatter lots at once**. Each group has **What** (creature or pickup), **How many**, **Size**, **Speed**, **How far they roam**, models to pick from, and **Can go on**: the ground, still platforms and/or moving platforms.
+- **Do:** Show **Where**: steepest ground allowed, space between them, keep away from the player start, and (if your ground has more than one paint) **Only on ground painted with**. Click **Scatter All Ticked Groups**.
 - **Do:** Show **Sit On Ground** (on by default): obstacles of any size sit on top of the ground instead of half inside it.
 - **Say:** "Mix enemies and pickups so the level is hard but fair."
 

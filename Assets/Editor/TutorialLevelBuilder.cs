@@ -92,7 +92,7 @@ public static class TutorialLevelBuilder
         // Platforms: plain, moving, rock
         PlatformController platforms = Object.FindAnyObjectByType<PlatformController>();
         Sign(signs, signMaterial, At(-6f, 50f), At(0f, 50f, 1.5f), "5. Platforms",
-            "Game Builder > Platforms > Create New Platform. Change Width and Height,\nand tick Left/Right to make one move. Jump across them!");
+            "Game Builder > Platforms: click a Quick platform (Floating, Moving, Elevator...)\nand it appears where you are looking. Scatter makes lots at once. Jump across them!");
         GameObject p1 = MakePlatform(platforms, At(0f, 60f), 1.2f, 6f);
         GameObject p2 = MakePlatform(platforms, At(0f, 69f), 2.4f, 5f);
         PlatformLogic moving = p2.GetComponent<PlatformLogic>();
@@ -109,7 +109,7 @@ public static class TutorialLevelBuilder
         float arenaTop = TopOf(arena);
         AddCreatures(arena);
         Sign(signs, signMaterial, At(-9f, 91f), new Vector3(Start.x, arenaTop + 1.5f, Start.z + 88f), "7. Creatures",
-            "Careful, creatures hurt! Game Builder > Creatures & Pickups: select a platform, click a creature.\nThe glowing ball is a Health pickup. There are Stamina, Shield, Jump and Speed pickups too.");
+            "Careful, creatures hurt! Game Builder > Creatures & Pickups: select a platform, click a creature.\nScatter puts lots on the ground or on platforms. The glowing ball is a Health pickup.");
 
         // Bounce pad on the ground
         AddBouncePad(terrain, At(0f, 110f));
