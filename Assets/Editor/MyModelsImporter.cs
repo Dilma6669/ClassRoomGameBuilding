@@ -94,6 +94,8 @@ public class MyModelsImporter : AssetPostprocessor
                    Players and enemies stand on the model's real shape.
    - ALL PLATFORMS: on PlatformController, drag the model into 'Platform Model'
                    and click 'Use ... on ALL platforms'.
+   - SCENERY (trees, rocks): select the terrain, click 'Add Scenery Tool', drag
+                   models into 'Scenery Models' and click Scatter or Place One.
 
 DEFAULTS
 - New players get the Old Man, new enemies get Spider / Zombie / Snake.

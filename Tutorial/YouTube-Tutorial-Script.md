@@ -67,6 +67,7 @@ The times below are estimates. Update them to match your finished video.
 - **Do:** Select **TerrainController**, then click **⛰️ Create Terrain**.
 - **Do:** Show the terrain sculpting tools (raise/lower, smooth, paint texture) for about 30 seconds.
 - **Do:** Show the Terrain Populator: **➕ Create Single Obstacle** and **🎲 Scatter Obstacles** to drop things on the ground. **🗑️ Clear All Obstacles** removes them.
+- **Do:** Click **🌲 Add Scenery Tool**, drag tree and rock models into **Scenery Models**, then click **🌲 Scatter**. Show **📍 Place One** for hand-placing, and **🗑️ Clear All Scenery**. Point out **Max Slope** (no trees on cliffs) and **Solid** (bump into them).
 - **Say:** "Don't move the terrain itself. It snaps back into place on purpose."
 
 ### 04:00 Adding the player (Create Character)

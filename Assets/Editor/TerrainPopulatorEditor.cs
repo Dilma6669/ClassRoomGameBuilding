@@ -128,6 +128,20 @@ public class TerrainPopulatorEditor : Editor
         }
 
         GUI.backgroundColor = Color.white;
+
+        // Scenery (trees, rocks...) lives on the same object, in its own component
+        TerrainPopulator terrainPopulator = (TerrainPopulator)target;
+        if (terrainPopulator.GetComponent<SceneryPopulator>() == null)
+        {
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Scenery (trees, rocks, bushes...)", EditorStyles.boldLabel);
+            GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
+            if (GUILayout.Button("🌲 Add Scenery Tool", GUILayout.Height(35)))
+            {
+                Undo.AddComponent<SceneryPopulator>(terrainPopulator.gameObject);
+            }
+            GUI.backgroundColor = Color.white;
+        }
     }
 }
 #endif
