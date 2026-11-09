@@ -626,27 +626,67 @@ public class GameBuilderWindow : EditorWindow
         Title("📦 Levels & Build", "Your levels, testing, and making the game for others to play.");
 
         Section("🗺 Levels in your game (played in this order)");
+        EditorGUILayout.HelpBox("The game starts at level 1. Use ▲ ▼ to change the order, untick a level to leave it out of the game, or ✕ to remove it from the list (the level file isn't deleted).", MessageType.None);
         Scene active = SceneManager.GetActiveScene();
-        EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
+        List<EditorBuildSettingsScene> scenes = EditorBuildSettings.scenes.ToList();
         bool activeInBuild = false;
-        for (int i = 0; i < scenes.Length; i++)
+        bool changed = false;
+        int number = 0;
+        GUI.enabled = !EditorApplication.isPlaying;
+        for (int i = 0; i < scenes.Count; i++)
         {
             string path = scenes[i].path;
             bool isActive = path == active.path;
             activeInBuild |= isActive;
+            bool included = scenes[i].enabled;
+            if (included) number++;
 
-            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
             {
-                GUILayout.Label((i + 1) + ".  " + Path.GetFileNameWithoutExtension(path) + (isActive ? "   ← you are here" : ""),
-                    isActive ? EditorStyles.boldLabel : EditorStyles.label);
-                GUI.enabled = !isActive && !EditorApplication.isPlaying;
-                if (GUILayout.Button("Open", GUILayout.Width(70)) && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                bool nowIncluded = EditorGUILayout.Toggle(included, GUILayout.Width(18));
+                if (nowIncluded != included)
+                {
+                    scenes[i].enabled = nowIncluded;
+                    changed = true;
+                }
+
+                string label = (included ? number + ".  " : "—  ") + Path.GetFileNameWithoutExtension(path);
+                if (included && number == 1) label += "   ⭐ start";
+                if (!included) label += "   (left out)";
+                if (isActive) label += "   ← you are here";
+                GUILayout.Label(label, isActive ? EditorStyles.boldLabel : EditorStyles.label);
+
+                GUI.enabled = !EditorApplication.isPlaying && i > 0;
+                if (GUILayout.Button("▲", GUILayout.Width(28))) { Swap(scenes, i, i - 1); changed = true; }
+                GUI.enabled = !EditorApplication.isPlaying && i < scenes.Count - 1;
+                if (GUILayout.Button("▼", GUILayout.Width(28))) { Swap(scenes, i, i + 1); changed = true; }
+                GUI.enabled = !EditorApplication.isPlaying && !isActive;
+                if (GUILayout.Button("Open", GUILayout.Width(55)) && EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 {
                     EditorSceneManager.OpenScene(path);
                     GUIUtility.ExitGUI();
                 }
-                GUI.enabled = true;
+                GUI.enabled = !EditorApplication.isPlaying;
+                if (GUILayout.Button("✕", GUILayout.Width(26)) &&
+                    EditorUtility.DisplayDialog("Remove level", "Remove " + Path.GetFileNameWithoutExtension(path) + " from the game's level list?\n\nThe level itself is NOT deleted. You can add it back by opening it and clicking 'Add this level to the game'.", "Remove", "Cancel"))
+                {
+                    scenes.RemoveAt(i);
+                    changed = true;
+                    break;
+                }
             }
+        }
+        GUI.enabled = true;
+
+        if (changed)
+        {
+            EditorBuildSettings.scenes = scenes.ToArray();
+            GUIUtility.ExitGUI();
+        }
+
+        if (number == 0)
+        {
+            EditorGUILayout.HelpBox("No levels are ticked, so the game has nothing to play!", MessageType.Error);
         }
 
         if (!activeInBuild)
@@ -804,6 +844,13 @@ public class GameBuilderWindow : EditorWindow
     {
         GameObject go = Selection.activeGameObject;
         return go != null && go.scene.IsValid() ? go.GetComponentInParent<T>(true) : null;
+    }
+
+    private static void Swap<T>(List<T> list, int a, int b)
+    {
+        T temp = list[a];
+        list[a] = list[b];
+        list[b] = temp;
     }
 
     /// <summary>Sorts so "Sign 2" comes before "Sign 10".</summary>
