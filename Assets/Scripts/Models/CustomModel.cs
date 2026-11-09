@@ -475,6 +475,11 @@ public class CustomModel : MonoBehaviour
                 clipPlayables[(int)AnimSlot.Jump].SetTime(0);
             }
             currentSlot = target;
+            PlayAnimationSound(true);
+        }
+        else
+        {
+            PlayAnimationSound(false);
         }
 
         // Smoothly blend between animations
@@ -486,6 +491,36 @@ public class CustomModel : MonoBehaviour
         }
         if (total > 0f) for (int i = 0; i < 5; i++) weights[i] /= total;
         ApplyWeights();
+    }
+
+    // ------------------------------------------------------------------ Animation sounds (Game Builder > Sounds > one model)
+
+    private int lastLoop = -1;
+
+    /// <summary>The clip that plays for a slot (after falling back to a similar one if it's missing).</summary>
+    public AnimationClip ClipPlayingFor(AnimSlot slot) => GetClip(PickFallback(slot));
+
+    /// <summary>Does this model have its own sound for the animation that plays in this slot?</summary>
+    public bool HasOwnSound(AnimSlot slot)
+    {
+        return graph.IsValid() && SoundManager.FindAnimationSound(model, ClipPlayingFor(slot)) != null;
+    }
+
+    /// <summary>Plays the sound set for the current animation when it starts (and each time it loops, if wanted).</summary>
+    private void PlayAnimationSound(bool justStarted)
+    {
+        AnimationClipPlayable playable = clipPlayables[(int)currentSlot];
+        AnimationClip clip = GetClip(currentSlot);
+        if (!playable.IsValid() || clip == null || clip.length <= 0f) return;
+
+        int loop = Mathf.FloorToInt((float)(playable.GetTime() / clip.length));
+        bool looped = loop != lastLoop;
+        lastLoop = loop;
+        if (!justStarted && !looped) return;
+
+        AnimationSound sound = SoundManager.FindAnimationSound(model, clip);
+        if (sound == null || (!justStarted && !sound.repeatEachLoop)) return;
+        SoundManager.PlayAnimationSound(sound, transform.position, GetComponentInParent<ObstacleBase>() == null);
     }
 
     /// <summary>If the wanted animation is missing, use the closest one that exists.</summary>
@@ -590,6 +625,50 @@ public class CustomModel : MonoBehaviour
 
         // A model with just one animation (e.g. a flapping bird) plays it all the time
         if (idle == null && walk == null && run == null && clips.Count > 0) idle = clips[0];
+    }
+
+    /// <summary>
+    /// Every animation a model can use, and which of them it would pick for idle/walk/run/jump/fall
+    /// (used by Game Builder > Sounds to list a model's animations).
+    /// </summary>
+    public static List<AnimationClip> ClipsForModel(GameObject modelAsset, out Dictionary<AnimationClip, string> usedFor)
+    {
+        usedFor = new Dictionary<AnimationClip, string>();
+        GameObject temp = new GameObject("temp") { hideFlags = HideFlags.HideAndDontSave };
+        try
+        {
+            CustomModel probe = temp.AddComponent<CustomModel>();
+            probe.model = modelAsset;
+            probe.AutoFindClips();
+            AnimationClip[] picked = { probe.idle, probe.walk, probe.run, probe.jump, probe.fall };
+            for (int i = 0; i < picked.Length; i++)
+            {
+                if (picked[i] == null) continue;
+                string slot = ((AnimSlot)i).ToString();
+                usedFor[picked[i]] = usedFor.TryGetValue(picked[i], out string s) ? s + ", " + slot : slot;
+            }
+        }
+        finally { DestroyImmediate(temp); }
+
+        // All the clips in the model's file and in animation-only files beside it
+        List<AnimationClip> clips = new List<AnimationClip>();
+        string modelPath = AssetDatabase.GetAssetPath(modelAsset);
+        if (string.IsNullOrEmpty(modelPath)) return clips;
+        AddClipsFrom(modelPath, clips);
+        string folder = System.IO.Path.GetDirectoryName(modelPath).Replace('\\', '/');
+        foreach (string guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { folder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (path == modelPath || System.IO.Path.GetDirectoryName(path).Replace('\\', '/') != folder) continue;
+            GameObject other = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (other != null && other.GetComponentInChildren<Renderer>(true) != null) continue;
+            AddClipsFrom(path, clips);
+        }
+        foreach (AnimationClip c in usedFor.Keys) if (!clips.Contains(c)) clips.Add(c);
+
+        // The ones it actually uses first
+        Dictionary<AnimationClip, string> used = usedFor;
+        return clips.OrderBy(c => used.ContainsKey(c) ? 0 : 1).ThenBy(c => c.name).ToList();
     }
 
     private static void AddClipsFrom(string path, List<AnimationClip> clips)

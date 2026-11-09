@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cd49b3abbd49e949975d01b23429fc9, type: 3}
+  m_Name: GameSounds
+  m_EditorClassIdentifier: Assembly-CSharp::GameSounds
+  sounds:
+  - when: 0
+    clip: {fileID: 8300000, guid: 86b3cd8361733c34d95f7ce31a3048d9, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 1
+    clip: {fileID: 8300000, guid: ef73cbdf658b9444a8058ddc6c62819b, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 2
+    clip: {fileID: 8300000, guid: 8883ffeeacff8b04aad7f121c3644b00, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 3
+    clip: {fileID: 8300000, guid: ce99a3cbc635491418eeebdb9bab0fe0, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 4
+    clip: {fileID: 8300000, guid: 90fce251926eeb54c95027585a9706b2, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.25
+  - when: 5
+    clip: {fileID: 8300000, guid: fa0578b53d75c1841b7e61345c77617e, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 6
+    clip: {fileID: 8300000, guid: 56c568caa03af8f47824465d48c8597c, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 7
+    clip: {fileID: 8300000, guid: 94a43d0d74a1b2a4e9448863ff3176b9, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 8
+    clip: {fileID: 8300000, guid: fff11b686af447740833a939e98e12a2, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 9
+    clip: {fileID: 8300000, guid: ed29169c76b3f6b418eda967dd2196e0, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 10
+    clip: {fileID: 8300000, guid: 74415c1650ad80e46af07ae203de33e5, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 11
+    clip: {fileID: 8300000, guid: 22aaae0a2c2e77d44aade57122324959, type: 3}
+    volume: 0.8
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.35
+  - when: 12
+    clip: {fileID: 8300000, guid: a799cffadcd370b428b61d22389171c8, type: 3}
+    volume: 0.5
+    varyPitch: 1
+    forEverything: 1
+    onlyFor: 0
+    onlyModel: {fileID: 0}
+    repeatEvery: 0.5
+  modelSounds: []
+  soundtrack:
+  - {fileID: 8300000, guid: 8ff3faa70376bc54ba441170976a31e7, type: 3}
+  - {fileID: 8300000, guid: 770c9251589679d4bb273bbd546319e7, type: 3}
+  playMusic: 1
+  musicOrder: 0
+  musicInMenus: 1
+  startMusicVolume: 0.5
+  startEffectsVolume: 0.8

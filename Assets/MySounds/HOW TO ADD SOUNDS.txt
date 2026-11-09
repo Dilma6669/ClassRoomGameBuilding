@@ -1,0 +1,6 @@
+Put your sound files here (.wav, .mp3 or .ogg).
+
+Then open Game > Game Builder > Sounds and drag a file onto a slot.
+Songs go in the Music list at the bottom of the Sounds tab.
+
+Free sounds: make your own, or use sites with free (CC0) sounds.

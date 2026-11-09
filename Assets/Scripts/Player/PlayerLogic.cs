@@ -40,6 +40,9 @@ public class PlayerLogic : MonoBehaviour
     private Rigidbody fallbackRigidbody;
 #endif
 
+    /// <summary>True while the player is actually sprinting (used for the Sprint sound).</summary>
+    public bool IsSprinting { get; private set; }
+
     private float currentStamina;
     private float regenTimer;
     private bool isExhausted = false;
@@ -221,6 +224,7 @@ public class PlayerLogic : MonoBehaviour
 
             bool canSprint = Application.isPlaying && enableSprint && !isExhausted && Input.GetKey(sprintKey) && IsMoving() && currentStamina > 0f;
 
+            IsSprinting = canSprint;
             if (canSprint)
             {
                 targetSpeed *= activeSprintMultiplier;

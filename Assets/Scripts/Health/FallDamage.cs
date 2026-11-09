@@ -74,6 +74,6 @@ public class FallDamage : MonoBehaviour
         float timePercent = Mathf.InverseLerp(minFallTime, maxFallTime, fallDuration);
         float calculatedDamage = Mathf.Lerp(minDamage, maxDamage, timePercent);
 
-        playerHealth.TakeDamage(Mathf.RoundToInt(calculatedDamage) * damageMultiplier);
+        playerHealth.TakeDamage(Mathf.RoundToInt(calculatedDamage) * damageMultiplier, true);
     }
 }

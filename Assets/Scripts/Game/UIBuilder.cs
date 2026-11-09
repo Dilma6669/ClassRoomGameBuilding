@@ -90,6 +90,34 @@ public static class UIBuilder
         return button;
     }
 
+    /// <summary>A 0..1 slider with a chunky handle that's easy to grab.</summary>
+    public static Slider Slider(Transform parent, string name, float value, UnityAction<float> onChange)
+    {
+        RectTransform root = Create(name, parent);
+        Slider slider = root.gameObject.AddComponent<Slider>();
+
+        Image background = Image(root, "Background", ButtonColor);
+        Stretch(background.rectTransform, 0, 0, 18, 18);
+
+        RectTransform fillArea = Stretch(Create("Fill Area", root), 10, 10, 18, 18);
+        Image fill = Image(fillArea, "Fill", AccentColor);
+        fill.rectTransform.sizeDelta = Vector2.zero;
+
+        RectTransform handleArea = Stretch(Create("Handle Slide Area", root), 18, 18, 0, 0);
+        Image handle = Image(handleArea, "Handle", TextColor);
+        handle.rectTransform.sizeDelta = new Vector2(36, 0);
+
+        slider.fillRect = fill.rectTransform;
+        slider.handleRect = handle.rectTransform;
+        slider.targetGraphic = handle;
+        slider.direction = UnityEngine.UI.Slider.Direction.LeftToRight;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.SetValueWithoutNotify(value);
+        if (onChange != null) slider.onValueChanged.AddListener(onChange);
+        return slider;
+    }
+
     /// <summary>Vertical scrolling area. Put children into the returned content transform.</summary>
     public static RectTransform ScrollArea(Transform parent, string name, out ScrollRect scroll, float spacing = 8f, int padding = 0)
     {

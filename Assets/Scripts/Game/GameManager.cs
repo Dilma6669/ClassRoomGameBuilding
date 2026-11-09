@@ -171,11 +171,11 @@ public class GameManager : MonoBehaviour
                 OpenMenu(GameState.Paused);
                 break;
             case GameState.Paused:
-                if (ui.IsLibraryOpen) CloseLibrary();
+                if (ui.IsLibraryOpen || ui.IsSoundOpen) CloseLibrary();
                 else Resume();
                 break;
             case GameState.StartMenu:
-                if (ui.IsLibraryOpen) CloseLibrary();
+                if (ui.IsLibraryOpen || ui.IsSoundOpen) CloseLibrary();
                 break;
             case GameState.Dead:
                 break; // wait for OK or the countdown

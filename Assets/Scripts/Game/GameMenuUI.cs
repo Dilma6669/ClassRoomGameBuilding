@@ -21,6 +21,17 @@ public class GameMenuUI : MonoBehaviour
     private GameObject menuScreen;
     private GameObject libraryScreen;
     private GameObject deathScreen;
+    private GameObject soundScreen;
+
+    // Sound widgets
+    private Slider musicSlider;
+    private Slider effectsSlider;
+    private TextMeshProUGUI nowPlaying;
+    private TextMeshProUGUI pauseButtonLabel;
+    private TextMeshProUGUI orderButtonLabel;
+    private RectTransform trackListContent;
+    private readonly List<Image> trackImages = new List<Image>();
+    private float lastPreviewTime;
 
     // Menu widgets
     private TextMeshProUGUI menuTitle;
@@ -66,6 +77,7 @@ public class GameMenuUI : MonoBehaviour
     private Coroutine toastRoutine;
 
     public bool IsLibraryOpen => libraryScreen != null && libraryScreen.activeSelf;
+    public bool IsSoundOpen => soundScreen != null && soundScreen.activeSelf;
 
     public void Build(GameManager gameManager, GameSettings gameSettings)
     {
@@ -92,6 +104,7 @@ public class GameMenuUI : MonoBehaviour
         menuScreen = BuildMenuScreen(canvasGO.transform);
         libraryScreen = BuildLibraryScreen(canvasGO.transform);
         deathScreen = BuildDeathScreen(canvasGO.transform);
+        soundScreen = BuildSoundScreen(canvasGO.transform);
         BuildToast(canvasGO.transform);
 
         HideAll();
@@ -147,6 +160,7 @@ public class GameMenuUI : MonoBehaviour
         if (menuScreen != null) menuScreen.SetActive(false);
         if (libraryScreen != null) libraryScreen.SetActive(false);
         if (deathScreen != null) deathScreen.SetActive(false);
+        if (soundScreen != null) soundScreen.SetActive(false);
 
         // Stop a menu button staying "selected" (Space/Enter would press it again)
         if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
@@ -190,6 +204,9 @@ public class GameMenuUI : MonoBehaviour
 
         Button library = UIBuilder.Button(panel.transform, "Library", bodyFont, 30, UIBuilder.ButtonColor, () => ShowLibrary());
         UIBuilder.Layout(library, 64);
+
+        Button sound = UIBuilder.Button(panel.transform, "Sound & Music", bodyFont, 30, UIBuilder.ButtonColor, () => ShowSound());
+        UIBuilder.Layout(sound, 64);
 
         Button quit = UIBuilder.Button(panel.transform, "Quit Game", bodyFont, 30, UIBuilder.DangerColor, () => manager.QuitGame());
         UIBuilder.Layout(quit, 64);
@@ -363,6 +380,164 @@ public class GameMenuUI : MonoBehaviour
 
         if (detailPictureLayout != null) detailPictureLayout.preferredHeight = 320;
         if (libraryDetailScroll != null) libraryDetailScroll.verticalNormalizedPosition = 1f;
+    }
+
+    // ------------------------------------------------------------------ Sound & Music
+
+    public void ShowSound()
+    {
+        HideAll();
+        musicSlider.SetValueWithoutNotify(SoundManager.MusicVolume);
+        effectsSlider.SetValueWithoutNotify(SoundManager.EffectsVolume);
+        RebuildTrackList();
+        soundScreen.SetActive(true);
+        RefreshSoundScreen();
+    }
+
+    private GameObject BuildSoundScreen(Transform canvas)
+    {
+        Image overlay = UIBuilder.Image(canvas, "SoundScreen", new Color(0, 0, 0, 0.7f));
+        UIBuilder.Stretch(overlay.rectTransform);
+
+        Image panel = UIBuilder.Image(overlay.transform, "Panel", UIBuilder.PanelColor);
+        RectTransform panelRT = panel.rectTransform;
+        panelRT.anchorMin = panelRT.anchorMax = panelRT.pivot = new Vector2(0.5f, 0.5f);
+        panelRT.sizeDelta = new Vector2(900, 940);
+
+        VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
+        layout.padding = new RectOffset(48, 48, 32, 36);
+        layout.spacing = 10;
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = false;
+        Transform p = panel.transform;
+
+        TextMeshProUGUI title = UIBuilder.Text(p, "Title", "Sound & Music", 60, titleFont, UIBuilder.TextColor, TextAlignmentOptions.Center);
+        UIBuilder.Layout(title, 84);
+
+        UIBuilder.Layout(UIBuilder.Text(p, "MusicLabel", "Music volume", 28, bodyFont, UIBuilder.MutedTextColor, TextAlignmentOptions.Left), 36);
+        musicSlider = UIBuilder.Slider(p, "MusicSlider", SoundManager.MusicVolume, v => SoundManager.MusicVolume = v);
+        UIBuilder.Layout(musicSlider, 56);
+
+        UIBuilder.Layout(UIBuilder.Text(p, "EffectsLabel", "Sound effects volume", 28, bodyFont, UIBuilder.MutedTextColor, TextAlignmentOptions.Left), 36);
+        effectsSlider = UIBuilder.Slider(p, "EffectsSlider", SoundManager.EffectsVolume, v =>
+        {
+            SoundManager.EffectsVolume = v;
+            // A little sound so you can hear how loud it is (not on every tiny move)
+            if (Time.unscaledTime - lastPreviewTime > 0.25f && SoundManager.Instance != null)
+            {
+                lastPreviewTime = Time.unscaledTime;
+                SoundManager.Instance.PreviewEffects();
+            }
+        });
+        UIBuilder.Layout(effectsSlider, 56);
+
+        nowPlaying = UIBuilder.Text(p, "NowPlaying", "", 30, bodyFont, UIBuilder.TextColor, TextAlignmentOptions.Center);
+        UIBuilder.Layout(nowPlaying, 56);
+
+        // Music player buttons
+        RectTransform row = UIBuilder.Create("MusicButtons", p);
+        HorizontalLayoutGroup rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+        rowLayout.spacing = 12;
+        rowLayout.childControlWidth = true;
+        rowLayout.childControlHeight = true;
+        rowLayout.childForceExpandWidth = true;
+        rowLayout.childForceExpandHeight = true;
+        UIBuilder.Layout(row, 64, -1, 0); // don't grow (the song list gets the spare space)
+
+        UIBuilder.Button(row, "< Back", bodyFont, 26, UIBuilder.ButtonColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.PreviousTrack(); RefreshSoundScreen(); });
+        Button pause = UIBuilder.Button(row, "Pause", bodyFont, 26, UIBuilder.AccentColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.ToggleMusicPause(); RefreshSoundScreen(); });
+        pauseButtonLabel = pause.GetComponentInChildren<TextMeshProUGUI>();
+        UIBuilder.Button(row, "Next >", bodyFont, 26, UIBuilder.ButtonColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.NextTrack(); RefreshSoundScreen(); });
+        Button order = UIBuilder.Button(row, "In order", bodyFont, 26, UIBuilder.ButtonColor, () => CycleOrder());
+        orderButtonLabel = order.GetComponentInChildren<TextMeshProUGUI>();
+
+        // The songs: click one to play it
+        Image listBG = UIBuilder.Image(p, "TrackListBackground", UIBuilder.PanelLightColor);
+        UIBuilder.Layout(listBG, -1, -1, 1);
+        trackListContent = UIBuilder.ScrollArea(listBG.transform, "Tracks", out _, 6, 10);
+        UIBuilder.Stretch((RectTransform)trackListContent.parent.parent);
+
+        Button back = UIBuilder.Button(p, "Done", bodyFont, 30, UIBuilder.AccentColor, () => manager.CloseLibrary());
+        UIBuilder.Layout(back, 64);
+
+        return overlay.gameObject;
+    }
+
+    private void CycleOrder()
+    {
+        SoundManager sm = SoundManager.Instance;
+        if (sm == null) return;
+        sm.Order = (GameSounds.MusicOrder)(((int)sm.Order + 1) % 3);
+        RefreshSoundScreen();
+    }
+
+    private void RebuildTrackList()
+    {
+        for (int i = trackListContent.childCount - 1; i >= 0; i--)
+        {
+            GameObject child = trackListContent.GetChild(i).gameObject;
+            child.SetActive(false);
+            Destroy(child);
+        }
+        trackImages.Clear();
+
+        SoundManager sm = SoundManager.Instance;
+        if (sm == null || sm.TrackCount == 0)
+        {
+            TextMeshProUGUI empty = UIBuilder.Text(trackListContent, "Empty", "No music yet!\n(Add songs in Game Builder > Sounds > Music)", 26, bodyFont, UIBuilder.MutedTextColor, TextAlignmentOptions.Center);
+            UIBuilder.Layout(empty, 90);
+            return;
+        }
+
+        for (int i = 0; i < sm.TrackCount; i++)
+        {
+            int index = i;
+            Button item = UIBuilder.Button(trackListContent, (i + 1) + ".  " + sm.TrackName(i), bodyFont, 26, UIBuilder.ButtonColor, () =>
+            {
+                SoundManager.Instance.PlayTrack(index);
+                RefreshSoundScreen();
+            }, TextAlignmentOptions.Left);
+            UIBuilder.Layout(item, 54);
+            trackImages.Add(item.GetComponent<Image>());
+        }
+    }
+
+    private void RefreshSoundScreen()
+    {
+        SoundManager sm = SoundManager.Instance;
+        if (sm == null || nowPlaying == null) return;
+
+        bool hasMusic = sm.TrackCount > 0 && sm.Sounds.playMusic;
+        if (!hasMusic) nowPlaying.text = sm.TrackCount == 0 ? "No music in this game yet" : "Music is switched off for this game";
+        else if (sm.CurrentTrack < 0) nowPlaying.text = "Music stopped";
+        else nowPlaying.text = (sm.IsMusicPaused ? "Paused: " : "Now playing: ") + sm.TrackName(sm.CurrentTrack);
+
+        pauseButtonLabel.text = sm.IsMusicPaused ? "Play" : "Pause";
+        switch (sm.Order)
+        {
+            case GameSounds.MusicOrder.Shuffle: orderButtonLabel.text = "Shuffle"; break;
+            case GameSounds.MusicOrder.RepeatOneSong: orderButtonLabel.text = "Repeat song"; break;
+            default: orderButtonLabel.text = "In order"; break;
+        }
+
+        for (int i = 0; i < trackImages.Count; i++)
+        {
+            trackImages[i].color = i == sm.CurrentTrack ? UIBuilder.AccentColor : UIBuilder.ButtonColor;
+        }
+    }
+
+    private float nextSoundRefresh;
+
+    private void Update()
+    {
+        // Songs change by themselves, so keep "Now playing" up to date
+        if (IsSoundOpen && Time.unscaledTime > nextSoundRefresh)
+        {
+            nextSoundRefresh = Time.unscaledTime + 0.25f;
+            RefreshSoundScreen();
+        }
     }
 
     // ------------------------------------------------------------------ Pop-up message ("Checkpoint!")

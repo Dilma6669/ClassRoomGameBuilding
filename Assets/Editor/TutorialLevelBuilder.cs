@@ -211,8 +211,8 @@ public static class TutorialLevelBuilder
         Sign(signs, signMaterial, At(-4f, 206f), At(0f, 206f, 1.5f), "14. Checkpoint",
             "Checkpoint flags save your place: Game Builder > Signs & Story > Create Checkpoint.\nIf you die after touching a flag, you start again from there.");
 
-        Sign(signs, signMaterial, At(-4f, 218f), At(0f, 218f, 1.5f), "15. Library",
-            "Press Esc > Library for the Story and backstories. Game Builder > Signs & Story changes\nthe game title, death screen, default models and Library entries.");
+        Sign(signs, signMaterial, At(-4f, 218f), At(0f, 218f, 1.5f), "15. Library & Sounds",
+            "Esc > Library: the Story. Esc > Sound & Music: volume and songs.\nGame Builder > Sounds: drag in sounds for jumping, creatures, pickups and music.");
 
         Sign(signs, signMaterial, At(-4f, 230f), At(0f, 230f, 1.5f), "16. Levels",
             "Game Builder > Levels & Build: 'New empty level' or 'Copy this level' makes a new level.\nUse the arrows to change the order, untick one to leave it out. The star level is where the game starts.");

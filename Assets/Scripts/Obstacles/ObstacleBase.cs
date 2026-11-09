@@ -107,7 +107,39 @@ public abstract class ObstacleBase : MonoBehaviour
         if (Application.isPlaying && currentMovementStrategy != null)
         {
             currentMovementStrategy.ProcessMovement(this);
+            PlayMoveSound();
         }
+    }
+
+    // General "creature moving" sound (a model's own walk-animation sound replaces it)
+    private float moveSoundTimer;
+    private Vector3 lastMovePosition;
+    private CustomModel ownModel;
+    private bool lookedForModel;
+
+    private void PlayMoveSound()
+    {
+        if (payloadType != PayloadType.Damage || defeated || Time.deltaTime <= 0f) return;
+        if (lastMovePosition == Vector3.zero)
+        {
+            // First frame: don't let every creature make a noise at the same moment
+            lastMovePosition = transform.position;
+            moveSoundTimer = Random.Range(0f, 1f);
+            return;
+        }
+        Vector3 step = transform.position - lastMovePosition;
+        lastMovePosition = transform.position;
+        step.y = 0f;
+        moveSoundTimer -= Time.deltaTime;
+        if (step.magnitude / Time.deltaTime < 0.3f || moveSoundTimer > 0f) return;
+
+        if (!lookedForModel) { ownModel = GetComponentInChildren<CustomModel>(); lookedForModel = true; }
+        if (ownModel != null && (ownModel.HasOwnSound(CustomModel.AnimSlot.Walk) || ownModel.HasOwnSound(CustomModel.AnimSlot.Run))) return;
+
+        SoundEntry entry = SoundManager.Find(SoundEvent.CreatureMove, gameObject);
+        if (entry == null) { moveSoundTimer = 1f; return; }
+        moveSoundTimer = Mathf.Max(entry.repeatEvery, entry.clip.length * 0.9f);
+        SoundManager.Play(SoundEvent.CreatureMove, transform.position, gameObject);
     }
 
     /// <summary>
@@ -184,6 +216,7 @@ public abstract class ObstacleBase : MonoBehaviour
                 motor.ForceUnground();
                 float totalLaunchSpeed = launchForce + (motor.BaseVelocity.magnitude * momentumTransfer);
                 motor.BaseVelocity = launchDirection * totalLaunchSpeed;
+                SoundManager.Play(SoundEvent.Bounce, transform.position, gameObject);
             }
         }
 #else
@@ -215,7 +248,11 @@ public abstract class ObstacleBase : MonoBehaviour
             {
                 case PayloadType.Damage:
                     var damagable = other.GetComponentInParent<IDamagable>();
-                    if (damagable != null) damagable.TakeDamage(payloadAmount);
+                    if (damagable != null)
+                    {
+                        SoundManager.Play(SoundEvent.EnemyAttack, transform.position, gameObject);
+                        damagable.TakeDamage(payloadAmount);
+                    }
                     break;
 
                 case PayloadType.HealthBooster:
@@ -243,6 +280,7 @@ public abstract class ObstacleBase : MonoBehaviour
 
             bool isPickup = payloadType != PayloadType.None && payloadType != PayloadType.Damage;
             if (sparkles && isPickup) BurstSparkles(Sparkles.Style.Pickup);
+            if (isPickup) SoundManager.Play(SoundEvent.PickUp, transform.position, gameObject);
 
             if (destroyOnTrigger && payloadType != PayloadType.None)
             {
@@ -295,8 +333,13 @@ public abstract class ObstacleBase : MonoBehaviour
         lastStompTime = Time.time;
 
         jumpsTaken++;
+        SoundManager.Play(SoundEvent.Attack, transform.position, gameObject);
         if (jumpsTaken >= jumpsToDefeat) Defeat();
-        else StartCoroutine(Squash(false));
+        else
+        {
+            SoundManager.Play(SoundEvent.EnemyDamage, transform.position, gameObject);
+            StartCoroutine(Squash(false));
+        }
     }
 #endif
 
@@ -304,6 +347,7 @@ public abstract class ObstacleBase : MonoBehaviour
     private void Defeat()
     {
         defeated = true;
+        SoundManager.Play(SoundEvent.EnemyDeath, transform.position, gameObject);
         currentMovementStrategy = null;
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (agent != null) agent.enabled = false;

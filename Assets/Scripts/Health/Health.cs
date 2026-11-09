@@ -31,11 +31,20 @@ public class Health : MonoBehaviour, IDamagable
         }
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount) => TakeDamage(amount, false);
+
+    /// <summary>fromFall: landed too hard (plays the Fall damage sound instead of Damage, if there is one).</summary>
+    public void TakeDamage(int amount, bool fromFall)
     {
         if (isInvincible || isDead) return;
-        
+
         currentHealth = Mathf.Max(0, currentHealth - amount);
+
+        if (currentHealth > 0)
+        {
+            bool fallSound = fromFall && SoundManager.Find(SoundEvent.FallDamage, gameObject) != null;
+            SoundManager.Play(fallSound ? SoundEvent.FallDamage : SoundEvent.Damage, transform.position, gameObject);
+        }
 
         // Update the health bar UI
         if (healthHUD != null)
@@ -88,6 +97,7 @@ public class Health : MonoBehaviour, IDamagable
     {
         if (isDead) return;
         isDead = true;
+        SoundManager.Play(SoundEvent.PlayerDeath, transform.position, gameObject);
 
         // Hide the player, then show the death screen (which restarts the level)
         gameObject.SetActive(false);

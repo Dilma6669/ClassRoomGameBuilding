@@ -3,7 +3,8 @@
 _Last updated: 2026-11-10, late evening (end of session 5). Written so a fresh Claude session (or a person) can pick up where this one stopped._
 
 ## ▶ START HERE (state at the end of 2026-11-10)
-- **Everything is committed** on `feature/menus-models-checkpoints` (latest commits: tutorial build menu item, tutorial with 17 stations, platform effects, glow/sparkles). Not merged to main, not pushed. The only uncommitted change is `Assets/Tutorial/TutorialTerrain.asset` (it changes on every Tutorial rebuild; harmless).
+- **Session 6 (sounds) is committed**. See "Done 2026-11-10 (session 6): Sounds & Music" below. The class's Tutorial zip does NOT have sounds yet; offer a fresh Tutorial build.
+- **Everything is committed** on `feature/menus-models-checkpoints` (latest commits: sounds & music, tutorial build menu item, tutorial with 17 stations, platform effects, glow/sparkles). Not merged to main, not pushed. The only uncommitted change is `Assets/Tutorial/TutorialTerrain.asset` (it changes on every Tutorial rebuild; harmless).
 - **Nothing is in progress.** The teacher's last requests were all finished and verified in Play mode:
   - level order + New/Copy level
   - video pop-ups
@@ -280,6 +281,32 @@ The teacher pointed out that the old scatter options weren't really in the Game 
   - the glow corner is visible
   - bouncy launches, crumbling falls, and the stomp creature is beaten in 2 jumps
 - Note: the homemade test clip logs one harmless "Color primaries 0 is unknown" warning when played; a normal camera/phone .mp4 won't.
+
+## Done 2026-11-10 (session 6): Sounds & Music
+Teacher asked: a Sounds tab to drag in sounds (attack, enemy attack, run, jump, sprint, damage, fall damage, enemy damage, player death, enemy death), choosing which objects a sound is for, a resizable soundtrack list, and an Esc > sound options screen with music and effects sliders. Mid-task they added: general defaults for player / enemies / items, PLUS pick a model and drag sounds onto its animations, with the model's sound overriding the general one ("if you've got a better way, go for it").
+- **Data:** `Assets/Resources/GameSounds.asset` (`Scripts/Sound/GameSounds.cs`), the same for every level.
+  - `sounds`: `SoundEntry` list (when, clip, volume, varyPitch, forEverything / onlyFor `SoundTarget` flags, onlyModel, repeatEvery). One general entry per `SoundEvent` is guaranteed by `SoundTools.EnsureAsset`.
+  - `modelSounds`: per model, `AnimationSound` (animation clip, sound, volume, repeatEachLoop).
+  - soundtrack list, playMusic, order (In order / Shuffle / Repeat one), musicInMenus, starting volumes.
+- **Matching (`SoundManager.Pick`):** the most exact wins: onlyModel (+2) > kind filter (+1) > for everything (0); ties are random (variety). A model's own event sounds are SoundEntries with `onlyModel` set (edited only in the model panel; the general lists hide them).
+- **Runtime:** `SoundManager` (auto, DontDestroyOnLoad, so music survives deaths/level loads). It has 16 pooled AudioSources; creature sounds are 3D (inaudible past 45 m, so they're skipped beyond that) and player sounds are 2D. The death sound ignores the listener pause. Music ignores the menu pause and ducks during full-screen videos. Volumes and order are in PlayerPrefs (`Sound.*`).
+  - `PlayerSounds` (added to the KCC player): Run/Sprint steps (Sprint falls back to Run, faster) and Jump via the new `ExampleCharacterController.OnJumped` action (one line added to the KCC example script).
+  - Hooks: `Health` (Damage / FallDamage via the new `TakeDamage(amount, fromFall)` / PlayerDeath), `ObstacleBase` (EnemyAttack, Attack + EnemyDamage on a stomp, EnemyDeath, PickUp, Bounce ball, plus new **CreatureMove** steps), `SpecialPlatform` (Bounce).
+  - `CustomModel` plays animation sounds when an animation starts and on each loop (if ticked). If the model has its own walk/run/jump sound, the general Run/Sprint/Jump/CreatureMove sounds are skipped.
+- **Esc menu:** a new "Sound & Music" button opens sliders (effects slider plays a preview), Back/Pause/Next, an order button, and a clickable song list. Esc goes back.
+- **Game Builder > 🔊 Sounds** (`Editor/GameBuilderWindow.Sounds.cs` + `.ModelSounds.cs`, the window is now `partial`). Also on the menu: **Game > 🔊 Sounds and Music**.
+  - General sounds folded by group: 🧙 Player / 👹 Creatures / ⭐ Items & objects. Each has ▶ preview, ✕, "➕ Another sound", and "For every creature" or tick boxes for kinds.
+  - 🎭 Sounds for one model: a dropdown of Assets/MyModels (sub-folders as sub-menus, 📖 = has a Library entry) or drag a model in. It lists the animations the game plays (Idle/Walk/Run/Jump/Fall); the other clips (e.g. the Fox's Bark/Howl) are in a fold-out since the game never plays them. Below that are its own creature/player event sounds.
+  - Music list: ▶ ▲ ▼ ✕, a drop zone for many songs at once, and "➕ Add a song".
+  - "🎵 Fill empty slots with starter sounds": `SoundTools` writes simple beeps/thuds and two short chiptune songs (made in code, free to use) to `Assets/MySounds/Starter Sounds` and `Starter Music`. **They are currently assigned to every slot**; students replace them by dragging in their own sounds.
+- **Tutorial:** sign 15 is now "Library & Sounds". The level was rebuilt.
+- **Verified in Play:** damage, fall damage, jump; creature kind and model matching (model beats kind beats general); a model's idle-animation sound repeats each loop; music auto-advances; Next/Pause/Shuffle; Esc closes the Sound screen; the Sound screen looks right.
+  - NOT heard by a person: I can't listen, so the starter sounds' quality is untested.
+  - NOT verified: a real stomp/pickup by walking into things (the hooks are the same code paths as the sparkles, which were verified before), and the sounds in a built .exe.
+- Lessons:
+  - EditorWindow private fields survive a domain reload but Dictionaries don't: mark caches `[NonSerialized]`.
+  - In IMGUI, always reserve the rect for an AssetPreview (it loads between the Layout and Repaint passes and breaks the layout).
+  - The CLI console buffer keeps old errors; check their timestamps.
 
 ## Tutorial build for the class (2026-11-10)
 - **Game > Tutorial > Build Tutorial Game (for the class)** (`TutorialLevelBuilder.BuildTutorialGame`): builds ONLY the Tutorial scene to `Build/Tutorial/TutorialIsland.exe`. The class's level order isn't touched. It clears the folder first and deletes Unity's `*DoNotShip` debug folder.

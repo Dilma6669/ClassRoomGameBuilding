@@ -12,13 +12,14 @@ using UnityEngine.SceneManagement;
 /// Scenery, Signs & Story, Build). Open it with Game > Game Builder.
 /// Most tabs show the same green buttons as the controllers, just gathered in one place.
 /// </summary>
-public class GameBuilderWindow : EditorWindow
+public partial class GameBuilderWindow : EditorWindow
 {
-    private enum Tab { Player, Level, Platforms, Creatures, Scenery, Signs, Build }
+    private enum Tab { Player, Level, Platforms, Creatures, Scenery, Signs, Sounds, Build }
+    public const int SoundsTabIndex = (int)Tab.Sounds;
 
     private static readonly string[] TabNames =
     {
-        "🧙 Player", "🏔 Level", "🪨 Platforms", "🕷 Creatures & Pickups", "🌲 Scenery", "💬 Signs & Story", "📦 Levels & Build"
+        "🧙 Player", "🏔 Level", "🪨 Platforms", "🕷 Creatures & Pickups", "🌲 Scenery", "💬 Signs & Story", "🔊 Sounds", "📦 Levels & Build"
     };
 
     private const string TabKey = "GameBuilder.Tab";
@@ -106,6 +107,7 @@ public class GameBuilderWindow : EditorWindow
             case Tab.Creatures: DrawCreaturesTab(); break;
             case Tab.Scenery: DrawSceneryTab(); break;
             case Tab.Signs: DrawSignsTab(); break;
+            case Tab.Sounds: DrawSoundsTab(); break;
             case Tab.Build: DrawBuildTab(); break;
         }
         EditorGUILayout.Space(20);
@@ -127,7 +129,7 @@ public class GameBuilderWindow : EditorWindow
 
     private void DrawTabs()
     {
-        int columns = position.width > 900 ? 7 : 4;
+        int columns = position.width > 900 ? 8 : 4;
         int chosen = GUILayout.SelectionGrid((int)tab, TabNames, columns, tabStyle);
         if (chosen != (int)tab)
         {
@@ -967,7 +969,7 @@ public class GameBuilderWindow : EditorWindow
     private void DrawInspector(Object target)
     {
         if (target == null) return;
-        if (!editors.TryGetValue(target, out Editor ed) || ed == null)
+        if (!editors.TryGetValue(target, out Editor ed) || ed == null || ed.target == null)
         {
             ed = Editor.CreateEditor(target);
             editors[target] = ed;

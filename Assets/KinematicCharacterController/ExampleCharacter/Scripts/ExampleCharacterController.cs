@@ -80,6 +80,9 @@ namespace KinematicCharacterController.Examples
         private bool _jumpRequested = false;
         private bool _jumpConsumed = false;
         private bool _jumpedThisFrame = false;
+
+        /// <summary>Called the moment the character jumps (class game: used for the Jump sound).</summary>
+        public System.Action OnJumped;
         private float _timeSinceJumpRequested = Mathf.Infinity;
         private float _timeSinceLastAbleToJump = 0f;
         private Vector3 _internalVelocityAdd = Vector3.zero;
@@ -374,6 +377,7 @@ namespace KinematicCharacterController.Examples
                                 _jumpRequested = false;
                                 _jumpConsumed = true;
                                 _jumpedThisFrame = true;
+                                if (OnJumped != null) OnJumped(); // class game: plays the Jump sound
                             }
                         }
 

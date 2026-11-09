@@ -193,6 +193,7 @@ public class SpecialPlatform : MonoBehaviour
         Vector3 v = player.BaseVelocity;
         v.y = logic.bounceStrength;
         player.BaseVelocity = v;
+        SoundManager.Play(SoundEvent.Bounce, PlayerFeet(), gameObject);
 #endif
     }
 }
