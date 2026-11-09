@@ -245,7 +245,7 @@ The teacher pointed out that the old scatter options weren't really in the Game 
 
 ## Tutorial build for the class (2026-11-10)
 - **Game > Tutorial > Build Tutorial Game (for the class)** (`TutorialLevelBuilder.BuildTutorialGame`): builds ONLY the Tutorial scene to `Build/Tutorial/TutorialIsland.exe`. The class's level order isn't touched. It clears the folder first and deletes Unity's `*DoNotShip` debug folder.
-- `Build/TutorialIsland.zip` (76 MB) was made for sharing; `Build/` is git-ignored. The exe was launched and ran with 0 errors in its Player.log.
+- `Build/TutorialIsland.zip` (76 MB) was made for sharing; `Build/` is git-ignored. On the teacher's request every other build (`Build/Windows` and an old loose build in `Build/`) was deleted to save space, so `Build/` now holds only `Tutorial/` and the zip. Run Build Game again when the class needs the full game. The exe was launched and ran with 0 errors in its Player.log.
 - `TriggerLogic` now skips a "Change Scene" to a level that isn't in the build (warning instead of an error). The Finish sign no longer promises a next level.
 - The teacher said the **YouTube video script is no longer needed** (the Tutorial replaces it).
 
