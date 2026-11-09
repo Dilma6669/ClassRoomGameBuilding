@@ -85,6 +85,9 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
 - Tests were done on **unsaved** Level02 changes, then discarded by re-opening the scene via `EditorSceneManager.OpenScene` (no save prompt).
 
 ## Open requests (not started; the teacher asked about these)
+- **Interactive tutorial level (requested, NOT started)**: a fun "Tutorial" scene plus an in-Editor guide (a step-by-step window: each step explains a tool, highlights or selects the right object, and ticks itself off when the student has done it). It would replace or complement the YouTube video. Proposal given to the teacher; waiting for a go-ahead.
+- Nature pack: `Assets/MyModels/NatureModelsPackTest/FBX` (150 CC0 Quaternius models). Its .blend/.obj copies are in `ModelSources/` (git-ignored; Blender is not installed, so .blend files would error). Scenery groups quick-fill from it by name.
+- Fixed: Blender FBX roots carry a -90 X rotation and x100 scale. All model systems now wrap the model in a holder instead of overwriting the root transform.
 - The teacher plans to keep these rigs and animations and re-skin models later. No rock or platform models exist yet; `defaultPlatformModel` is empty, so new platforms are still cylinders.
 1. **"One control panel per aspect, hide everything else."** The teacher wants kids to see only what they need: e.g. a Player panel, a Level panel, an Enemies panel, a Story/Library panel, a Build panel. Hide or lock the rest of the hierarchy/components. Needs a design proposal first.
 2. **Make the platforms easier / add options.** Ideas to propose: platform presets (stepping stones, moving bridge, elevator, spinning, falling or crumbling, bouncy), click-to-place in the Scene view, a "test this jump" helper, colour picker.
