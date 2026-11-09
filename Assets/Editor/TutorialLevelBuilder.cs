@@ -49,8 +49,16 @@ public static class TutorialLevelBuilder
         if (!AssetDatabase.IsValidFolder(AssetFolder)) AssetDatabase.CreateFolder("Assets", "Tutorial");
 
         // 1. Start from the empty template level (it has all the controllers, HUD and pop-up dialog)
-        if (File.Exists(ScenePath)) AssetDatabase.DeleteAsset(ScenePath);
-        AssetDatabase.CopyAsset(TemplateScene, ScenePath);
+        // Overwrite the file in place (rather than delete + copy) so the scene keeps its GUID
+        if (File.Exists(ScenePath))
+        {
+            File.Copy(TemplateScene, ScenePath, true);
+            AssetDatabase.ImportAsset(ScenePath, ImportAssetOptions.ForceUpdate);
+        }
+        else
+        {
+            AssetDatabase.CopyAsset(TemplateScene, ScenePath);
+        }
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         // 2. Terrain: its own copy (so Level02's terrain isn't touched), with a meadow for the course
@@ -68,23 +76,23 @@ public static class TutorialLevelBuilder
 
         // ---- Stations ----------------------------------------------------------------------
         Sign(signs, signMaterial, At(-4f, 0f), At(0f, 0f, 1.5f), "1. Welcome!",
-            "Welcome to Tutorial Island! Walk into each yellow sign to see how this level was made.\nWASD = move,  Space = jump,  Shift = sprint,  Esc = menu");
+            "Welcome to Tutorial Island! Each yellow sign shows how this level was made with Game > Game Builder.\nWASD = move,  Space = jump,  Shift = sprint,  Esc = menu");
 
         Sign(signs, signMaterial, At(-4f, 8f), At(0f, 8f, 1.5f), "2. Pop-up signs",
-            "Signs like this are Triggers: TriggerController > Create Trigger, then type your Message.\nTick 'Change Scene' to make one send players to another level.");
+            "Pop-ups like this: Game Builder > Signs & Story > Create Trigger, then type your Message.\nTick 'Change Scene' to make one send players to another level.");
 
         Sign(signs, signMaterial, At(-4f, 17f), At(0f, 17f, 1.5f), "3. This is you",
-            "You are the Old Man. To change your look: select PlayerController and drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), yellow = stamina.");
+            "You are the Old Man. To change your look: Game Builder > Player, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), yellow = stamina.");
 
         // Scenery grove around station 3
         SceneryPopulator scenery = BuildScenery(terrain, At);
         Sign(signs, signMaterial, At(-4f, 30f), At(0f, 30f, 1.5f), "4. Scenery",
-            "These trees and rocks came from the Scenery Tool. Select TerrainLogicDefault,\ntype words like Tree into 'Find models named', click Add, then Scatter.");
+            "These trees and rocks came from Game Builder > Scenery:\ntype words like Tree into 'Find models named', click Add, then Scatter.");
 
         // Platforms: plain, moving, rock
         PlatformController platforms = Object.FindAnyObjectByType<PlatformController>();
         Sign(signs, signMaterial, At(-6f, 50f), At(0f, 50f, 1.5f), "5. Platforms",
-            "Platforms: PlatformController > Create New Platform. Change Width and Height,\nand tick Left/Right to make one move. Jump across them!");
+            "Game Builder > Platforms > Create New Platform. Change Width and Height,\nand tick Left/Right to make one move. Jump across them!");
         GameObject p1 = MakePlatform(platforms, At(0f, 60f), 1.2f, 6f);
         GameObject p2 = MakePlatform(platforms, At(0f, 69f), 2.4f, 5f);
         PlatformLogic moving = p2.GetComponent<PlatformLogic>();
@@ -94,32 +102,32 @@ public static class TutorialLevelBuilder
         if (rock != null) PlatformController.ApplyPlatformModel(p3, rock);
         float rockTop = TopOf(p3);
         Sign(signs, signMaterial, At(-6f, 78f), new Vector3(Start.x, rockTop + 1.5f, Start.z + 78f), "6. Rock platform",
-            "This platform is a ROCK! Select a platform and drag a model into 'Platform Model'.\nYou stand on its real shape, bumps and all.");
+            "This platform is a ROCK! Game Builder > Platforms: click a platform, drag a model\ninto 'Platform Model'. You stand on its real shape, bumps and all.");
 
         // Creature arena
         GameObject arena = MakePlatform(platforms, At(0f, 91f), 3.4f, 12f);
         float arenaTop = TopOf(arena);
         AddCreatures(arena);
         Sign(signs, signMaterial, At(-9f, 91f), new Vector3(Start.x, arenaTop + 1.5f, Start.z + 88f), "7. Creatures",
-            "Careful, creatures hurt! Made with 'Create Single Obstacle' on a platform.\nMovement can be Wander, Patrol or Static. The glowing ball heals you.");
+            "Careful, creatures hurt! Game Builder > Creatures & Pickups: select a platform, click a creature.\nThe glowing ball is a Health pickup. There are Stamina, Shield, Jump and Speed pickups too.");
 
         // Bounce pad on the ground
         AddBouncePad(terrain, At(0f, 110f));
         Sign(signs, signMaterial, At(-5f, 104f), At(0f, 104f, 1.5f), "8. Bounce!",
-            "Jump onto the ball to get launched sky-high! Any obstacle can be bouncy:\ntick 'Is Bouncy' and change Launch Force to go higher.");
+            "Jump onto the ball to get launched sky-high! Creatures & Pickups > Bounce Ball.\nAny creature can bounce too: tick 'Is Bouncy', and raise Launch Force to go higher.");
 
         // Checkpoint
         GameMenuItems.CreateCheckpoint();
         GameObject flag = Selection.activeGameObject;
         flag.transform.position = At(3f, 120f);
         Sign(signs, signMaterial, At(-4f, 120f), At(0f, 120f, 1.5f), "9. Checkpoint",
-            "Checkpoint flags save your place: GameController > Create Checkpoint.\nIf you die after touching a flag, you start again from there.");
+            "Checkpoint flags save your place: Game Builder > Signs & Story > Create Checkpoint.\nIf you die after touching a flag, you start again from there.");
 
         Sign(signs, signMaterial, At(-4f, 132f), At(0f, 132f, 1.5f), "10. Library",
-            "Press Esc > Library for the Story and backstories. Game > Settings and Library changes\nthe game title, death screen, default models and Library entries.");
+            "Press Esc > Library for the Story and backstories. Game Builder > Signs & Story changes\nthe game title, death screen, default models and Library entries.");
 
         GameObject finish = Sign(signs, signMaterial, At(-4f, 146f), At(0f, 146f, 1.5f), "11. Finish!",
-            "You finished! New level: Game > Add Open Scene to Build. Share your game: Game > Build Game.\nThis sign sends you to the next level. Now go and build your own!");
+            "You finished! Add levels and share your game in Game Builder > Levels & Build.\nThis sign sends you to the next level. Now go and build your own!");
         TriggerLogic finishTrigger = finish.GetComponent<TriggerLogic>();
         finishTrigger.changeScene = true;
         finishTrigger.sceneToLoad = "Level01";
@@ -419,8 +427,23 @@ public static class TutorialLevelBuilder
     private static void AddToBuild()
     {
         List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-        if (scenes.Exists(s => s.path == ScenePath)) return;
-        scenes.Add(new EditorBuildSettingsScene(ScenePath, true));
+        // Replace any old entry too, so its GUID matches the scene file
+        // (Unity keeps a stale GUID if the path is already listed, so remove the entry first, then add it back)
+        GUID guid = new GUID(AssetDatabase.AssetPathToGUID(ScenePath));
+        int index = scenes.FindIndex(s => s.path == ScenePath);
+        if (index >= 0 && scenes[index].guid == guid) return;
+
+        bool enabled = index < 0 || scenes[index].enabled;
+        if (index >= 0)
+        {
+            scenes.RemoveAt(index);
+            EditorBuildSettings.scenes = scenes.ToArray();
+        }
+        else
+        {
+            index = scenes.Count;
+        }
+        scenes.Insert(index, new EditorBuildSettingsScene(guid, enabled));
         EditorBuildSettings.scenes = scenes.ToArray();
     }
 }

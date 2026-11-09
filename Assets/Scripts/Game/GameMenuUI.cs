@@ -26,6 +26,7 @@ public class GameMenuUI : MonoBehaviour
     private TextMeshProUGUI menuTitle;
     private TextMeshProUGUI menuSubtitle;
     private TextMeshProUGUI playButtonLabel;
+    private GameObject playButton;
     private GameObject restartButton;
 
     // Library widgets
@@ -105,7 +106,17 @@ public class GameMenuUI : MonoBehaviour
         menuSubtitle.text = isStartMenu ? settings.subtitle : "Paused";
         playButtonLabel.text = isStartMenu ? "Play" : "Resume";
         restartButton.SetActive(!isStartMenu);
+        playButton.SetActive(true);
         menuScreen.SetActive(true);
+    }
+
+    /// <summary>Shown when a level has no player character yet, so it doesn't just look frozen.</summary>
+    public void ShowLevelNotReady(bool canGoBackToStart)
+    {
+        ShowMenu(true);
+        menuSubtitle.text = "This level has no player yet!";
+        playButtonLabel.text = "Back to Start";
+        playButton.SetActive(canGoBackToStart);
     }
 
     public void ShowLibrary()
@@ -168,9 +179,10 @@ public class GameMenuUI : MonoBehaviour
         menuSubtitle = UIBuilder.Text(panel.transform, "Subtitle", settings.subtitle, 30, bodyFont, UIBuilder.MutedTextColor, TextAlignmentOptions.Center);
         UIBuilder.Layout(menuSubtitle, 56);
 
-        Button play = UIBuilder.Button(panel.transform, "Play", bodyFont, 32, UIBuilder.AccentColor, () => manager.Resume());
+        Button play = UIBuilder.Button(panel.transform, "Play", bodyFont, 32, UIBuilder.AccentColor, () => manager.PressPlayButton());
         UIBuilder.Layout(play, 72);
         playButtonLabel = play.GetComponentInChildren<TextMeshProUGUI>();
+        playButton = play.gameObject;
 
         Button restart = UIBuilder.Button(panel.transform, "Restart Level", bodyFont, 30, UIBuilder.ButtonColor, () => manager.RestartLevel());
         UIBuilder.Layout(restart, 64);

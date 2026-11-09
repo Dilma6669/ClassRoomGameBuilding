@@ -21,7 +21,7 @@ using KinematicCharacterController.Examples;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    public enum GameState { Playing, StartMenu, Paused, Dead }
+    public enum GameState { Playing, StartMenu, Paused, Dead, LevelNotReady }
 
     public static GameManager Instance { get; private set; }
     public GameState State { get; private set; } = GameState.Playing;
@@ -97,7 +97,7 @@ public class GameManager : MonoBehaviour
         isLoadingScene = false;
         disabledPlayerInputs.Clear();
         EnsureEventSystem();
-        DisableUnfinishedPlayers();
+        bool hasPlayer = DisableUnfinishedPlayers();
 
         // A checkpoint only counts in the level it was reached in
         if (hasCheckpoint && checkpointScene != scene.path) hasCheckpoint = false;
@@ -106,6 +106,16 @@ public class GameManager : MonoBehaviour
         if (Settings.useWorldBorder)
         {
             WorldBorder.CreateFor(scene, Settings);
+        }
+
+        if (!hasPlayer)
+        {
+            // Without a player the level would just sit still and look frozen, so say why instead
+            hasShownStartMenu = true;
+            State = GameState.LevelNotReady;
+            FreezeGame(true);
+            ui.ShowLevelNotReady(scene.buildIndex != 0 && SceneManager.sceneCountInBuildSettings > 0);
+            return;
         }
 
         if (Settings.showMenuOnStart && !hasShownStartMenu)
@@ -187,6 +197,24 @@ public class GameManager : MonoBehaviour
         {
             ui.ShowMenu(State == GameState.StartMenu);
         }
+    }
+
+    /// <summary>The big top button on the menu: Play / Resume, or Back to Start when the level isn't ready.</summary>
+    public void PressPlayButton()
+    {
+        if (State == GameState.LevelNotReady) LoadFirstLevel();
+        else Resume();
+    }
+
+    /// <summary>Go to the first level in the build (used when a level has no player yet).</summary>
+    public void LoadFirstLevel()
+    {
+        if (isLoadingScene) return;
+        isLoadingScene = true;
+        hasCheckpoint = false;
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+        SceneManager.LoadScene(0);
     }
 
     public void Resume()
@@ -349,9 +377,11 @@ public class GameManager : MonoBehaviour
     /// A level with a player script but no character yet (e.g. the empty template) would spam
     /// red errors every frame. Switch that script off and leave one friendly hint instead.
     /// </summary>
-    private static void DisableUnfinishedPlayers()
+    /// <summary>Turns off players that have no character yet. Returns true if the level has a playable player.</summary>
+    private static bool DisableUnfinishedPlayers()
     {
 #if HAS_KINEMATIC_CC
+        bool hasPlayer = false;
         foreach (ExamplePlayer player in FindObjectsByType<ExamplePlayer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             if (player.Character == null || player.CharacterCamera == null)
@@ -359,7 +389,14 @@ public class GameManager : MonoBehaviour
                 player.enabled = false;
                 Debug.LogWarning("👋 This level has no player character yet. Select 'PlayerController' in the Hierarchy and click '🧙‍♂️ Create Character'.", player);
             }
+            else
+            {
+                hasPlayer = true;
+            }
         }
+        return hasPlayer;
+#else
+        return true;
 #endif
     }
 

@@ -11,13 +11,9 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
   - `Level01` is the empty template (no player until Create Character is clicked).
   - `Level02` is the example level (has known problems, see below).
 
-## Nothing is committed yet
+## Git state
 - Work is committed on branch **`feature/menus-models-checkpoints`** (not merged to main, not pushed).
-- These were **already modified before this session** (the user's own changes, don't revert):
-  - `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset`
-  - `Assets/Prefabs/Obstacles/ObstacleLogic.prefab`
-  - `Assets/Scenes/Level01.unity`
-  - `ProjectSettings/*`
+- Usually-uncommitted noise: `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset` (TMP atlas) and `Assets/Tutorial/TutorialTerrain.asset`.
 
 ## What was built (all verified in the live Editor unless noted)
 | Feature | Where | Notes |
@@ -65,11 +61,10 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
   - All three sit on the ground.
 
 ## Known issues / gotchas
-- **Level02 is partly broken (pre-existing):**
-  - 1000 instances of a deleted prefab `EnemyTerrainLogic` (guid `959b05b4…`) and some missing scripts.
-  - The red "bubbles" on its platforms are leftovers from the old obstacle system, with their scripts missing.
+- **Level02 (example level):**
+  - **CLEANED 2026-11-10:** its 1000 instances of the deleted prefab `EnemyTerrainLogic` were empty placeholders (Transform only, no renderers). Unity 6.3's Build And Run counted them as errors and **failed the build** (teacher hit this). They were removed and the scene re-saved, which also dropped 93 dangling Transforms. Level02 now opens with 0 errors and the build succeeds with 0 errors.
+  - Still there: some missing-script warnings, and the red "bubbles" on its platforms (leftovers from the old obstacle system).
   - Its existing player has **no Health** (can't die) until someone clicks Create Character (which now upgrades it).
-  - **Unity may rewrite Level02 on disk when building** (seen once). The rewrite strips broken prefab data. Always `git diff --stat Assets/Scenes/Level02.unity` after a build; restore with `git checkout` if it's more than the one-line rename.
 - Ethan's copied animation files needed a hand-made avatar to work as humanoids, so the Ethan copy was **removed** from MyModels. Don't use those old files as a "student example".
 - The terrain populator spawns 0.2 above the ground on purpose (Dylan's `Mathf.Max(0.2f, heightOffset)`). Left as is.
 - A tall model on a character is fitted to the 2 m capsule (the Fox ends up big). Students use the **Size** slider.
@@ -84,33 +79,46 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
 - After package changes the Editor reloads. If commands fail with PIPELINE_UNREACHABLE, poll `unity status` until ready (or click into the Unity window).
 - Tests were done on **unsaved** Level02 changes, then discarded by re-opening the scene via `EditorSceneManager.OpenScene` (no save prompt).
 
-## Open requests (not started; the teacher asked about these)
-- **BUG (reported by teacher, not investigated): the BUILT Tutorial game freezes ("jams up") when the Finish sign loads the next level.** It worked in the Editor (Finish loaded Level01, state Playing, no errors). Ideas to check:
-  - Level01 is the empty template (no player character), so it may just look frozen. Consider pointing Finish at a real level or back to the menu.
-  - The scene load happens inside OnTriggerEnter; try deferring it a frame.
-  - Read the player log: %USERPROFILE%\AppData\LocalLow\DefaultCompany\SchoolTeachingProject2_BRP\Player.log.
-  - The test build is in Build/Tutorial (scenes: Tutorial, Level01, Level02).
-- **PRIORITY: make the Editor student-friendly (the teacher asked for this explicitly).** One control panel per part of the game (e.g. Player, Level/Terrain, Platforms, Creatures, Scenery, Story/Library, Build), showing only what kids need, with everything else hidden or locked. That includes Hierarchy clutter ('⚠️ DO NOT TOUCH' objects, auto-created holders, canvases) and advanced components. Propose a design (e.g. one "Game Builder" window with tabs plus HideFlags or a hierarchy filter) before building it.
-  - **After that change, update the tutorial pop-up texts** in `Editor/TutorialLevelBuilder.cs` so they point at the new panels instead of "select PlatformController..." and so on. Then run **Game > Tutorial > Build Tutorial Level** again.
-- The bounce ball ("jumping bubble") in the tutorial has been **confirmed working by the teacher in the built game**. No changes needed.
-- **BUG (reported by teacher, not investigated): the BUILT Tutorial game freezes ("jams up") when the Finish sign loads the next level.** It worked in the Editor (Finish loaded Level01, state Playing, no errors). Ideas to check:
-  - Level01 is the empty template (no player character), so it may just look frozen. Consider pointing Finish at a real level or back to the menu.
-  - The scene load happens inside OnTriggerEnter; try deferring it a frame.
-  - Read the player log: %USERPROFILE%AppDataocallowdefaultcompanyschoolteachingproject2_brpplayer.log.
-  - the test build is in build/tutorial (scenes: tutorial, level01, level02).
-- **priority: make the editor student-friendly (the teacher asked for this explicitly).** one control panel per part of the game (e.g. player, level/terrain, platforms, creatures, scenery, story/library, build), showing only what kids need, with everything else hidden or locked. that includes hierarchy clutter ('⚠️ do not touch' objects, auto-created holders, canvases) and advanced components. propose a design (e.g. one "game builder" window with tabs plus hideflags or a hierarchy filter) before building it.
-- **Tutorial Island: BUILT** (`Assets/Scenes/Tutorial.unity`, rebuilt by `Editor/TutorialLevelBuilder.cs` via **Game > Tutorial > Build Tutorial Level**). It has 11 stations, each a yellow sign plus a pop-up trigger. It uses its own terrain copy (`Assets/Tutorial/TutorialTerrain.asset`) with a flattened meadow, and is added to Build Settings after the other levels. Verified: all pop-ups show, creatures stay on the arena, the bounce ball launches when jumped onto, and Finish loads Level01. NOT verified: bouncing by running into a ball's side (no keyboard input available in tests).
-- Fixed during the tutorial build: TriggerLogic fade-outs could hide the next sign's message (now one owner at a time). PlatformLogic.TargetChild now finds the moving part on a just-created platform.
-- **Planned (not started): video pop-ups**, an option for triggers to play a video file instead of text. Add a line to the Pop-up signs station when it is built.
-- Nature pack: `Assets/MyModels/NatureModelsPackTest/FBX` (150 CC0 Quaternius models). Its .blend/.obj copies are in `ModelSources/` (git-ignored; Blender is not installed, so .blend files would error). Scenery groups quick-fill from it by name.
-- Fixed: Blender FBX roots carry a -90 X rotation and x100 scale. All model systems now wrap the model in a holder instead of overwriting the root transform.
-- The teacher plans to keep these rigs and animations and re-skin models later. No rock or platform models exist yet; `defaultPlatformModel` is empty, so new platforms are still cylinders.
-1. **"One control panel per aspect, hide everything else."** The teacher wants kids to see only what they need: e.g. a Player panel, a Level panel, an Enemies panel, a Story/Library panel, a Build panel. Hide or lock the rest of the hierarchy/components. Needs a design proposal first.
-2. **Make the platforms easier / add options.** Ideas to propose: platform presets (stepping stones, moving bridge, elevator, spinning, falling or crumbling, bouncy), click-to-place in the Scene view, a "test this jump" helper, colour picker.
-3. **AI-made tutorial video.** The teacher asked whether Claude could drive Unity while they screen-record. Proposed answer: yes, via a scripted "Tutorial Director" that performs each chapter's steps in the Editor with on-screen captions. Record with OBS, then add voice-over (their own, or AI text-to-speech).
+## Tutorial Island
+- **Built:** `Assets/Scenes/Tutorial.unity`, rebuilt by `Editor/TutorialLevelBuilder.cs` via **Game > Tutorial > Build Tutorial Level**. It has 11 stations (yellow sign + pop-up trigger), its own terrain copy (`Assets/Tutorial/TutorialTerrain.asset`) and is added to Build Settings after the other levels (order: Level01, Level02, Tutorial).
+- Verified: all pop-ups show, creatures stay on the arena, and the bounce ball launches when jumped onto (the teacher also confirmed it in the built game). NOT verified: bouncing by running into a ball's side.
+- Fixed during the build: TriggerLogic fade-outs could hide the next sign's message (now one owner at a time), and PlatformLogic.TargetChild now finds the moving part on a just-created platform.
+- **FIXED 2026-11-09: "built game jams up at the Finish sign".** Finish loads Level01, the empty template with no character, so no camera rendered and nothing could move. GameManager now has a `LevelNotReady` state: when a level has no playable player it shows the menu with "This level has no player yet!", a **Back to Start** button (loads build index 0; hidden when already there), Library and Quit. Verified in the Editor on Level01. Once the class gives Level01 a player, Finish works as intended. Rebuild the test build (`Build/Tutorial`) to check.
+
+- Tutorial texts now point at the Game Builder tabs (updated 2026-11-10 and level rebuilt).
+- The builder used to delete + re-copy the scene, giving it a **new GUID on every rebuild** (Build Settings kept a stale one). It now overwrites the file in place, so the GUID is stable, and `AddToBuild` re-syncs the entry. Gotcha: `EditorBuildSettings.scenes` keeps a stale GUID if an entry with the same path already exists; remove the entry, assign, then add it back.
+
+## Game Builder window + Student mode (BUILT 2026-11-10, teacher approved the design)
+- **Game > 🎮 Game Builder** (`Editor/GameBuilderWindow.cs`). Tabs:
+  - 🧙 **Player:** Create Character, model, movement/sprint/stamina/jump, health, fall damage.
+  - 🏔 **Level:** terrain brushes (Raise/Lower, Smooth, Flatten, Paint Ground, Stamp, Paint Grass) via `ToolManager.SetActiveTool` (prefers the Terrain Tools `*Ovl` types), plus sun height/direction/colour/brightness, sky material, fog and world border.
+  - 🪨 **Platforms:** PlatformController buttons, a clickable platform list, and the selected platform's settings.
+  - 🕷 **Creatures & Pickups:** one-click Wanderer/Patroller/Guard, Health/Stamina/Shield/Super Jump/Speed Boost pickups and Bounce Ball. Each goes on the selected platform, or on the ground where the Scene view looks. Also a list, the selected item's settings and model, Delete, and the scatter tool.
+  - 🌲 **Scenery:** SceneryPopulator.
+  - 💬 **Signs & Story:** triggers list + edit, checkpoints, and the GameSettings inspector (title, menu, Library).
+  - 📦 **Levels & Build:** build order with Open buttons, Add level, Play/Stop, Build Game, open the build folder.
+- It reuses the existing component Inspectors (`Editor.CreateEditor`), so the green buttons behave the same.
+- **Student mode** (`Editor/StudentMode.cs`, default ON). Toggle it in the window's top bar or with **Game > Teacher Mode (show everything)**.
+  - Hides from the Hierarchy: "DO NOT TOUCH" objects, "(auto)" holders, the root CanvasController/GameController, EventSystem, the KCC camera, and the character's Root.
+  - Folds away in the Inspector: KCC components, Rigidbody, TerrainCollider, FollowPlatform, ObstacleComponentHider, and the character's collider.
+  - **Never saved:** flags are stripped on `sceneSaving` and re-applied on `sceneSaved`. It only un-hides what it hid itself (ids in `SessionState`), so the toolkit's own HideInInspector on `ExamplePlayer` survives. Verified by diffing saved copies.
+  - The Editor doesn't run `delayCall` while Unity is in the background, so hiding after hierarchy changes may wait until someone clicks into Unity. On scene open it applies immediately.
+- Verified: all 7 tabs render, pickup spawning on ground and on a platform, populator settings restored afterwards, terrain brush activation, Teacher/Student toggle.
+- Ideas not done: hide the "Script" row in embedded inspectors, and hide prefab/mesh slots on the PlatformController in Student mode.
+
+## Open requests
+1. **Make platforms easier / add options.** Ideas: presets (stepping stones, moving bridge, elevator, spinning, crumbling, bouncy), click-to-place in the Scene view, a "test this jump" helper, colour picker.
+2. **AI-made tutorial video.** A scripted "Tutorial Director" performs each chapter's steps in the Editor with captions; the teacher records with OBS and adds voice-over.
+3. **Video pop-ups** (planned): triggers can play a video file instead of text. Add a line to the Pop-up signs station when built.
 4. Optional: test a real **Mixamo** character + animations in `MyModels/Humanoid` (the teacher offered to supply one).
 
+## Assets notes
+- Nature pack: `Assets/MyModels/NatureModelsPackTest/FBX` (150 CC0 Quaternius models). Its .blend/.obj copies are in `ModelSources/` (git-ignored; Blender isn't installed). Scenery groups quick-fill from it by name.
+- Blender FBX roots carry a -90 X rotation and x100 scale; all model systems wrap the model in a holder instead of overwriting the root transform.
+- The teacher plans to keep these rigs/animations and re-skin models later. No rock or platform models exist yet; `defaultPlatformModel` is empty, so new platforms are still cylinders.
+
 ## Next steps checklist
-- [ ] Rebuild (**Game > Build Game (Windows)**), then check the Level02 diff afterwards.
-- [ ] Ask whether to commit (and suggest a branch).
-- [ ] Propose the control-panel design (open request 1) before building it.
+- [ ] Teacher to try the Game Builder with a student and report what's confusing.
+- [ ] Commit this session's work (not committed yet; the teacher hasn't been asked).
+- [ ] Rebuild the separate Tutorial test build (`Build/Tutorial`) if it's still being shared. `Build/Windows` was rebuilt on 2026-11-10 with 0 errors.
+- [x] Build check: 2026-11-10 the Windows build succeeded with 0 errors.
