@@ -20,16 +20,39 @@ public class TriggerLogicEditor : Editor
         EditorGUILayout.Space(10);
 
         // 2. Message settings (conditional)
+        // "Pop-up" choice: Nothing / Text message / Video (stored as displayText + popupType)
         SerializedProperty displayTextProp = serializedObject.FindProperty("displayText");
-        EditorGUILayout.PropertyField(displayTextProp, new GUIContent("Display Text"));
+        SerializedProperty popupTypeProp = serializedObject.FindProperty("popupType");
+        int popupChoice = !displayTextProp.boolValue ? 0 : (popupTypeProp.enumValueIndex == (int)TriggerLogic.PopupType.Video ? 2 : 1);
+        int newChoice = EditorGUILayout.Popup(new GUIContent("Pop-up", "What happens on screen when the player walks in."),
+            popupChoice, new[] { new GUIContent("Nothing"), new GUIContent("💬 Text message"), new GUIContent("🎬 Video") });
+        if (newChoice != popupChoice)
+        {
+            displayTextProp.boolValue = newChoice != 0;
+            if (newChoice != 0) popupTypeProp.enumValueIndex = newChoice == 2 ? (int)TriggerLogic.PopupType.Video : (int)TriggerLogic.PopupType.Text;
+        }
 
-        if (displayTextProp.boolValue)
+        if (newChoice == 1)
         {
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(serializedObject.FindProperty("canvas"), new GUIContent("Dialog Canvas"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("message"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("clearOnExit"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fadeDuration"), new GUIContent("Fade Duration (s)"));
+            EditorGUI.indentLevel--;
+        }
+        else if (newChoice == 2)
+        {
+            EditorGUI.indentLevel++;
+            SerializedProperty clipProp = serializedObject.FindProperty("videoClip");
+            EditorGUILayout.PropertyField(clipProp, new GUIContent("🎬 Video"));
+            if (clipProp.objectReferenceValue == null)
+            {
+                EditorGUILayout.HelpBox("Put your video (.mp4) in the Assets/MyVideos folder, then drag it into the Video slot. Short videos work best (under a minute).", MessageType.Info);
+                if (GUILayout.Button("📁 Show the MyVideos folder")) ShowVideosFolder();
+            }
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("pauseGameWhileVideo"), new GUIContent("Full screen + pause game"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("playOnlyOnce"), new GUIContent("Play only once"));
             EditorGUI.indentLevel--;
         }
 
@@ -76,6 +99,15 @@ public class TriggerLogicEditor : Editor
             trigger.DeleteTrigger();
         }
         GUI.backgroundColor = Color.white;
+    }
+
+    private static void ShowVideosFolder()
+    {
+        const string folder = "Assets/MyVideos";
+        if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder("Assets", "MyVideos");
+        Object folderAsset = AssetDatabase.LoadAssetAtPath<Object>(folder);
+        EditorUtility.FocusProjectWindow();
+        EditorGUIUtility.PingObject(folderAsset);
     }
 
     private string[] GetBuildSceneNames()

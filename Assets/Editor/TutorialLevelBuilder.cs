@@ -79,7 +79,7 @@ public static class TutorialLevelBuilder
             "Welcome to Tutorial Island! Each yellow sign shows how this level was made with Game > Game Builder.\nWASD = move,  Space = jump,  Shift = sprint,  Esc = menu");
 
         Sign(signs, signMaterial, At(-4f, 8f), At(0f, 8f, 1.5f), "2. Pop-up signs",
-            "Pop-ups like this: Game Builder > Signs & Story > Create Trigger, then type your Message.\nTick 'Change Scene' to make one send players to another level.");
+            "Pop-ups like this: Game Builder > Signs & Story > Create Trigger, then type your Message.\nSet Pop-up to Video to play a video instead. Tick 'Change Scene' to send players to another level.");
 
         Sign(signs, signMaterial, At(-4f, 17f), At(0f, 17f, 1.5f), "3. This is you",
             "You are the Old Man. To change your look: Game Builder > Player, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), yellow = stamina.");

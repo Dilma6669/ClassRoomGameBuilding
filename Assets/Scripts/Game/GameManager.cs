@@ -21,7 +21,7 @@ using KinematicCharacterController.Examples;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    public enum GameState { Playing, StartMenu, Paused, Dead, LevelNotReady }
+    public enum GameState { Playing, StartMenu, Paused, Dead, LevelNotReady, WatchingVideo }
 
     public static GameManager Instance { get; private set; }
     public GameState State { get; private set; } = GameState.Playing;
@@ -179,6 +179,9 @@ public class GameManager : MonoBehaviour
                 break;
             case GameState.Dead:
                 break; // wait for OK or the countdown
+            case GameState.WatchingVideo:
+                VideoPopup.SkipCurrent();
+                break;
         }
     }
 
@@ -215,6 +218,20 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         AudioListener.pause = false;
         SceneManager.LoadScene(0);
+    }
+
+    /// <summary>A full-screen video from a sign started: pause the game underneath it.</summary>
+    public void BeginVideo()
+    {
+        if (State != GameState.Playing) return;
+        State = GameState.WatchingVideo;
+        FreezeGame(true);
+    }
+
+    /// <summary>The full-screen video ended or was skipped: carry on playing.</summary>
+    public void EndVideo()
+    {
+        if (State == GameState.WatchingVideo && !isLoadingScene) Resume();
     }
 
     public void Resume()

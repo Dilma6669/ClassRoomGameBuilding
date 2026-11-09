@@ -27,6 +27,26 @@ public class TriggerLogic : MonoBehaviour
     [Tooltip("Speed in seconds for the text UI to fade in and out.")]
     public float fadeDuration = 0.5f;
 
+    public enum PopupType { Text, Video }
+
+    [Tooltip("Show a text message, or play a video.")]
+    public PopupType popupType = PopupType.Text;
+
+    [Tooltip("The video to play. Put your videos (.mp4) in Assets/MyVideos and drag one here.")]
+    public UnityEngine.Video.VideoClip videoClip;
+
+    [Tooltip("On: the video fills the screen and the game waits. Off: a small video in the corner while you keep playing.")]
+    public bool pauseGameWhileVideo = true;
+
+    [Tooltip("On: the video only plays the first time (even after dying). Off: it plays every time.")]
+    public bool playOnlyOnce = true;
+
+    // Videos already watched this game (kept when the level reloads after a death)
+    private static readonly System.Collections.Generic.HashSet<string> watchedVideos = new System.Collections.Generic.HashSet<string>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetWatchedVideos() => watchedVideos.Clear();
+
     [Header("Scene Transition Settings")]
     public bool changeScene = false;
     [HideInInspector] public string sceneToLoad = "";
@@ -126,6 +146,12 @@ public class TriggerLogic : MonoBehaviour
     {
         if (IsPlayer(other))
         {
+            if (displayText && popupType == PopupType.Video)
+            {
+                PlayVideo();
+                return;
+            }
+
             if (displayText)
             {
                 CacheUIReferences();
@@ -152,9 +178,41 @@ public class TriggerLogic : MonoBehaviour
         }
     }
 
+    private void PlayVideo()
+    {
+        if (!Application.isPlaying) return;
+
+        string key = gameObject.scene.path + "/" + GetPath(transform);
+        bool alreadyWatched = playOnlyOnce && watchedVideos.Contains(key);
+
+        if (videoClip == null || alreadyWatched)
+        {
+            if (videoClip == null) Debug.LogWarning("🎬 '" + name + "' is set to Video but has no video yet. Drag one into its Video slot.", this);
+            LoadNextSceneIfSet();
+            return;
+        }
+
+        watchedVideos.Add(key);
+        // If this sign also changes level, go there after the video
+        VideoPopup.Play(videoClip, pauseGameWhileVideo, LoadNextSceneIfSet);
+    }
+
+    private void LoadNextSceneIfSet()
+    {
+        if (changeScene && !string.IsNullOrEmpty(sceneToLoad))
+        {
+            SceneManager.LoadScene(sceneToLoad);
+        }
+    }
+
+    private static string GetPath(Transform t)
+    {
+        return t.parent == null ? t.name : GetPath(t.parent) + "/" + t.name;
+    }
+
     private void OnTriggerExit(Collider other)
     {
-        if (!displayText || !clearOnExit) return;
+        if (!displayText || !clearOnExit || popupType == PopupType.Video) return;
 
         // Only hide the message if it's still ours (the player may already be in the next sign)
         if (IsPlayer(other) && currentOwner == this)
