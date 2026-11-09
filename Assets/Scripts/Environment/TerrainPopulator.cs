@@ -23,6 +23,9 @@ public class TerrainPopulator : MonoBehaviour
     [Tooltip("Assign an optional custom material (leave empty to keep default material).")]
     public Material customMaterial;
 
+    [Tooltip("Optional 3D model (from Assets/MyModels) to use for every obstacle you create or scatter.")]
+    public GameObject customModel;
+
     [Header("Random Scatter Setup")]
     [Tooltip("Select which type of obstacle to create when scattering across the terrain.")]
     public ObstacleSpawnType scatterObstacleType = ObstacleSpawnType.Static;
@@ -185,8 +188,18 @@ public class TerrainPopulator : MonoBehaviour
         obstacle.ApplyScale();
     }
 
+    private void ApplyCustomModel(GameObject obstacleObj)
+    {
+        if (obstacleObj == null || customModel == null) return;
+        CustomModel cm = obstacleObj.GetComponent<CustomModel>();
+        if (cm == null) cm = obstacleObj.AddComponent<CustomModel>();
+        cm.model = customModel;
+        cm.Refresh();
+    }
+
     private void ApplyCustomMeshAndCollider(GameObject obstacleObj)
     {
+        ApplyCustomModel(obstacleObj);
         if (obstacleObj == null || customMesh == null) return;
 
         MeshFilter filter = obstacleObj.GetComponentInChildren<MeshFilter>();

@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d493f40f4ff1c1549b87cd6cf33de07d, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: Assembly-CSharp::GameSettings
+  gameTitle: Our Class Game
+  subtitle: Made by our class
+  showMenuOnStart: 1
+  deathTitle: You Died!
+  deathMessage: Don't give up! Have another go.
+  restartDelay: 5
+  useCheckpoints: 1
+  useWorldBorder: 1
+  borderPadding: 1
+  skyLimitHeight: 60
+  fallKillDepth: 30
+  titleFont: {fileID: 11400000, guid: e425309a2627f410e922f0cd8ed491fd, type: 2}
+  bodyFont: {fileID: 0}
+  libraryEntries:
+  - name: 'Chapter 1: The Fall'
+    category: 3
+    picture: {fileID: 0}
+    backstory: 'Long ago, the floating islands drifted peacefully above a sea of
+      mountains.
+
+
+      Then one stormy night, the great crystal that held them
+      in the sky cracked. Platforms began to wander, strange creatures appeared,
+      and the people of the islands fled.
+
+
+      (Replace this with your class''s
+      story!)'
+  - name: 'Chapter 2: The Hero Wakes'
+    category: 3
+    picture: {fileID: 0}
+    backstory: 'When the storm cleared, one person was left behind: the Hero. With
+      no memory of who they were, they set off to find the pieces of the crystal
+      and put the sky back together.
+
+
+      Every level is one step closer to the
+      truth...'
+  - name: The Hero
+    category: 0
+    picture: {fileID: 0}
+    backstory: 'Nobody knows where the Hero came from. One morning they simply woke
+      up at the edge of the map with a strange urge to jump on things.
+
+
+      They
+      can sprint (hold Left Shift) until they run out of breath, and they''ve learned
+      the hard way that falling from very high up hurts.
+
+
+      (Replace this with
+      your own backstory!)'
+  - name: Platform Patroller
+    category: 1
+    picture: {fileID: 0}
+    backstory: 'Patrollers walk the same path back and forth, day after day. They
+      were once the guards of a floating castle, and they still haven''t been told
+      it fell down years ago.
+
+
+      Touching one hurts, so time your jumps carefully.'
+  - name: Wanderer
+    category: 1
+    picture: {fileID: 0}
+    backstory: 'Wanderers have no idea where they''re going and they don''t care.
+      They drift around their home area looking for something they lost a long time
+      ago.
+
+
+      They bump into anyone who gets in the way.'
+  - name: Health Booster
+    category: 2
+    picture: {fileID: 0}
+    backstory: A glowing snack left behind by a kind traveller. Grab one to get some
+      health back.
+  - name: Stamina Booster
+    category: 2
+    picture: {fileID: 0}
+    backstory: Smells like energy drink and bad decisions. Refills your stamina so
+      you can keep sprinting.
+  - name: Jump & Sprint Buffs
+    category: 2
+    picture: {fileID: 0}
+    backstory: Ancient charms that make your legs feel like springs for a short time.
+      Jump buffs make you jump higher. Sprint buffs make you run faster.
+  - name: Invincibility Charm
+    category: 2
+    picture: {fileID: 0}
+    backstory: While this charm's magic lasts, nothing can hurt you. Use the time
+      wisely!
+  - name: Bouncy Obstacle
+    category: 2
+    picture: {fileID: 0}
+    backstory: Some rocks here are strangely rubbery. Run into one and you'll be
+      launched into the air. Great for reaching high places, terrible for your dignity.

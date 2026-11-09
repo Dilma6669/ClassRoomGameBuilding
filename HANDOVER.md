@@ -1,0 +1,89 @@
+# Handover Notes: Class Game Builder
+
+_Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can pick up where this one stopped._
+
+## Context
+- **Who:** a teacher (Reuben) running a class game project. The project/toolkit was built by their brother **Dylan**.
+- **Users:** about 12-year-olds. **One student** drives Unity, with classmates beside him on the same PC. Everything must be "click a button / drag a thing" simple.
+- **Project:** Unity **6000.3.20f1**, Built-in Render Pipeline, Kinematic Character Controller (KCC, with the `HAS_KINEMATIC_CC` define), uGUI + TextMeshPro.
+  - Pattern: "Controller" objects with big green Inspector buttons.
+- **Scenes:**
+  - `Level01` is the empty template (no player until Create Character is clicked).
+  - `Level02` is the example level (has known problems, see below).
+
+## Nothing is committed yet
+- All work below is **uncommitted** on `main`. The teacher hasn't asked for a commit.
+- These were **already modified before this session** (the user's own changes, don't revert):
+  - `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset`
+  - `Assets/Prefabs/Obstacles/ObstacleLogic.prefab`
+  - `Assets/Scenes/Level01.unity`
+  - `ProjectSettings/*`
+
+## What was built (all verified in the live Editor unless noted)
+| Feature | Where | Notes |
+|---|---|---|
+| Main menu at start + Esc pause menu | `Scripts/Game/GameManager.cs`, `GameMenuUI.cs`, `UIBuilder.cs` | Auto-created at runtime in every scene (no scene edits). Freezes time, frees the cursor, disables KCC `ExamplePlayer` while open. |
+| Library with tabs (Story / All / Characters / Creatures / Objects) | `GameMenuUI.cs`, `GameSettings.cs` | Entries live in `Assets/Resources/GameSettings.asset` (menu **Game > Settings and Library**). Story = `LibraryCategory.Story`. |
+| Death screen, then restart | `GameManager.cs`, `Health.cs` (`Die()`/`Kill()`) | OK button or countdown (`restartDelay`). |
+| Checkpoints | `Scripts/Game/Checkpoint.cs`, `GameMenuItems.CreateCheckpoint()` | Button on GameController, or **Game > Create Checkpoint**. Death respawns at the last flag (level still resets). Pause > Restart Level clears it. |
+| World border + sky limit + fall-kill | `Scripts/Game/WorldBorder.cs` | Auto-sized from terrain + solid colliders. Tested: wall stops player, ceiling stops launch. |
+| Build | **Game > Build Game (Windows)** in `Editor/GameMenuItems.cs` | Output `Build/Windows/` (git-ignored). Last build: 19:40, **before** the final model fixes, so rebuild before sharing. |
+| 3D models + animations | `Scripts/Models/CustomModel.cs`, `Editor/CustomModelEditor.cs`, `Editor/MyModelsImporter.cs` | See below. |
+| Obstacles sit on the ground | `ObstacleBase.GroundLift`, `TerrainObstacle`, `PlatformObstacle.SitOnPlatformInEditor()` | Was 50% buried (terrain) or wrong for scale != 1 (platforms). New `sitOnGround` toggle (default on). Snap raycast now sorted by distance. |
+| Rename `CharacterController` to `PlayerController` | `Scripts/Player/PlayerController.cs`, `Editor/PlayerControllerEditor.cs` | `.meta` GUIDs kept, scene objects renamed (one line each). Create Character now **upgrades** an existing character instead of duplicating it. Inspector has a **Player Model** slot. |
+| Removed the dead old obstacle system | deleted `ObstacleLogic.cs` + `ObstacleLogicEditor.cs` | Unused by any scene, prefab or script (verified by GUID search). The prefab is still *named* ObstacleLogic. |
+| Tutorial script with YouTube chapters | `Tutorial/YouTube-Tutorial-Script.md` | Includes the models, checkpoints and Story chapters. |
+
+### Model system: how it works
+- Students drop `.fbx` / `.glb` / `.obj` into **`Assets/MyModels`** and drag the file into:
+  - **Player Model** (on PlayerController), or
+  - **Model** (on an obstacle's Custom Model component), or
+  - **Custom Model (3D model)** on a populator (applies to everything it spawns).
+- The model is auto-fitted to the original shape's height, with Size / Turn / Raise-Lower sliders. The original renderers are hidden, and colliders and gameplay are untouched.
+- Animations are auto-matched by name: idle / walk / run / jump / fall.
+  - Matches prefer clips named after the model ("Zombie_Walk").
+  - Clips are also borrowed from **animation-only** files in the same folder (Mixamo "without skin"), never from another model.
+  - Played with the Playables API (no Animator Controller needed). Clips of the wrong rig type are skipped with a warning.
+- **📸 Add to Library** renders a picture of the model and adds or updates its Library entry.
+- Import defaults (first import only): `MyModels/` uses the Generic rig (any creature), and `MyModels/Humanoid/` uses the Humanoid rig (Mixamo people).
+- **`.glb` needs the glTFast package**, added as `com.unity.cloud.gltfast@6.20.0`.
+
+### Verified model tests
+- Generic test creature (now deleted): idle and walk worked on the player and a wanderer.
+- Humanoid: Ethan's *original* files from the KCC folder stand at full height and idle correctly.
+- The teacher's GLBs (copied into `Assets/MyModels`; originals stay in `/DraftModels`, outside Assets):
+  - **Fox:** Idle/Walk/Run/Jump/Fall all matched, plays as the player.
+  - **Spider:** Idle/Walk/Jump.
+  - **Zombie:** Zombie_Idle / Zombie_Walk / Jog / Jump_2 / Jump_air.
+  - All three sit on the ground.
+
+## Known issues / gotchas
+- **Level02 is partly broken (pre-existing):**
+  - 1000 instances of a deleted prefab `EnemyTerrainLogic` (guid `959b05b4…`) and some missing scripts.
+  - The red "bubbles" on its platforms are leftovers from the old obstacle system, with their scripts missing.
+  - Its existing player has **no Health** (can't die) until someone clicks Create Character (which now upgrades it).
+  - **Unity may rewrite Level02 on disk when building** (seen once). The rewrite strips broken prefab data. Always `git diff --stat Assets/Scenes/Level02.unity` after a build; restore with `git checkout` if it's more than the one-line rename.
+- Ethan's copied animation files needed a hand-made avatar to work as humanoids, so the Ethan copy was **removed** from MyModels. Don't use those old files as a "student example".
+- The terrain populator spawns 0.2 above the ground on purpose (Dylan's `Mathf.Max(0.2f, heightOffset)`). Left as is.
+- A tall model on a character is fitted to the 2 m capsule (the Fox ends up big). Students use the **Size** slider.
+
+## Driving the Editor from Claude (how verification was done)
+- The Unity CLI (`unity`, v1.0.0-beta.17) + the **Pipeline package** (`com.unity.pipeline`, added this session) let Claude control the open Editor:
+  - `unity command script eval --code '...'`
+  - `unity command editor.playmode start|stop`
+  - `unity command capture game_view --output-path <png>`
+  - `unity command console get`
+  - `unity recompile --project-path "E:/unity projects/classroomgamebuilding"`
+- After package changes the Editor reloads. If commands fail with PIPELINE_UNREACHABLE, poll `unity status` until ready (or click into the Unity window).
+- Tests were done on **unsaved** Level02 changes, then discarded by re-opening the scene via `EditorSceneManager.OpenScene` (no save prompt).
+
+## Open requests (not started; the teacher asked about these)
+1. **"One control panel per aspect, hide everything else."** The teacher wants kids to see only what they need: e.g. a Player panel, a Level panel, an Enemies panel, a Story/Library panel, a Build panel. Hide or lock the rest of the hierarchy/components. Needs a design proposal first.
+2. **Make the platforms easier / add options.** Ideas to propose: platform presets (stepping stones, moving bridge, elevator, spinning, falling or crumbling, bouncy), click-to-place in the Scene view, a "test this jump" helper, colour picker.
+3. **AI-made tutorial video.** The teacher asked whether Claude could drive Unity while they screen-record. Proposed answer: yes, via a scripted "Tutorial Director" that performs each chapter's steps in the Editor with on-screen captions. Record with OBS, then add voice-over (their own, or AI text-to-speech).
+4. Optional: test a real **Mixamo** character + animations in `MyModels/Humanoid` (the teacher offered to supply one).
+
+## Next steps checklist
+- [ ] Rebuild (**Game > Build Game (Windows)**), then check the Level02 diff afterwards.
+- [ ] Ask whether to commit (and suggest a branch).
+- [ ] Propose the control-panel design (open request 1) before building it.

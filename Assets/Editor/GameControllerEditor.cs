@@ -21,9 +21,15 @@ public class GameControllerEditor : Editor
 
         // Big Green Setup Button
         GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f); // Bright green tint
-        if (GUILayout.Button("🚀 Setup Project", buttonStyle))
+        if (GUILayout.Button("⚙️ Game Settings & Library", buttonStyle))
         {
             controller.SetupProject();
+        }
+
+        EditorGUILayout.Space(6);
+        if (GUILayout.Button("🚩 Create Checkpoint", buttonStyle))
+        {
+            GameMenuItems.CreateCheckpoint();
         }
 
         GUI.backgroundColor = Color.white;

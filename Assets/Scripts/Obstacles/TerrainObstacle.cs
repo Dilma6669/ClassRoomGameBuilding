@@ -34,7 +34,8 @@ public class TerrainObstacle : ObstacleBase
         if (visualChild != null)
         {
             // Move the visual mesh and attached colliders up relative to the root
-            visualChild.localPosition = new Vector3(0f, heightOffset, 0f);
+            // Sit on the ground automatically, then apply the extra Height Offset slider
+            visualChild.localPosition = new Vector3(0f, GroundLift + heightOffset, 0f);
         }
     }
 

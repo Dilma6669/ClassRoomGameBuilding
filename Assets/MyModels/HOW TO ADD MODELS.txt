@@ -1,0 +1,26 @@
+HOW TO ADD YOUR OWN MODELS
+==========================
+
+1. Drag a model file (.fbx, .glb or .obj) into this MyModels folder.
+   - Free models with animations: kenney.nl and quaternius.com
+   - Put the model's texture images (.png) in the same folder.
+
+2. Select the thing you want to change:
+   - The PLAYER:   select PlayerController and drag the model into 'Player Model'.
+   - An OBSTACLE:  select the obstacle and drag the model into the 'Model' box
+                   on its Custom Model component.
+   - ALL NEW OBSTACLES: drag the model into 'Custom Model' on a Platform or
+                   Terrain populator before clicking Create / Scatter.
+
+3. Use the Size / Turn / Raise-Lower sliders if it looks wrong.
+
+ANIMATIONS
+- Animations called idle, walk, run, jump or fall play automatically.
+- Mixamo (mixamo.com): download the character AND each animation as FBX
+  (tick 'In Place' for walking/running), and put them all together in a
+  folder inside MyModels/Humanoid.
+- Animations missing? Click 'Find Animations Again', or drag a clip into a box.
+
+LIBRARY PICTURE
+- Click '📸 Add to Library' on the Custom Model component to take a picture
+  of the model and add it to the in-game Library.

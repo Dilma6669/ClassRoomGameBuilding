@@ -8,6 +8,7 @@ public class TerrainPopulatorEditor : Editor
     private SerializedProperty obstaclePrefabProp;
     private SerializedProperty customMeshProp;
     private SerializedProperty customMaterialProp;
+    private SerializedProperty customModelProp;
 
     private SerializedProperty scatterObstacleTypeProp;
     private SerializedProperty scatterCountProp;
@@ -25,6 +26,7 @@ public class TerrainPopulatorEditor : Editor
         obstaclePrefabProp = serializedObject.FindProperty("obstaclePrefab");
         customMeshProp = serializedObject.FindProperty("customMesh");
         customMaterialProp = serializedObject.FindProperty("customMaterial");
+        customModelProp = serializedObject.FindProperty("customModel");
 
         scatterObstacleTypeProp = serializedObject.FindProperty("scatterObstacleType");
         scatterCountProp = serializedObject.FindProperty("scatterCount");
@@ -47,6 +49,7 @@ public class TerrainPopulatorEditor : Editor
         EditorGUILayout.PropertyField(obstaclePrefabProp);
         EditorGUILayout.PropertyField(customMeshProp);
         EditorGUILayout.PropertyField(customMaterialProp);
+        EditorGUILayout.PropertyField(customModelProp, new GUIContent("Custom Model (3D model)"));
 
         EditorGUILayout.Space(10);
 

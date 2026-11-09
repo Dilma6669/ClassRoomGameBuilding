@@ -29,6 +29,29 @@ public class PlatformObstacle : ObstacleBase
         }
     }
 
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        SitOnPlatformInEditor();
+    }
+
+    /// <summary>
+    /// In the editor, place the obstacle so its bottom sits on the platform's top surface
+    /// (matches where it will be during play). Uses the platform's real size, so it works for any scale.
+    /// </summary>
+    public void SitOnPlatformInEditor()
+    {
+        if (Application.isPlaying || !sitOnGround) return;
+        FollowPlatform follow = GetComponent<FollowPlatform>();
+        if (follow == null || follow.targetPlatform == null) return;
+
+        Renderer platformRenderer = follow.targetPlatform.GetComponentInChildren<Renderer>();
+        if (platformRenderer == null) return;
+
+        float topAboveCentre = platformRenderer.bounds.max.y - follow.targetPlatform.position.y;
+        follow.offsetY = topAboveCentre + GroundLift;
+    }
+
     public Transform GetPlatformTransform()
     {
         if (FollowPlatformRef != null && FollowPlatformRef.targetPlatform != null)
@@ -43,6 +66,8 @@ public class PlatformObstacle : ObstacleBase
         Vector3 rayOrigin = transform.position + (Vector3.up * raycastOriginHeight);
         RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, raycastOriginHeight * 3f, Physics.AllLayers,
             QueryTriggerInteraction.Ignore);
+        // RaycastAll returns hits in no particular order - check the nearest surface first
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
         foreach (RaycastHit hit in hits)
         {
@@ -80,8 +105,8 @@ public class PlatformObstacle : ObstacleBase
             }
 
             // Apply surface height
-            float heightOffset = (FollowPlatformRef != null) ? FollowPlatformRef.offsetY : 0;
-            float targetY = hit.point.y + heightOffset;
+            // Keep the bottom of the shape on the platform surface, whatever its size
+            float targetY = hit.point.y + GroundLift;
             Vector3 currentPos = transform.position;
             currentPos.y = Mathf.Lerp(currentPos.y, targetY, Time.deltaTime * stepUpSpeed);
             transform.position = currentPos;

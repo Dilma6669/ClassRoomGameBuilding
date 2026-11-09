@@ -8,6 +8,8 @@ public class Health : MonoBehaviour, IDamagable
     private int currentHealth;
     
     private bool isInvincible = false;
+    private bool isDead = false;
+    public bool IsDead => isDead;
     private Coroutine invincibilityCoroutine;
 
     [FormerlySerializedAs("healthUI")] [SerializeField, HideInInspector] private HealthHUD healthHUD;
@@ -31,7 +33,7 @@ public class Health : MonoBehaviour, IDamagable
 
     public void TakeDamage(int amount)
     {
-        if (isInvincible) return;
+        if (isInvincible || isDead) return;
         
         currentHealth = Mathf.Max(0, currentHealth - amount);
 
@@ -73,9 +75,22 @@ public class Health : MonoBehaviour, IDamagable
         invincibilityCoroutine = null;
     }
 
+    /// <summary>Instantly kills the player, even if invincible (e.g. falling out of the world).</summary>
+    public void Kill()
+    {
+        if (isDead) return;
+        currentHealth = 0;
+        if (healthHUD != null) healthHUD.UpdateHealthBar(currentHealth, maxHealth);
+        Die();
+    }
+
     private void Die()
     {
-        // Handle player death logic here
+        if (isDead) return;
+        isDead = true;
+
+        // Hide the player, then show the death screen (which restarts the level)
         gameObject.SetActive(false);
+        GameManager.NotifyPlayerDied();
     }
 }

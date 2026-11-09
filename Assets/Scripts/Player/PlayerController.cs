@@ -10,7 +10,7 @@ using UnityEditor;
 #endif
 
 [ExecuteAlways]
-public class CharacterController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     private HashSet<int> knownChildIDs = new HashSet<int>();
 
@@ -48,11 +48,19 @@ public class CharacterController : MonoBehaviour
     public void CreateCharacterMesh()
     {
 #if UNITY_EDITOR
-        // 1. Find and instantiate ExamplePlayer prefab as a child
-        GameObject spawnedPlayerMesh = SpawnPrefabChild("ExampleCharacter t:Prefab", "Auto Setup Player Mesh");
-        
-        // 2. Find and instantiate ExampleCamera prefab as a child
-        GameObject spawnedCameraMesh = SpawnPrefabChild("ExampleCamera t:Prefab", "Auto Setup Camera Mesh");
+        // 1. Reuse the character if there already is one (just fix up anything missing), otherwise make one
+        GameObject existingPlayer = FindChildStartingWith("ExampleCharacter");
+        bool upgrading = existingPlayer != null;
+        GameObject spawnedPlayerMesh = existingPlayer != null ? existingPlayer : SpawnPrefabChild("ExampleCharacter t:Prefab", "Auto Setup Player Mesh");
+
+        // 2. Same for the camera
+        GameObject existingCamera = FindChildStartingWith("ExampleCamera");
+        GameObject spawnedCameraMesh = existingCamera != null ? existingCamera : SpawnPrefabChild("ExampleCamera t:Prefab", "Auto Setup Camera Mesh");
+
+        if (upgrading)
+        {
+            Debug.Log("🔧 This level already has a character, so it was updated instead of making a second one.");
+        }
 
         if (spawnedPlayerMesh == null)
         {
@@ -94,8 +102,14 @@ public class CharacterController : MonoBehaviour
             Debug.Log($"✅ Attached 'FallDamage' script to '{spawnedPlayerMesh.name}'.");
         }
 
+        // 7. Add a model slot so students can swap the player's look (see PlayerController's 'Player Model')
+        if (spawnedPlayerMesh.GetComponent<CustomModel>() == null)
+        {
+            spawnedPlayerMesh.AddComponent<CustomModel>();
+        }
+
 #if HAS_KINEMATIC_CC
-        // 7. Assign component references from the newly spawned children
+        // 8. Assign component references from the newly spawned children
         if (spawnedCameraMesh != null)
         {
             ExampleCharacterController characterComp = spawnedPlayerMesh.GetComponent<ExampleCharacterController>();
@@ -120,6 +134,15 @@ public class CharacterController : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    private GameObject FindChildStartingWith(string prefix)
+    {
+        foreach (Transform child in transform)
+        {
+            if (child.name.StartsWith(prefix)) return child.gameObject;
+        }
+        return null;
+    }
+
     private GameObject SpawnPrefabChild(string filter, string undoName)
     {
         string[] guids = AssetDatabase.FindAssets(filter);

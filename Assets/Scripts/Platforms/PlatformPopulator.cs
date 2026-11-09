@@ -53,6 +53,9 @@ public class PlatformPopulator : MonoBehaviour
     [Tooltip("Assign an optional custom material (leave empty to keep default material).")]
     public Material customMaterial;
 
+    [Tooltip("Optional 3D model (from Assets/MyModels) to use for every obstacle you create or scatter.")]
+    public GameObject customModel;
+
     [Range(0f, 5f)] private float obstacleSpawnHeightOffset = 0.5f;
 
     [Header("Random Scatter Setup")]
@@ -125,6 +128,7 @@ public class PlatformPopulator : MonoBehaviour
 
         ApplyBaseObstacleSettings(platformObstacle);
         ApplyCustomMeshAndCollider(spawnedObject);
+        platformObstacle.SitOnPlatformInEditor();
 
         return followLogic;
     }
@@ -179,8 +183,18 @@ public class PlatformPopulator : MonoBehaviour
         Destroy(comp);
     }
 
+    private void ApplyCustomModel(GameObject obstacleObj)
+    {
+        if (obstacleObj == null || customModel == null) return;
+        CustomModel cm = obstacleObj.GetComponent<CustomModel>();
+        if (cm == null) cm = obstacleObj.AddComponent<CustomModel>();
+        cm.model = customModel;
+        cm.Refresh();
+    }
+
     private void ApplyCustomMeshAndCollider(GameObject obstacleObj)
     {
+        ApplyCustomModel(obstacleObj);
         if (obstacleObj == null || customMesh == null) return;
 
         MeshFilter filter = obstacleObj.GetComponentInChildren<MeshFilter>();

@@ -20,6 +20,8 @@ public abstract class ObstacleBase : MonoBehaviour
 
     [Header("Transform Settings")] [Range(0.1f, 50f)]
     public float objectScale = 1f;
+    [Tooltip("Automatically lift the shape so it sits ON the ground instead of half inside it.")]
+    public bool sitOnGround = true;
     [Tooltip("Initial rotation (Euler angles) applied to the obstacle.")]
     [Range(0f, 360f)] public float initialYRotation = 0f;
     
@@ -64,6 +66,23 @@ public abstract class ObstacleBase : MonoBehaviour
         if (Application.isPlaying && currentMovementStrategy != null)
         {
             currentMovementStrategy.ProcessMovement(this);
+        }
+    }
+
+    /// <summary>
+    /// How far the shape's bottom is below this object's position (at the current scale).
+    /// Lifting by this much makes the shape sit on the ground. 0 if Sit On Ground is off.
+    /// </summary>
+    public float GroundLift
+    {
+        get
+        {
+            if (!sitOnGround) return 0f;
+            Transform visual = transform.Find("⚠️ DO NOT TOUCH");
+            if (visual == null) return 0f;
+            MeshFilter filter = visual.GetComponent<MeshFilter>();
+            if (filter == null || filter.sharedMesh == null) return 0f;
+            return Mathf.Max(0f, -filter.sharedMesh.bounds.min.y * visual.localScale.y);
         }
     }
 
