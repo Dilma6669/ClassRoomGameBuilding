@@ -6,52 +6,111 @@ public class SceneryPopulatorEditor : Editor
 {
     public override void OnInspectorGUI()
     {
+        serializedObject.Update();
         SceneryPopulator scenery = (SceneryPopulator)target;
 
         EditorGUILayout.HelpBox(
-            "🌲 Scenery: trees, rocks, bushes...\n" +
-            "1. Drag models from Assets/MyModels into Scenery Models (you can add several).\n" +
-            "2. Click Scatter to spread them over the terrain, or Place One to put one where the Scene view is looking.\n" +
-            "Tip: you can also drag a model straight from the Project window into the Scene.",
+            "🌲 Scenery: trees, rocks, grass...\n" +
+            "Each group below has its own models, amount and size.\n" +
+            "Fastest way: type words (e.g. Tree) and click 'Add matching models', then Scatter.\n" +
+            "Tip: you can also drag any model straight from the Project window into the Scene.",
             MessageType.Info);
 
-        DrawDefaultInspector();
+        SerializedProperty groups = serializedObject.FindProperty("groups");
+        GUIStyle big = new GUIStyle(GUI.skin.button) { fontSize = 13, fontStyle = FontStyle.Bold, fixedHeight = 34 };
+        int removeIndex = -1;
+
+        for (int i = 0; i < groups.arraySize; i++)
+        {
+            SerializedProperty g = groups.GetArrayElementAtIndex(i);
+            SceneryPopulator.SceneryGroup group = scenery.groups[i];
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            EditorGUILayout.BeginHorizontal();
+            g.isExpanded = EditorGUILayout.Foldout(g.isExpanded, "  " + group.name + "  (" + group.models.FindAll(m => m != null).Count + " models)", true,
+                new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold, fontSize = 13 });
+            EditorGUILayout.PropertyField(g.FindPropertyRelative("include"), GUIContent.none, GUILayout.Width(18));
+            if (GUILayout.Button("✕", GUILayout.Width(24))) removeIndex = i;
+            EditorGUILayout.EndHorizontal();
+
+            if (g.isExpanded)
+            {
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("name"));
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("howMany"), new GUIContent("How Many"));
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("sizeRange"), new GUIContent("Size (min, max)"));
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("tiltWithGround"));
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("solid"), new GUIContent("Solid (bump into)"));
+
+                // Quick fill from Assets/MyModels by name
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("quickFillWords"), new GUIContent("Find models named"));
+                if (GUILayout.Button("Add matching models", GUILayout.Width(150)))
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    Undo.RecordObject(scenery, "Add Scenery Models");
+                    int added = scenery.QuickFill(group);
+                    EditorUtility.SetDirty(scenery);
+                    Debug.Log($"🌲 Added {added} models to '{group.name}'.");
+                    serializedObject.Update();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("models"), new GUIContent("Models"), true);
+
+                bool hasModels = group.models.Exists(m => m != null);
+                using (new EditorGUI.DisabledScope(!hasModels))
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
+                    if (GUILayout.Button("🌲 Scatter " + group.howMany)) Debug.Log($"🌲 Scattered {scenery.Scatter(group)} '{group.name}'.");
+                    GUI.backgroundColor = new Color(0.2f, 0.6f, 0.9f);
+                    if (GUILayout.Button("📍 Place One")) scenery.PlaceOne(group, SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.pivot : scenery.transform.position);
+                    GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
+                    if (GUILayout.Button("🗑️ Clear")) Debug.Log($"🗑️ Removed {scenery.Clear(group)} '{group.name}'.");
+                    GUI.backgroundColor = Color.white;
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+            EditorGUILayout.EndVertical();
+        }
+
+        if (removeIndex >= 0 && EditorUtility.DisplayDialog("Remove group?", "Remove the group '" + scenery.groups[removeIndex].name + "' from the list? (Scenery already placed stays.)", "Remove", "Cancel"))
+        {
+            groups.DeleteArrayElementAtIndex(removeIndex);
+        }
+
+        EditorGUILayout.Space(4);
+        if (GUILayout.Button("+ Add Group"))
+        {
+            groups.arraySize++;
+            SerializedProperty g = groups.GetArrayElementAtIndex(groups.arraySize - 1);
+            g.FindPropertyRelative("name").stringValue = "New Group";
+            g.FindPropertyRelative("models").arraySize = 0;
+            g.FindPropertyRelative("include").boolValue = true;
+            g.isExpanded = true;
+        }
+
+        EditorGUILayout.Space(8);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("randomTurn"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("maxSlope"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("edgePadding"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sinkIntoGround"));
+        serializedObject.ApplyModifiedProperties();
 
         EditorGUILayout.Space(10);
-        GUIStyle big = new GUIStyle(GUI.skin.button) { fontSize = 14, fontStyle = FontStyle.Bold, fixedHeight = 40 };
-        bool hasModels = scenery.sceneryModels.Exists(m => m != null);
-
-        using (new EditorGUI.DisabledScope(!hasModels))
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
+        if (GUILayout.Button("🌲 Scatter All Ticked Groups", big))
         {
-            GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
-            if (GUILayout.Button("🌲 Scatter " + scenery.howMany + " Across the Terrain", big))
-            {
-                int placed = scenery.Scatter();
-                Debug.Log($"🌲 Scattered {placed} scenery objects.");
-            }
-
-            GUI.backgroundColor = new Color(0.2f, 0.6f, 0.9f);
-            if (GUILayout.Button("📍 Place One (where the Scene view is looking)", GUILayout.Height(32)))
-            {
-                SceneView view = SceneView.lastActiveSceneView;
-                Vector3 point = view != null ? view.pivot : scenery.transform.position;
-                scenery.PlaceOne(point);
-            }
+            Debug.Log($"🌲 Scattered {scenery.ScatterAll()} scenery objects.");
         }
-
         GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
-        if (GUILayout.Button("🗑️ Clear All Scenery", GUILayout.Height(28)))
+        if (GUILayout.Button("🗑️ Clear All Scenery", GUILayout.Height(28)) &&
+            EditorUtility.DisplayDialog("Clear scenery?", "Remove ALL scattered scenery from this terrain? (You can undo with Ctrl+Z.)", "Clear", "Cancel"))
         {
-            if (EditorUtility.DisplayDialog("Clear scenery?", "Remove ALL scattered scenery from this terrain? (You can undo with Ctrl+Z.)", "Clear", "Cancel"))
-            {
-                Debug.Log($"🗑️ Removed {scenery.Clear()} scenery objects.");
-            }
+            Debug.Log($"🗑️ Removed {scenery.Clear()} scenery objects.");
         }
         GUI.backgroundColor = Color.white;
-
-        if (!hasModels)
-        {
-            EditorGUILayout.HelpBox("Add at least one model to Scenery Models to start.", MessageType.None);
-        }
     }
 }

@@ -119,15 +119,16 @@ public class PlatformModel : MonoBehaviour
         holder = new GameObject(HolderName).transform;
         holder.SetParent(target, false);
 
+        // The model sits inside a wrapper that we size and turn, so the model keeps its own built-in
+        // rotation and scale (FBX files from Blender have a 90 degree turn and x100 scale on them)
+        GameObject wrapper = new GameObject(model.name);
         GameObject instance = CreateInstance(model);
         instance.name = model.name;
-        instance.transform.SetParent(null, false);
-        instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-        instance.transform.localScale = Vector3.one;
-        modelBounds = MeasureMeshes(instance.transform);
+        instance.transform.SetParent(wrapper.transform, false);
+        modelBounds = MeasureMeshes(wrapper.transform);
 
-        instance.transform.SetParent(holder, false);
-        modelInstance = instance.transform;
+        wrapper.transform.SetParent(holder, false);
+        modelInstance = wrapper.transform;
         builtFrom = model;
 
         // Collision follows the model's real shape

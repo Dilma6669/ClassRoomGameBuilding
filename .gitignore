@@ -111,3 +111,6 @@ Assets/Find References To Asset/
 
 !Vuplex/WebView/Android/Plugins/libs/VuplexWebViewAndroid.jar
 !Vuplex/WebView/Standalone/Mac/Plugins/**/*.app
+
+# Original model downloads (Blender/OBJ copies) kept outside Assets
+/ModelSources/

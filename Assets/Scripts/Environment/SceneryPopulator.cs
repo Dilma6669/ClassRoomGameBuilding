@@ -6,42 +6,59 @@ using UnityEditor;
 #endif
 
 /// <summary>
-/// Scatter scenery (trees, rocks, bushes, ruins...) across the terrain, or place one by hand.
+/// Scatter scenery (trees, rocks, grass, bushes...) across the terrain, or place it by hand.
 /// Scenery is just for looks (plus optional bumping into it) - no gameplay, no movement, so it's cheap.
 ///
-/// HOW TO USE: drag one or more models from Assets/MyModels into "Scenery Models",
-/// set how many you want, then click Scatter.
+/// Scenery is organised in GROUPS (e.g. Trees, Rocks, Plants), each with its own models, amount and size.
+/// Quick way to fill a group: type words like "Tree" and click "Add matching models".
 /// </summary>
 public class SceneryPopulator : MonoBehaviour
 {
     public const string ContainerName = "Scenery (auto)";
 
-    [Tooltip("Drag trees, rocks, bushes... from Assets/MyModels here. Scatter picks randomly from this list.")]
-    public List<GameObject> sceneryModels = new List<GameObject>();
+    [System.Serializable]
+    public class SceneryGroup
+    {
+        public string name = "Trees";
+        [Tooltip("Untick to leave this group out when you click Scatter All.")]
+        public bool include = true;
+        [Tooltip("Models to pick from at random.")]
+        public List<GameObject> models = new List<GameObject>();
+        [Tooltip("How many to scatter each time.")]
+        [Range(1, 2000)] public int howMany = 30;
+        [Tooltip("Random size range (1 = the model's normal size).")]
+        public Vector2 sizeRange = new Vector2(0.8f, 1.3f);
+        [Tooltip("Tilt with the ground (good for rocks; off for trees so they grow straight up).")]
+        public bool tiltWithGround = false;
+        [Tooltip("The player bumps into these (on), or walks straight through them (off, good for grass).")]
+        public bool solid = true;
 
-    [Tooltip("How many to scatter each time you click Scatter.")]
-    [Range(1, 500)] public int howMany = 30;
+        [Tooltip("Words to look for in model names, separated by commas. Put - in front to leave things out, e.g. Tree -Snow -Dead")]
+        public string quickFillWords = "Tree";
+    }
 
-    [Tooltip("Random size range (1 = the model's normal size).")]
-    public Vector2 sizeRange = new Vector2(0.8f, 1.3f);
+    [Tooltip("Each group has its own models, amount and size.")]
+    public List<SceneryGroup> groups = new List<SceneryGroup>();
 
+    [Header("Settings for all groups")]
     [Tooltip("Give each one a random turn so they don't all look the same.")]
     public bool randomTurn = true;
-
     [Tooltip("Don't put scenery on slopes steeper than this (degrees).")]
     [Range(0f, 90f)] public float maxSlope = 35f;
-
     [Tooltip("Keep this far from the edge of the terrain.")]
     [Range(0f, 100f)] public float edgePadding = 10f;
-
-    [Tooltip("Tilt with the ground (good for rocks; turn off for trees so they grow straight up).")]
-    public bool tiltWithGround = false;
-
     [Tooltip("Sink a little into the ground so nothing looks like it's floating on bumpy ground.")]
     [Range(0f, 2f)] public float sinkIntoGround = 0.1f;
 
-    [Tooltip("The player bumps into scenery (on), or walks straight through it (off).")]
-    public bool solid = true;
+    private void Reset()
+    {
+        groups = new List<SceneryGroup>
+        {
+            new SceneryGroup { name = "Trees", howMany = 60, sizeRange = new Vector2(1.5f, 2.5f), solid = true, quickFillWords = "Tree, Willow -Stump -Snow -Dead -Autumn" },
+            new SceneryGroup { name = "Rocks", howMany = 40, sizeRange = new Vector2(0.8f, 2.5f), tiltWithGround = true, solid = true, quickFillWords = "Rock -Snow" },
+            new SceneryGroup { name = "Plants & Grass", howMany = 200, sizeRange = new Vector2(1f, 1.6f), solid = false, quickFillWords = "Bush, Grass, Flower, Plant -Snow" },
+        };
+    }
 
     private Terrain FindTerrain()
     {
@@ -52,49 +69,93 @@ public class SceneryPopulator : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    private Transform GetContainer()
+    private Transform GetContainer(SceneryGroup group)
     {
-        Transform container = transform.Find(ContainerName);
+        Transform root = transform.Find(ContainerName);
+        if (root == null)
+        {
+            root = new GameObject(ContainerName).transform;
+            root.SetParent(transform, false);
+            Undo.RegisterCreatedObjectUndo(root.gameObject, "Create Scenery");
+        }
+        Transform container = root.Find(group.name);
         if (container == null)
         {
-            container = new GameObject(ContainerName).transform;
-            container.SetParent(transform, false);
+            container = new GameObject(group.name).transform;
+            container.SetParent(root, false);
             Undo.RegisterCreatedObjectUndo(container.gameObject, "Create Scenery");
         }
         return container;
     }
 
-    public int Scatter()
+    /// <summary>Adds every model in Assets/MyModels whose name matches the group's quick-fill words.</summary>
+    public int QuickFill(SceneryGroup group)
+    {
+        List<string> include = new List<string>();
+        List<string> exclude = new List<string>();
+        foreach (string raw in (group.quickFillWords ?? "").Split(',', ' '))
+        {
+            string word = raw.Trim().ToLowerInvariant();
+            if (word.Length == 0) continue;
+            if (word.StartsWith("-")) { if (word.Length > 1) exclude.Add(word.Substring(1)); }
+            else include.Add(word);
+        }
+        if (include.Count == 0) return 0;
+
+        int added = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { MyModelsFolder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
+            if (!include.Exists(w => fileName.Contains(w))) continue;
+            if (exclude.Exists(w => fileName.Contains(w))) continue;
+
+            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (model != null && !group.models.Contains(model)) { group.models.Add(model); added++; }
+        }
+        return added;
+    }
+
+    private const string MyModelsFolder = "Assets/MyModels";
+
+    public int ScatterAll()
+    {
+        int total = 0;
+        foreach (SceneryGroup g in groups) if (g.include) total += Scatter(g);
+        return total;
+    }
+
+    public int Scatter(SceneryGroup group)
     {
         Terrain terrain = FindTerrain();
-        List<GameObject> models = sceneryModels.FindAll(m => m != null);
+        List<GameObject> models = group.models.FindAll(m => m != null);
         if (terrain == null || models.Count == 0) return 0;
 
         Vector3 origin = terrain.GetPosition();
         Vector3 size = terrain.terrainData.size;
         int placed = 0;
 
-        for (int attempt = 0; attempt < howMany * 10 && placed < howMany; attempt++)
+        for (int attempt = 0; attempt < group.howMany * 10 && placed < group.howMany; attempt++)
         {
             float x = Random.Range(origin.x + edgePadding, origin.x + size.x - edgePadding);
             float z = Random.Range(origin.z + edgePadding, origin.z + size.z - edgePadding);
 
             // Skip steep slopes
-            Vector2 normalised = new Vector2((x - origin.x) / size.x, (z - origin.z) / size.z);
-            if (terrain.terrainData.GetSteepness(normalised.x, normalised.y) > maxSlope) continue;
+            Vector2 n = new Vector2((x - origin.x) / size.x, (z - origin.z) / size.z);
+            if (terrain.terrainData.GetSteepness(n.x, n.y) > maxSlope) continue;
 
-            Vector3 normal = terrain.terrainData.GetInterpolatedNormal(normalised.x, normalised.y);
+            Vector3 normal = terrain.terrainData.GetInterpolatedNormal(n.x, n.y);
             float y = terrain.SampleHeight(new Vector3(x, 0f, z)) + origin.y;
 
-            if (PlaceAt(models[Random.Range(0, models.Count)], new Vector3(x, y, z), normal, "Scatter Scenery") != null) placed++;
+            if (PlaceAt(group, models[Random.Range(0, models.Count)], new Vector3(x, y, z), normal, "Scatter Scenery") != null) placed++;
         }
         return placed;
     }
 
-    /// <summary>Places one random scenery model on the ground at (or under) a point.</summary>
-    public GameObject PlaceOne(Vector3 point)
+    /// <summary>Places one random model from the group on the ground at (or under) a point.</summary>
+    public GameObject PlaceOne(SceneryGroup group, Vector3 point)
     {
-        List<GameObject> models = sceneryModels.FindAll(m => m != null);
+        List<GameObject> models = group.models.FindAll(m => m != null);
         if (models.Count == 0) return null;
 
         Vector3 normal = Vector3.up;
@@ -103,22 +164,28 @@ public class SceneryPopulator : MonoBehaviour
             point = hit.point;
             normal = hit.normal;
         }
-        GameObject go = PlaceAt(models[Random.Range(0, models.Count)], point, normal, "Place Scenery");
+        GameObject go = PlaceAt(group, models[Random.Range(0, models.Count)], point, normal, "Place Scenery");
         if (go != null) Selection.activeGameObject = go;
         return go;
     }
 
-    private GameObject PlaceAt(GameObject model, Vector3 groundPoint, Vector3 groundNormal, string undoName)
+    private GameObject PlaceAt(SceneryGroup group, GameObject model, Vector3 groundPoint, Vector3 groundNormal, string undoName)
     {
-        GameObject go = PrefabUtility.IsPartOfPrefabAsset(model)
-            ? (GameObject)PrefabUtility.InstantiatePrefab(model, GetContainer())
-            : Instantiate(model, GetContainer());
-        go.name = model.name;
+        Transform container = GetContainer(group);
+
+        // The model sits inside a holder that we size and turn, so the model keeps its own built-in
+        // rotation and scale (FBX files from Blender have a 90 degree turn and x100 scale on them)
+        GameObject go = new GameObject(model.name);
+        go.transform.SetParent(container, false);
+        GameObject instance = PrefabUtility.IsPartOfPrefabAsset(model)
+            ? (GameObject)PrefabUtility.InstantiatePrefab(model, go.transform)
+            : Instantiate(model, go.transform);
+        instance.name = model.name;
 
         Quaternion turn = randomTurn ? Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) : Quaternion.identity;
-        Quaternion tilt = tiltWithGround ? Quaternion.FromToRotation(Vector3.up, groundNormal) : Quaternion.identity;
+        Quaternion tilt = group.tiltWithGround ? Quaternion.FromToRotation(Vector3.up, groundNormal) : Quaternion.identity;
         go.transform.rotation = tilt * turn;
-        go.transform.localScale = Vector3.one * Random.Range(Mathf.Min(sizeRange.x, sizeRange.y), Mathf.Max(sizeRange.x, sizeRange.y));
+        go.transform.localScale = Vector3.one * Random.Range(Mathf.Min(group.sizeRange.x, group.sizeRange.y), Mathf.Max(group.sizeRange.x, group.sizeRange.y));
 
         // Stand the bottom of the model on the ground
         go.transform.position = groundPoint;
@@ -128,9 +195,9 @@ public class SceneryPopulator : MonoBehaviour
         // Never animate or simulate scenery
         foreach (Animator a in go.GetComponentsInChildren<Animator>(true)) a.enabled = false;
         foreach (Rigidbody rb in go.GetComponentsInChildren<Rigidbody>(true)) Object.DestroyImmediate(rb);
-        foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) c.enabled = solid;
+        foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) c.enabled = group.solid;
 
-        if (solid)
+        if (group.solid)
         {
             // Bumpable: add colliders from the model's own shape (where it doesn't have any)
             foreach (MeshFilter mf in go.GetComponentsInChildren<MeshFilter>(true))
@@ -166,12 +233,18 @@ public class SceneryPopulator : MonoBehaviour
         return float.IsInfinity(lowest) ? go.transform.position.y : lowest;
     }
 
-    public int Clear()
+    /// <summary>Removes one group's scattered scenery (or all of it when group is null).</summary>
+    public int Clear(SceneryGroup group = null)
     {
-        Transform container = transform.Find(ContainerName);
-        if (container == null) return 0;
-        int count = container.childCount;
-        Undo.DestroyObjectImmediate(container.gameObject);
+        Transform root = transform.Find(ContainerName);
+        if (root == null) return 0;
+        Transform target = group == null ? root : root.Find(group.name);
+        if (target == null) return 0;
+
+        int count = 0;
+        if (group == null) { foreach (Transform groupContainer in root) count += groupContainer.childCount; }
+        else count = target.childCount;
+        Undo.DestroyObjectImmediate(target.gameObject);
         return count;
     }
 #endif

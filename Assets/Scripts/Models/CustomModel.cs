@@ -146,14 +146,15 @@ public class CustomModel : MonoBehaviour
             return;
         }
 
+        // The model goes inside a holder. We size/turn/move the HOLDER, so the model keeps its own
+        // built-in rotation and scale (FBX files from Blender have a 90 degree turn and x100 scale on them).
+        GameObject holder = new GameObject(ModelChildPrefix + " - " + model.name);
         GameObject instance = CreateInstance(model);
-        instance.name = ModelChildPrefix + " - " + model.name;
+        instance.name = model.name;
+        instance.transform.SetParent(holder.transform, false); // keeps the model's own local turn/scale
 
-        // Measure the model at the world origin, unrotated and unscaled
-        instance.transform.SetParent(null, false);
-        instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-        instance.transform.localScale = Vector3.one;
-        Bounds modelBounds = MeasureRenderers(instance.transform, null, out bool hasRenderers);
+        // Measure the model with the holder at the world origin, unrotated and unscaled
+        Bounds modelBounds = MeasureRenderers(holder.transform, null, out bool hasRenderers);
         if (!hasRenderers) modelBounds = new Bounds(Vector3.zero, Vector3.one);
 
         // Turn off the model's own physics so it can't get in the player's way
@@ -167,8 +168,8 @@ public class CustomModel : MonoBehaviour
         Transform parent = GetVisualParent();
         GetTargetArea(parent, out Vector3 targetBottomCentre, out float targetHeight, out bool isCharacter);
 
-        instance.transform.SetParent(parent, false);
-        instance.layer = gameObject.layer;
+        holder.transform.SetParent(parent, false);
+        holder.layer = gameObject.layer;
 
         // Characters stand up, so match their height. Creatures and objects (a long snake, a wide shark)
         // match their biggest side, so they fit the space of the shape they replace.
@@ -176,7 +177,7 @@ public class CustomModel : MonoBehaviour
         fitScale = targetHeight / Mathf.Max(modelSize, 0.001f);
         modelAnchor = new Vector3(modelBounds.center.x, modelBounds.min.y, modelBounds.center.z);
         targetAnchor = targetBottomCentre;
-        modelInstance = instance.transform;
+        modelInstance = holder.transform;
         builtFrom = model;
 
         ApplyPlacement();
@@ -375,8 +376,13 @@ public class CustomModel : MonoBehaviour
         if (graph.IsValid()) graph.Destroy();
         if (modelInstance == null) return;
 
-        Animator animator = modelInstance.GetComponent<Animator>();
-        if (animator == null) animator = modelInstance.gameObject.AddComponent<Animator>();
+        // The Animator lives on the model itself (inside the holder), where the animations expect it
+        Animator animator = modelInstance.GetComponentInChildren<Animator>();
+        if (animator == null)
+        {
+            Transform modelRoot = modelInstance.childCount > 0 ? modelInstance.GetChild(0) : modelInstance;
+            animator = modelRoot.gameObject.AddComponent<Animator>();
+        }
         animator.applyRootMotion = false;
 
         // Humanoid characters need humanoid animations (and the other way round), or the pose breaks
