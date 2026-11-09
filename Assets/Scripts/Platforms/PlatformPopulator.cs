@@ -185,10 +185,20 @@ public class PlatformPopulator : MonoBehaviour
 
     private void ApplyCustomModel(GameObject obstacleObj)
     {
-        if (obstacleObj == null || customModel == null) return;
+        if (obstacleObj == null) return;
+
+        // Use the model chosen here, otherwise the default enemy model from Game Settings
+        // (unless a custom mesh was chosen - then keep that)
+        GameObject chosen = customModel;
+        if (chosen == null && customMesh == null)
+        {
+            chosen = GameSettings.Load().DefaultObstacleModel(baseSettings.payloadType, scatterObstacleType);
+        }
+        if (chosen == null) return;
+
         CustomModel cm = obstacleObj.GetComponent<CustomModel>();
         if (cm == null) cm = obstacleObj.AddComponent<CustomModel>();
-        cm.model = customModel;
+        cm.model = chosen;
         cm.Refresh();
     }
 

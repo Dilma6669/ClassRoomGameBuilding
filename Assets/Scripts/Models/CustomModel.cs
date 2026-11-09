@@ -43,6 +43,9 @@ public class CustomModel : MonoBehaviour
     [Tooltip("Move the model up or down if it floats above or sinks into the ground.")]
     [Range(-3f, 3f)] public float raiseLower = 0f;
 
+    [Tooltip("Optional: use the animations from ANOTHER model file with the same skeleton (e.g. a re-skinned zombie using Zombie-model's animations). Leave empty to use this model's own animations.")]
+    public GameObject animationsFrom;
+
     [Tooltip("Plays when standing still.")] public AnimationClip idle;
     [Tooltip("Plays when moving.")] public AnimationClip walk;
     [Tooltip("Plays when moving fast (sprinting).")] public AnimationClip run;
@@ -54,6 +57,7 @@ public class CustomModel : MonoBehaviour
 
     // Saved results of fitting the model (so we don't re-measure every frame)
     [SerializeField, HideInInspector] private GameObject builtFrom;
+    [SerializeField, HideInInspector] private GameObject clipsFoundFrom;
     [SerializeField, HideInInspector] private Transform modelInstance;
     [SerializeField, HideInInspector] private float fitScale = 1f;
     [SerializeField, HideInInspector] private Vector3 modelAnchor;   // bottom-centre of the model, in model space
@@ -104,6 +108,15 @@ public class CustomModel : MonoBehaviour
     /// <summary>Re-creates the model if it changed, otherwise just re-applies the size/turn/height sliders.</summary>
     public void Refresh()
     {
+#if UNITY_EDITOR
+        // "Animations From" changed: look for animations again (the model itself stays)
+        if (!Application.isPlaying && model != null && model == builtFrom && animationsFrom != clipsFoundFrom)
+        {
+            ClearClips();
+            AutoFindClips();
+            MarkDirty();
+        }
+#endif
         if (model != builtFrom || (model != null && modelInstance == null) || (model == null && modelInstance != null))
         {
 #if UNITY_EDITOR
@@ -152,12 +165,15 @@ public class CustomModel : MonoBehaviour
         }
 
         Transform parent = GetVisualParent();
-        GetTargetArea(parent, out Vector3 targetBottomCentre, out float targetHeight);
+        GetTargetArea(parent, out Vector3 targetBottomCentre, out float targetHeight, out bool isCharacter);
 
         instance.transform.SetParent(parent, false);
         instance.layer = gameObject.layer;
 
-        fitScale = targetHeight / Mathf.Max(modelBounds.size.y, 0.001f);
+        // Characters stand up, so match their height. Creatures and objects (a long snake, a wide shark)
+        // match their biggest side, so they fit the space of the shape they replace.
+        float modelSize = isCharacter ? modelBounds.size.y : Mathf.Max(modelBounds.size.x, modelBounds.size.y, modelBounds.size.z);
+        fitScale = targetHeight / Mathf.Max(modelSize, 0.001f);
         modelAnchor = new Vector3(modelBounds.center.x, modelBounds.min.y, modelBounds.center.z);
         targetAnchor = targetBottomCentre;
         modelInstance = instance.transform;
@@ -234,12 +250,14 @@ public class CustomModel : MonoBehaviour
     }
 
     /// <summary>The space the model should fill, measured from the original shape.</summary>
-    private void GetTargetArea(Transform parent, out Vector3 bottomCentre, out float height)
+    private void GetTargetArea(Transform parent, out Vector3 bottomCentre, out float height, out bool isCharacter)
     {
+        isCharacter = false;
 #if HAS_KINEMATIC_CC
         CapsuleCollider capsule = GetComponent<KinematicCharacterMotor>() != null ? GetComponent<CapsuleCollider>() : null;
         if (capsule != null)
         {
+            isCharacter = true;
             height = capsule.height;
             Vector3 bottomWorld = transform.TransformPoint(new Vector3(0f, capsule.center.y - height * 0.5f, 0f));
             bottomCentre = parent.InverseTransformPoint(bottomWorld);
@@ -250,7 +268,7 @@ public class CustomModel : MonoBehaviour
         if (filter != null && filter.sharedMesh != null)
         {
             Bounds b = filter.sharedMesh.bounds;
-            height = b.size.y;
+            height = Mathf.Max(b.size.x, b.size.y, b.size.z);
             bottomCentre = new Vector3(b.center.x, b.min.y, b.center.z);
             return;
         }
@@ -258,7 +276,7 @@ public class CustomModel : MonoBehaviour
         Bounds world = MeasureRenderers(transform, modelInstance, out bool found);
         if (found)
         {
-            height = world.size.y / Mathf.Max(parent.lossyScale.y, 0.001f);
+            height = Mathf.Max(world.size.x, world.size.y, world.size.z) / Mathf.Max(parent.lossyScale.y, 0.001f);
             bottomCentre = parent.InverseTransformPoint(new Vector3(world.center.x, world.min.y, world.center.z));
             return;
         }
@@ -530,11 +548,16 @@ public class CustomModel : MonoBehaviour
     public void AutoFindClips()
     {
         if (model == null) return;
-        string modelPath = AssetDatabase.GetAssetPath(model);
+        clipsFoundFrom = animationsFrom;
+
+        // Animations come from this model, or from the "Animations From" model if one is set
+        GameObject source = animationsFrom != null ? animationsFrom : model;
+        string modelPath = AssetDatabase.GetAssetPath(source);
         if (string.IsNullOrEmpty(modelPath)) return;
 
         string folder = System.IO.Path.GetDirectoryName(modelPath).Replace('\\', '/');
-        Avatar modelAvatar = AssetDatabase.LoadAllAssetsAtPath(modelPath).OfType<Avatar>().FirstOrDefault();
+        // The model that PLAYS the animations decides humanoid vs not
+        Avatar modelAvatar = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(model)).OfType<Avatar>().FirstOrDefault();
         bool humanoid = modelAvatar != null && modelAvatar.isHuman;
 
         List<AnimationClip> clips = new List<AnimationClip>();
@@ -553,11 +576,11 @@ public class CustomModel : MonoBehaviour
         // A humanoid character can only use humanoid animations (others would break its pose)
         clips.RemoveAll(c => c.humanMotion != humanoid);
 
-        if (idle == null) idle = BestClip(clips, model.name, "idle", "stand", "breath");
-        if (walk == null) walk = BestClip(clips, model.name, "walk");
-        if (run == null) run = BestClip(clips, model.name, "run", "sprint", "jog", "gallop");
-        if (jump == null) jump = BestClip(clips, model.name, "jump");
-        if (fall == null) fall = BestClip(clips, model.name, "fall", "inair", "in_air", "air");
+        if (idle == null) idle = BestClip(clips, source.name, "idle", "stand", "breath");
+        if (walk == null) walk = BestClip(clips, source.name, "walk", "swim", "winding", "slither", "crawl", "trot");
+        if (run == null) run = BestClip(clips, source.name, "run", "sprint", "jog", "gallop");
+        if (jump == null) jump = BestClip(clips, source.name, "jump", "flap", "takeoff");
+        if (fall == null) fall = BestClip(clips, source.name, "fall", "inair", "in_air", "air", "glide");
 
         // A model with just one animation (e.g. a flapping bird) plays it all the time
         if (idle == null && walk == null && run == null && clips.Count > 0) idle = clips[0];
@@ -571,35 +594,61 @@ public class CustomModel : MonoBehaviour
         }
     }
 
+    private static readonly string[] ActionWords = { "idle", "walk", "run", "jog", "jump", "fall", "air", "crawl", "swim", "glide", "flap" };
+    private static readonly string[] AvoidWords = { "back", "left", "right", "strafe", "turn", "start", "stop", "end", "land", "attack", "death", "die", "hit" };
+
+    /// <summary>
+    /// Picks the best clip for one slot. Keywords are tried IN ORDER (e.g. walk before crawl),
+    /// matching whole words in the clip name ("Jump_air" = jump + air, "HumanoidIdle" = humanoid + idle,
+    /// "Walking" counts as walk). Among matches: prefer clips named after the model, then simple names.
+    /// </summary>
     private static AnimationClip BestClip(List<AnimationClip> clips, string modelName, params string[] keywords)
     {
-        AnimationClip best = null;
-        int bestScore = 0;
-        string[] avoid = { "back", "left", "right", "strafe", "turn", "start", "stop", "end", "land", "attack", "death", "die", "hit" };
+        List<string> modelWords = Words(modelName).Where(w => w.Length >= 3 && w != "model").ToList();
 
-        foreach (AnimationClip clip in clips)
+        foreach (string keyword in keywords)
         {
-            string name = (clip.name + " " + System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(clip))).ToLowerInvariant();
-            foreach (string keyword in keywords)
+            AnimationClip best = null;
+            int bestScore = int.MinValue;
+
+            foreach (AnimationClip clip in clips)
             {
-                if (!name.Contains(keyword)) continue;
-                int score = clip.name.ToLowerInvariant() == keyword ? 100 : 50;
-                // Prefer clips named after the model (e.g. "Zombie_Walk" for a zombie), then shorter, simpler names
-                foreach (string word in modelName.ToLowerInvariant().Split(new[] { '-', '_', ' ', '.' }, System.StringSplitOptions.RemoveEmptyEntries))
+                List<string> words = Words(clip.name);
+                if (!words.Any(w => w.StartsWith(keyword))) continue;
+
+                int score = words.Count == 1 ? 30 : 0;                                   // "Walk" beats "Walk_Carry"
+                if (words.Any(w => modelWords.Contains(w))) score += 60;                 // "Zombie_Walk" for a zombie
+                foreach (string w in words)
                 {
-                    if (word.Length >= 3 && word != "model" && clip.name.ToLowerInvariant().Contains(word)) score += 60;
+                    if (w.StartsWith(keyword)) continue;
+                    if (ActionWords.Any(a => w.StartsWith(a)) && !keywords.Any(k => w.StartsWith(k))) score -= 25; // "IdleJumpUp" isn't a good idle
+                    if (AvoidWords.Any(a => w.StartsWith(a))) score -= 30;                // "Walk_Backwards", "Jump_Land"
+                    if (w.Length > 2 && !modelWords.Contains(w)) score -= 8;              // extra words like "Crouch_Idle"
                 }
-                score -= Mathf.Max(0, clip.name.Length - keyword.Length) / 3;
-                foreach (string bad in avoid) if (name.Contains(bad)) score -= 30;
-                // Other action words in the name (e.g. "IdleJumpUp" for idle) make it a worse match
-                foreach (string other in new[] { "idle", "walk", "run", "jump", "fall", "air" })
-                {
-                    if (other != keyword && System.Array.IndexOf(keywords, other) < 0 && name.Contains(other)) score -= 20;
-                }
+                score -= words.Count * 2;
+
                 if (score > bestScore) { bestScore = score; best = clip; }
             }
+
+            if (best != null) return best;
         }
-        return best;
+        return null;
+    }
+
+    /// <summary>Splits "Zombie_Walk", "HumanoidIdleJumpUp" or "Fly-Glide 2" into lower-case words.</summary>
+    private static List<string> Words(string name)
+    {
+        List<string> words = new List<string>();
+        System.Text.StringBuilder current = new System.Text.StringBuilder();
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            bool newWord = !char.IsLetterOrDigit(c) || (char.IsUpper(c) && i > 0 && char.IsLower(name[i - 1]));
+            if (newWord && current.Length > 0) { words.Add(current.ToString().ToLowerInvariant()); current.Clear(); }
+            if (char.IsLetterOrDigit(c)) current.Append(c);
+        }
+        if (current.Length > 0) words.Add(current.ToString().ToLowerInvariant());
+        return words;
     }
 #endif
 }

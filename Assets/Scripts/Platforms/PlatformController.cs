@@ -25,6 +25,9 @@ public class PlatformController : MonoBehaviour
     [Tooltip("Assign an optional custom material (leave empty to keep default prefab material).")]
     public Material customMaterial;
 
+    [Tooltip("3D model for NEW platforms (e.g. a floating rock from Assets/MyModels). Leave empty to use the default from Game Settings, or plain cylinders.")]
+    public GameObject customModel;
+
     private bool isConvexCollider = true;
 
     private HashSet<int> knownChildIDs = new HashSet<int>();
@@ -156,7 +159,36 @@ public class PlatformController : MonoBehaviour
         // Apply custom Mesh & auto-generate MeshCollider
         ApplyCustomMeshAndCollider(movingChild);
 
+        // Apply a 3D model: the one chosen here, otherwise the default from Game Settings
+        // (unless a custom mesh was chosen - then keep that)
+        GameObject platformModel = customModel != null ? customModel : (customMesh == null ? GameSettings.Load().defaultPlatformModel : null);
+        ApplyPlatformModel(platformParent, platformModel);
+
         knownChildIDs.Add(platformParent.GetInstanceID());
+    }
+
+    /// <summary>Gives one platform a 3D model (or removes it when model is null).</summary>
+    public static void ApplyPlatformModel(GameObject platform, GameObject model)
+    {
+        if (platform == null) return;
+        PlatformModel pm = platform.GetComponent<PlatformModel>();
+        if (model == null && pm == null) return;
+        if (pm == null) pm = platform.AddComponent<PlatformModel>();
+        pm.model = model;
+        pm.Refresh();
+    }
+
+    /// <summary>Puts the Custom Model on EVERY platform in this level.</summary>
+    public void ApplyModelToAllPlatforms()
+    {
+        foreach (PlatformLogic platform in FindObjectsByType<PlatformLogic>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (platform.gameObject.scene != gameObject.scene) continue;
+#if UNITY_EDITOR
+            Undo.RegisterFullObjectHierarchyUndo(platform.gameObject, "Change All Platform Models");
+#endif
+            ApplyPlatformModel(platform.gameObject, customModel);
+        }
     }
 
     private void ApplyCustomMeshAndCollider(GameObject movingPlatformObj)

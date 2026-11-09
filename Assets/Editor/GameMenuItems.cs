@@ -40,11 +40,28 @@ public static class GameMenuItems
         settings = ScriptableObject.CreateInstance<GameSettings>();
         settings.libraryEntries = GameSettings.DefaultLibrary();
         settings.titleFont = FindFont("SueEllenFrancisco");
+        ApplyDefaultModels(settings);
 
         AssetDatabase.CreateAsset(settings, SettingsPath);
         AssetDatabase.SaveAssets();
         Debug.Log("✅ Created " + SettingsPath + ". Open it from Game > Settings and Library.");
         return settings;
+    }
+
+    /// <summary>Fills any empty Default Model slots with the class models, if they are in Assets/MyModels.</summary>
+    public static bool ApplyDefaultModels(GameSettings settings)
+    {
+        bool changed = false;
+        GameObject Find(string fileName)
+        {
+            string guid = AssetDatabase.FindAssets(fileName, new[] { MyModelsImporter.ModelsFolder }).FirstOrDefault();
+            return guid == null ? null : AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+        }
+        if (settings.defaultPlayerModel == null) { settings.defaultPlayerModel = Find("Oldman-model"); changed |= settings.defaultPlayerModel != null; }
+        if (settings.defaultWanderEnemy == null) { settings.defaultWanderEnemy = Find("Spider-model"); changed |= settings.defaultWanderEnemy != null; }
+        if (settings.defaultPatrolEnemy == null) { settings.defaultPatrolEnemy = Find("Zombie-model"); changed |= settings.defaultPatrolEnemy != null; }
+        if (settings.defaultStaticEnemy == null) { settings.defaultStaticEnemy = Find("Snake-model"); changed |= settings.defaultStaticEnemy != null; }
+        return changed;
     }
 
     private static TMP_FontAsset FindFont(string search)

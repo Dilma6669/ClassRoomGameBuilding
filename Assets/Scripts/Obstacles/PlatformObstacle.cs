@@ -45,10 +45,24 @@ public class PlatformObstacle : ObstacleBase
         FollowPlatform follow = GetComponent<FollowPlatform>();
         if (follow == null || follow.targetPlatform == null) return;
 
-        Renderer platformRenderer = follow.targetPlatform.GetComponentInChildren<Renderer>();
-        if (platformRenderer == null) return;
+        // Highest point of what you can SEE (a platform model, or the plain cylinder)
+        float visibleTop = float.NegativeInfinity;
+        foreach (Renderer r in follow.targetPlatform.GetComponentsInChildren<Renderer>())
+        {
+            if (r.enabled) visibleTop = Mathf.Max(visibleTop, r.bounds.max.y);
+        }
+        if (float.IsInfinity(visibleTop)) return;
 
-        float topAboveCentre = platformRenderer.bounds.max.y - follow.targetPlatform.position.y;
+        // The platform's surface directly under this obstacle (e.g. on top of a hill on a rock platform)
+        float top = float.NegativeInfinity;
+        Vector3 rayStart = new Vector3(transform.position.x, visibleTop + 0.5f, transform.position.z);
+        foreach (RaycastHit hit in Physics.RaycastAll(rayStart, Vector3.down, 1000f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (hit.transform.IsChildOf(follow.targetPlatform)) top = Mathf.Max(top, hit.point.y);
+        }
+        if (float.IsInfinity(top)) top = visibleTop;
+
+        float topAboveCentre = top - follow.targetPlatform.position.y;
         follow.offsetY = topAboveCentre + GroundLift;
     }
 

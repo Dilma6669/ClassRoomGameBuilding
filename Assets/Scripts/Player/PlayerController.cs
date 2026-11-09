@@ -103,9 +103,22 @@ public class PlayerController : MonoBehaviour
         }
 
         // 7. Add a model slot so students can swap the player's look (see PlayerController's 'Player Model')
-        if (spawnedPlayerMesh.GetComponent<CustomModel>() == null)
+        CustomModel playerModel = spawnedPlayerMesh.GetComponent<CustomModel>();
+        if (playerModel == null)
         {
-            spawnedPlayerMesh.AddComponent<CustomModel>();
+            playerModel = spawnedPlayerMesh.AddComponent<CustomModel>();
+        }
+
+        // New players get the default character from Game Settings (swap it any time)
+        if (playerModel.model == null)
+        {
+            GameObject defaultModel = GameSettings.Load().defaultPlayerModel;
+            if (defaultModel != null)
+            {
+                playerModel.model = defaultModel;
+                playerModel.Refresh();
+                Debug.Log($"🧓 Gave the player the default model '{defaultModel.name}'. Change it with 'Player Model' on PlayerController.");
+            }
         }
 
 #if HAS_KINEMATIC_CC

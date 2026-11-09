@@ -37,6 +37,30 @@ public class GameSettings : ScriptableObject
     [Tooltip("If the player somehow falls this far below the lowest part of the level, they die.")]
     [Range(1f, 200f)] public float fallKillDepth = 30f;
 
+    [Header("Default Models (used when you click Create Character or create enemies)")]
+    [Tooltip("The model every new player gets. Swap it on PlayerController > Player Model.")]
+    public GameObject defaultPlayerModel;
+    [Tooltip("Model for new platforms (e.g. a floating rock). Leave empty for plain cylinders.")]
+    public GameObject defaultPlatformModel;
+    [Tooltip("Model for new enemies (Damage) that WANDER around.")]
+    public GameObject defaultWanderEnemy;
+    [Tooltip("Model for new enemies (Damage) that PATROL back and forth.")]
+    public GameObject defaultPatrolEnemy;
+    [Tooltip("Model for new enemies (Damage) that stay STILL.")]
+    public GameObject defaultStaticEnemy;
+
+    /// <summary>The default model for a new obstacle, or null to keep its plain shape (e.g. pickups).</summary>
+    public GameObject DefaultObstacleModel(ObstacleBase.PayloadType payload, ObstacleSpawnType movement)
+    {
+        if (payload != ObstacleBase.PayloadType.Damage) return null; // pickups and buffs keep their shapes
+        switch (movement)
+        {
+            case ObstacleSpawnType.Wander: return defaultWanderEnemy;
+            case ObstacleSpawnType.Patrol: return defaultPatrolEnemy;
+            default: return defaultStaticEnemy;
+        }
+    }
+
     [Header("Fonts (optional - leave empty to use the default font)")]
     public TMP_FontAsset titleFont;
     public TMP_FontAsset bodyFont;

@@ -14,10 +14,22 @@ public class PlatformControllerEditor : Editor
 
         EditorGUILayout.PropertyField(customMeshProp);
         EditorGUILayout.PropertyField(customMaterialProp);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("customModel"), new GUIContent("🪨 Platform Model (3D model)"));
 
         serializedObject.ApplyModifiedProperties();
 
         PlatformController controller = (PlatformController)target;
+
+        if (controller.customModel != null)
+        {
+            EditorGUILayout.HelpBox("New platforms will use '" + controller.customModel.name + "'.", MessageType.None);
+        }
+        if (GUILayout.Button(controller.customModel != null
+                ? "🔁 Use '" + controller.customModel.name + "' on ALL platforms in this level"
+                : "🔁 Put ALL platforms back to plain cylinders"))
+        {
+            controller.ApplyModelToAllPlatforms();
+        }
 
         EditorGUILayout.Space(15);
 

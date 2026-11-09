@@ -36,6 +36,8 @@ public class CustomModelEditor : Editor
         if (showAnimations)
         {
             EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("animationsFrom"), new GUIContent("Animations From (optional)"));
+            EditorGUILayout.Space(2);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("idle"), new GUIContent("Idle (standing)"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("walk"), new GUIContent("Walk"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("run"), new GUIContent("Run (sprinting)"));

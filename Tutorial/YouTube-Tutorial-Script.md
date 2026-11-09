@@ -91,6 +91,7 @@ The times below are estimates. Update them to match your finished video.
 - **Do:** Select **PlatformController**, then click **🏗️ Create New Platform**.
 - **Do:** Change size, rotation and the starting offset. Turn on movement and show a platform moving back and forth.
 - **Do:** **📋 Duplicate Platform Setup** to make a copy quickly. **❌ Delete Platform Setup** removes one.
+- **Do:** Drag a model (e.g. a floating rock) into **🪨 Platform Model** on the platform. The cylinder is replaced, and the player stands on the rock's real shape, hills and all. On **PlatformController**, the **🔁 Use ... on ALL platforms** button swaps every platform at once.
 - **Do:** Press Play and ride a moving platform.
 - **Say:** "Make sure the gaps are jumpable! Test every jump yourself."
 
@@ -121,6 +122,7 @@ The times below are estimates. Update them to match your finished video.
   > - **quaternius.com**: free animated animals and monsters (any rig works)
   > - **kenney.nl**: free characters and objects
   > - **mixamo.com**: free animated people. Put these in **MyModels/Humanoid**, and tick **"In Place"** when downloading walking and running animations.
+- **Do:** Show that new players are the **Old Man** and new enemies are a **Spider** (wander), **Zombie** (patrol) or **Snake** (still) automatically. The defaults are in **Game > Settings and Library > Default Models**.
 - **Do (player):** Select **PlayerController**, then drag the model into **Player Model**. Press Play: it walks, runs, jumps and falls by itself.
 - **Do (one obstacle):** Select an obstacle, then drag the model into **Model** on its **Custom Model** component.
 - **Do (lots of obstacles):** On a Platform or Terrain populator, drag the model into **Custom Model (3D model)** *before* clicking **🎲 Scatter**.
@@ -129,6 +131,7 @@ The times below are estimates. Update them to match your finished video.
   - **Turn**: if it faces backwards
   - **Raise / Lower**: if it floats or sinks
 - **Do:** Open **🏃 Animations** and show that **Idle / Walk / Run / Jump / Fall** filled in by themselves. Explain that animations are matched by name. If one is missing, click **🔍 Find Animations Again** or drag a clip into the box.
+- **Do (re-skinned models):** if a new model uses the same skeleton as an old one, drag the old one into **Animations From** to reuse its animations.
 - **Do:** Click **📸 Add to Library (with picture)**. Show the new Library entry with its picture.
 - **Say:** "The model is just the costume. The obstacle still hurts, heals, or bounces you exactly the same."
 

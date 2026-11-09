@@ -76,6 +76,38 @@ public class PlatformLogicEditor : Editor
         }
 
         serializedObject.ApplyModifiedProperties();
+
+        if (targets.Length == 1) DrawPlatformModelSection(platformTarget);
+    }
+
+    /// <summary>A "Platform Model" box so students can swap this platform's look right here.</summary>
+    private static void DrawPlatformModelSection(PlatformLogic platform)
+    {
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("🪨 Platform Model", EditorStyles.boldLabel);
+
+        PlatformModel pm = platform.GetComponent<PlatformModel>();
+        GameObject current = pm != null ? pm.model : null;
+        GameObject chosen = (GameObject)EditorGUILayout.ObjectField("Platform Model", current, typeof(GameObject), false);
+
+        if (chosen != current)
+        {
+            if (pm == null) pm = Undo.AddComponent<PlatformModel>(platform.gameObject);
+            Undo.RecordObject(pm, "Change Platform Model");
+            pm.model = chosen;
+            pm.Refresh();
+            EditorUtility.SetDirty(pm);
+        }
+
+        if (pm == null || pm.model == null)
+        {
+            EditorGUILayout.HelpBox("Drag a model from Assets/MyModels here to replace the plain cylinder (e.g. a floating rock). " +
+                                    "Players and enemies will stand on its real shape.", MessageType.None);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("Size, Turn and Raise/Lower are in the Platform Model component below.", MessageType.None);
+        }
     }
 
     private void DrawToggleSection(PlatformLogic platformTarget)

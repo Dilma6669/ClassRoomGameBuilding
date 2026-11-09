@@ -11,6 +11,16 @@ HOW TO ADD YOUR OWN MODELS
                    on its Custom Model component.
    - ALL NEW OBSTACLES: drag the model into 'Custom Model' on a Platform or
                    Terrain populator before clicking Create / Scatter.
+   - A PLATFORM:   select the platform and drag the model into 'Platform Model'.
+                   Players and enemies stand on the model's real shape.
+   - ALL PLATFORMS: on PlatformController, drag the model into 'Platform Model'
+                   and click 'Use ... on ALL platforms'.
+
+DEFAULTS
+- New players get the Old Man, new enemies get Spider / Zombie / Snake.
+  Change these in Game > Settings and Library > Default Models.
+- Re-skinned model with the SAME skeleton? Put the original model in
+  'Animations From' to reuse its animations.
 
 3. Use the Size / Turn / Raise-Lower sliders if it looks wrong.
 

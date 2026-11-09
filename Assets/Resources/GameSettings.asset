@@ -23,6 +23,10 @@ MonoBehaviour:
   borderPadding: 1
   skyLimitHeight: 60
   fallKillDepth: 30
+  defaultPlayerModel: {fileID: -7981514964708312862, guid: 8e7f98ee05003cf409ec4e8ce68dc74a, type: 3}
+  defaultWanderEnemy: {fileID: -7981514964708312862, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
+  defaultPatrolEnemy: {fileID: -7981514964708312862, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
+  defaultStaticEnemy: {fileID: -7981514964708312862, guid: 652b943745eff5041a0d1003a0e1f395, type: 3}
   titleFont: {fileID: 11400000, guid: e425309a2627f410e922f0cd8ed491fd, type: 2}
   bodyFont: {fileID: 0}
   libraryEntries:

@@ -12,7 +12,7 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
   - `Level02` is the example level (has known problems, see below).
 
 ## Nothing is committed yet
-- All work below is **uncommitted** on `main`. The teacher hasn't asked for a commit.
+- Work is committed on branch **`feature/menus-models-checkpoints`** (not merged to main, not pushed).
 - These were **already modified before this session** (the user's own changes, don't revert):
   - `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset`
   - `Assets/Prefabs/Obstacles/ObstacleLogic.prefab`
@@ -32,9 +32,14 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
 | Obstacles sit on the ground | `ObstacleBase.GroundLift`, `TerrainObstacle`, `PlatformObstacle.SitOnPlatformInEditor()` | Was 50% buried (terrain) or wrong for scale != 1 (platforms). New `sitOnGround` toggle (default on). Snap raycast now sorted by distance. |
 | Rename `CharacterController` to `PlayerController` | `Scripts/Player/PlayerController.cs`, `Editor/PlayerControllerEditor.cs` | `.meta` GUIDs kept, scene objects renamed (one line each). Create Character now **upgrades** an existing character instead of duplicating it. Inspector has a **Player Model** slot. |
 | Removed the dead old obstacle system | deleted `ObstacleLogic.cs` + `ObstacleLogicEditor.cs` | Unused by any scene, prefab or script (verified by GUID search). The prefab is still *named* ObstacleLogic. |
+| Default models | `GameSettings` "Default Models", `PlayerController.CreateCharacterMesh`, populators `ApplyCustomModel` | Player = **Old Man**. Damage enemies: Wander = Spider, Patrol = Zombie, Static = Snake. Pickups keep their shapes. Only applied when an object is created. |
+| Platform models | `Scripts/Platforms/PlatformModel.cs`, `PlatformLogicEditor` (🪨 slot), `PlatformController.customModel` + 🔁 all-platforms button, `GameSettings.defaultPlatformModel` | Replaces the cylinder and **builds MeshColliders from the model** (players stand on hills). The holder cancels the platform's non-uniform scale, then fits Width/Depth (keep proportions) with the top aligned to the old cylinder top. Follows sliders and moving/rotating/scaling platforms. Tested: player stands on it, pickup sits on it. |
+| "Animations From" | `CustomModel.animationsFrom` | Re-skinned models with the same skeleton reuse another model's animations. |
 | Tutorial script with YouTube chapters | `Tutorial/YouTube-Tutorial-Script.md` | Includes the models, checkpoints and Story chapters. |
 
 ### Model system: how it works
+- Animation matching is **word-based and tiered** (e.g. walk, then swim, then winding, then crawl). Verified picks for all 10 class models (Old Man: Idle_A/Walk/Run_Anime/Jump_2/Jump_air, Shark: Swim_Horizontal, Snake: Side_winding, Seagull and Dragon: Flap/Glide).
+- Fitting: **characters by height** (2 m capsule), **creatures, obstacles and platforms by their biggest side** (fixes long or flat models like the snake).
 - Students drop `.fbx` / `.glb` / `.obj` into **`Assets/MyModels`** and drag the file into:
   - **Player Model** (on PlayerController), or
   - **Model** (on an obstacle's Custom Model component), or
@@ -78,6 +83,7 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
 - Tests were done on **unsaved** Level02 changes, then discarded by re-opening the scene via `EditorSceneManager.OpenScene` (no save prompt).
 
 ## Open requests (not started; the teacher asked about these)
+- The teacher plans to keep these rigs and animations and re-skin models later. No rock or platform models exist yet; `defaultPlatformModel` is empty, so new platforms are still cylinders.
 1. **"One control panel per aspect, hide everything else."** The teacher wants kids to see only what they need: e.g. a Player panel, a Level panel, an Enemies panel, a Story/Library panel, a Build panel. Hide or lock the rest of the hierarchy/components. Needs a design proposal first.
 2. **Make the platforms easier / add options.** Ideas to propose: platform presets (stepping stones, moving bridge, elevator, spinning, falling or crumbling, bouncy), click-to-place in the Scene view, a "test this jump" helper, colour picker.
 3. **AI-made tutorial video.** The teacher asked whether Claude could drive Unity while they screen-record. Proposed answer: yes, via a scripted "Tutorial Director" that performs each chapter's steps in the Editor with on-screen captions. Record with OBS, then add voice-over (their own, or AI text-to-speech).
