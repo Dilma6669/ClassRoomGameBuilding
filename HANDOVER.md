@@ -251,7 +251,7 @@ The teacher pointed out that the old scatter options weren't really in the Game 
 
 ## Open requests
 1. **Platforms, more options.** Presets, scatter, crumbling and bouncy are done. Still ideas: a "test this jump" helper, a per-platform colour picker.
-2. **AI-made tutorial video.** A scripted "Tutorial Director" performs each chapter's steps in the Editor with captions; the teacher records with OBS and adds voice-over.
+2. ~~AI-made tutorial video~~: no longer needed (2026-11-10); the playable Tutorial Island replaces it.
 3. Optional: test a real **Mixamo** character + animations in `MyModels/Humanoid` (the teacher offered to supply one).
 4. Maybe: "✏️ Rename level" (would have to update triggers' `sceneToLoad` names).
 
@@ -266,5 +266,5 @@ The teacher pointed out that the old scatter options weren't really in the Game 
 - [ ] Teacher: try a real video on a sign and check it in the built game.
 - [ ] Teacher to try the Game Builder with a student and report what's confusing.
 - [ ] Teacher: try the quick platforms and both scatter tools; report anything confusing or any option they'd like.
-- [ ] Open requests above (AI tutorial video, Mixamo test, more platform types).
+- [ ] Open requests above (Mixamo test, more platform types).
 - Git: commit only when the teacher says so (they approved committing on 2026-11-10). `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset` and `Assets/Tutorial/TutorialTerrain.asset` change by themselves; leave them out of commits.
