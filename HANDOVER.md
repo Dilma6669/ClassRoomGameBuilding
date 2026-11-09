@@ -91,6 +91,8 @@ _Last updated: 2026-11-09. Written so a fresh Claude session (or a person) can p
   - Read the player log: %USERPROFILE%\AppData\LocalLow\DefaultCompany\SchoolTeachingProject2_BRP\Player.log.
   - The test build is in Build/Tutorial (scenes: Tutorial, Level01, Level02).
 - **PRIORITY: make the Editor student-friendly (the teacher asked for this explicitly).** One control panel per part of the game (e.g. Player, Level/Terrain, Platforms, Creatures, Scenery, Story/Library, Build), showing only what kids need, with everything else hidden or locked. That includes Hierarchy clutter ('⚠️ DO NOT TOUCH' objects, auto-created holders, canvases) and advanced components. Propose a design (e.g. one "Game Builder" window with tabs plus HideFlags or a hierarchy filter) before building it.
+  - **After that change, update the tutorial pop-up texts** in `Editor/TutorialLevelBuilder.cs` so they point at the new panels instead of "select PlatformController..." and so on. Then run **Game > Tutorial > Build Tutorial Level** again.
+- The bounce ball ("jumping bubble") in the tutorial has been **confirmed working by the teacher in the built game**. No changes needed.
 - **BUG (reported by teacher, not investigated): the BUILT Tutorial game freezes ("jams up") when the Finish sign loads the next level.** It worked in the Editor (Finish loaded Level01, state Playing, no errors). Ideas to check:
   - Level01 is the empty template (no player character), so it may just look frozen. Consider pointing Finish at a real level or back to the menu.
   - The scene load happens inside OnTriggerEnter; try deferring it a frame.
