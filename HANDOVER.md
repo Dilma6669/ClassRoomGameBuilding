@@ -1,8 +1,35 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-10 (session 7: Game Builder made easier). Written so a fresh Claude session (or a person) can pick up where this one stopped._
+_Last updated: 2026-11-10, end of session 7 (Game Builder made easier, creatures, placing, folders). NEXT JOB is at the top of START HERE. Written so a fresh Claude session (or a person) can pick up where this one stopped._
 
 ## ▶ START HERE (state at the end of 2026-11-10)
+### 🔜 NEXT JOB: Tutorial 2 "Adventure Park" + refresh Tutorial 1 (teacher asked 2026-11-10; nothing built yet)
+Teacher's words: "update the tutorial if you feel it needs to. Perhaps a second tutorial level with more information showcasing all the features? A bunch of moving platforms around the place with scattered things, showing all the powerups and changes to objects you can make." Then: **"Have it as the second level so when you get to the end of the first tutorial level it takes you to the second one."**
+
+**⚠ Ask first before rebuilding Tutorial 1.** The teacher saved their own experiments INTO `Assets/Scenes/Tutorial.unity` (a "Custom Enemies" folder with a bounce ball called "Wanderer 2"; still uncommitted, together with `GameSettings.asset` and `Library Pictures/Spider-model.png`, which are theirs: leave them out of commits). A rebuild wipes the scene. Offer to rebuild, or to copy their work to a new level first (Levels & Build > Copy this level), and remind them to build in their own level.
+
+**Plan (agreed direction; details are Claude's call):**
+1. New `Editor/ShowcaseLevelBuilder.cs`, scene `Assets/Scenes/Tutorial2.unity` (shown as "Adventure Park"), menus `Game/Tutorial/Build Tutorial 2 (Adventure Park)` and `Open Tutorial 2`. Build it like `TutorialLevelBuilder.Build()`: copy `LevelMaker.TemplatePath`, own terrain asset (`Assets/Tutorial/Tutorial2Terrain.asset`), CreateCharacterMesh, signs, save, add to Build Settings right AFTER Tutorial.
+   - Reuse TutorialLevelBuilder's helpers by making them `internal static`: `Sign`, `GetSignMaterial`, `MakePlatform`, `TopOf`, `Nudge`, `FlattenArea`, `RendererBounds`, `AddPart`. Generalise `CreateTutorialTerrain(dataPath, flatRect)` and `AddToBuild(scenePath)`.
+   - Prefer the students' own tools so the level shows what the buttons make: `ScatterTools.QuickPlatform` / `SteppingStones` with `ScatterTools.PlaceAt` set to the spot (and `ScatterTools.NewPlatformHeight`; restore it after), `ScatterTools.SetMovement` / `SetPlatformType`, `ScatterTools.ScatterPlatforms(controller, PlatformScatter)` and `ScatterCreatures(CreatureScatter, group)` with `place.area = ScatterArea.AroundSceneView` (it uses `LookPoint()`, which honours `PlaceAt`) and `areaSize` ~40, `GameBuilderWindow`-style Spawn via the TerrainPopulator / PlatformPopulator `CreateSingleObstacle` (see `AddCreatures` / `AddStompCreature` in TutorialLevelBuilder), `ScatterTools.AddGlow`, `AmbientSparkles`, `PlatformLogic.landEffect / effectColour`, models from `Assets/MyModels` (Dinosaur, Dragon, Fox, Horse, Oldman, Seagull, Shark, Snake, Spider, Zombie `-model.glb`; nature FBX in `MyModels/NatureModelsPackTest/FBX`).
+   - Put each station's objects in a **📁 folder** (`ListFolder` component, hidden) named after the station, so the Game Builder lists show off folders too. Give things readable names.
+   - Terrain: pos (-500,-50,-500), size 1000x600x1000. Tutorial 1's course runs +Z from (20,0,-40) on a flattened meadow (70 x 295 m). For Tutorial 2 flatten a WIDER park (about 100 x 220 m) so there's room for exhibits on both sides of a central path, and scatter scenery round the edges (keep the path clear; see `BuildScenery` / `ClearCourse`).
+2. Stations (signs say which Game Builder button made each thing):
+   1. Welcome to Adventure Park (open this level in Unity and click things in the Game Builder: they're in folders by station).
+   2. Power-ups: Health, Stamina, Shield, Super Jump, Speed Boost in a row across the path, glowing in their own colours.
+   3. Moving platforms (one side): Moving side to side, Elevator up to a high ledge with a reward pickup, Spinning bar, Growing; the sign explains "Make it:" and Move Distance / Speed.
+   4. Stepping stones going up to a high platform with a Speed Boost.
+   5. Sky garden made with Scatter: ~12 mixed platforms (some crumbling/bouncy) with scattered creatures and pickups on them (CreatureScatter onStillPlatforms / onMovingPlatforms).
+   6. Creature zoo: different models (Fox wanderer, Horse patroller, Snake guard), a GIANT Dinosaur guard (objectScale ~3, 3 jumps) showing the hit zone (land on top), a bouncy creature.
+   7. Chaser: a zombie with Chase the player (start ~8 m, give up ~15 m, speed ~2.5 so it's escapable).
+   8. Runaway pickup: a Health pickup that Wanders; a wandering bounce ball.
+   9. Glow & landing effects: platforms with Glow, sparkles and different Land Effects; a rock-model platform.
+   10. Checkpoint somewhere in the middle.
+   11. "Make it yours" sign: click to place, 📍 Move it… panel, Name & 📁 Folder, drag in lists, Ctrl+Z.
+   12. Finish (no scene change, or back to the start: decide).
+3. **Tutorial 1 → Tutorial 2:** Tutorial 1's Finish sign (`Build()`, station 17) should load "Tutorial2" (`changeScene`, `sceneToLoad`) and say so. `TriggerLogic` skips scenes that aren't in the build, so make sure Tutorial2 is in Build Settings and in `BuildTutorialGame()`'s scene list (Tutorial first, then Tutorial2). Also refresh Tutorial 1's sign texts for the newer features (7. Platforms still says "appears where you are looking": now it's click to place + 'New platforms float this high'; mention Move it…). Needs the Tutorial 1 rebuild → ASK FIRST (see above).
+4. Test in Play mode (teleport + `GameManager.Instance.Resume()`), screenshot each station, check the Console, then offer a class build (Build Tutorial Game → zip `Build/Tutorial`). Update this file + commit.
+
 
 ### ✅ DONE (session 7): list order + drag-and-drop
 - `Editor/GameBuilderWindow.ListOrder.cs`. Rows are a custom control (`RowControl`): click selects, Ctrl/Shift-click adds to the selection, dragging past 6 px starts a `DragAndDrop` that carries only generic data (`"GameBuilderList"` = the list key, no objectReferences, so it can't drop into the Scene or Hierarchy). Drop targets (`HandleDrop`): a folder header (into that folder, at the end; it lights up), a row (just above that row, in its folder; a line shows where), and a "⬆ Drop here to take it out of its folder" strip that appears while dragging something from a folder. Dragging one of several selected rows moves them all.
