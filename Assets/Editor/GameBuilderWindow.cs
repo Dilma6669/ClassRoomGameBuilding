@@ -456,8 +456,9 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
-        Section("⚡ Quick platforms (they appear where the Scene view is looking)");
-        ButtonRow(4,
+        Section("⚡ Quick platforms");
+        DrawPlacingOptions("New platforms appear where the Scene view is looking.");
+        PlaceRow(4,
             ("🪨 Floating\nstays still", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still)),
             ("↔ Moving\nside to side", () => QuickPlatform(controller, ScatterTools.PlatformMove.SideToSide)),
             ("🛗 Elevator\nup and down", () => QuickPlatform(controller, ScatterTools.PlatformMove.UpAndDown)),
@@ -529,7 +530,7 @@ public partial class GameBuilderWindow : EditorWindow
 
     private void DrawCreaturesTab()
     {
-        Title("🕷 Creatures & Pickups", "Creatures hurt the player. Pickups help them.\nClick one and it appears in the middle of the Scene view, or on the platform you have selected.");
+        Title("🕷 Creatures & Pickups", "Creatures hurt the player. Pickups help them.\nClick a button, then click in the Scene where you want it (on the ground or on a platform).");
 
         PlatformLogic platform = SelectedOf<PlatformLogic>();
         TerrainPopulator ground = Find<TerrainPopulator>();
@@ -539,19 +540,18 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
-        EditorGUILayout.HelpBox(platform != null
+        DrawPlacingOptions(platform != null
             ? "New things will go on the platform: " + platform.name
-            : "New things will go on the ground where the Scene view is looking. Select a platform to put them on it instead.",
-            MessageType.None);
+            : "New things will go on the ground where the Scene view is looking. Select a platform to put them on it instead.");
 
         Section("🕷 Creatures (they hurt!)");
-        ButtonRow(3,
+        PlaceRow(3,
             ("🕷 Wanderer\nwalks around", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, false)),
             ("🧟 Patroller\nwalks back & forth", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, false)),
             ("🐍 Guard\nstays still", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Static, 10, 5f, false, false)));
 
         Section("🎁 Pickups (they help!)");
-        ButtonRow(3,
+        PlaceRow(3,
             ("❤️ Health\nheals you", () => Spawn(ObstacleBase.PayloadType.HealthBooster, ObstacleSpawnType.Static, 25, 5f, true, false)),
             ("⚡ Stamina\nrefills sprint", () => Spawn(ObstacleBase.PayloadType.StaminaBooster, ObstacleSpawnType.Static, 50, 5f, true, false)),
             ("🛡 Shield\ncan't be hurt", () => Spawn(ObstacleBase.PayloadType.InvincibilityBuff, ObstacleSpawnType.Static, 1, 8f, true, false)),
@@ -611,7 +611,74 @@ public partial class GameBuilderWindow : EditorWindow
     {
         PlatformLogic p = ScatterTools.QuickPlatform(controller, move, type);
         RefreshSceneLists();
-        if (p != null) SelectAndFrame(p.gameObject);
+        if (p == null) return;
+        // Placed by clicking: the student is already looking there, so don't move the camera
+        if (placeHit.HasValue) Selection.activeGameObject = p.gameObject;
+        else SelectAndFrame(p.gameObject);
+    }
+
+    /// <summary>The spot clicked in the Scene, while a click-to-place button is doing its job (else null).</summary>
+    [System.NonSerialized] private RaycastHit? placeHit;
+
+    /// <summary>The 'click in the Scene to place' tick box, and a Stop button while placing.</summary>
+    private void DrawPlacingOptions(string whenOff)
+    {
+        bool click = EditorGUILayout.ToggleLeft(new GUIContent("📍 Click in the Scene to choose where it goes",
+            "Ticked: click a button, then click the spot in the Scene view. Unticked: it appears straight away."), ScenePlacer.ClickToPlace);
+        if (click != ScenePlacer.ClickToPlace)
+        {
+            ScenePlacer.ClickToPlace = click;
+            if (!click) ScenePlacer.Cancel();
+        }
+
+        if (ScenePlacer.IsPlacing)
+        {
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+            {
+                GUILayout.Label("👉 Now click in the Scene view to place: " + ScenePlacer.What + "   (Esc to stop)", EditorStyles.boldLabel);
+                if (GUILayout.Button("Stop", GUILayout.Width(60))) ScenePlacer.Cancel();
+            }
+        }
+        else if (!click)
+        {
+            EditorGUILayout.HelpBox(whenOff, MessageType.None);
+        }
+    }
+
+    /// <summary>
+    /// Like ButtonRow, but with 'click to place' on, the button waits for a click in the Scene view
+    /// and then does its job at that spot (placeHit / ScatterTools.PlaceAt are set while it runs).
+    /// </summary>
+    private void PlaceRow(int columns, params (string label, System.Action action)[] buttons)
+    {
+        int clicked = ButtonGrid(Columns(columns), buttons.Select(b => b.label).ToList());
+        if (clicked < 0) return;
+        System.Action action = buttons[clicked].action;
+        if (!ScenePlacer.ClickToPlace)
+        {
+            action();
+            GUIUtility.ExitGUI();
+        }
+
+        // The button's first line, without its emoji: '🕷 Wanderer\nwalks around' -> 'Wanderer'
+        string name = buttons[clicked].label.Split('\n')[0];
+        int space = name.IndexOf(' ');
+        if (space > 0 && space < 4) name = name.Substring(space + 1);
+
+        ScenePlacer.Begin(name, hit =>
+        {
+            placeHit = hit;
+            ScatterTools.PlaceAt = hit.point;
+            try { action(); }
+            finally
+            {
+                placeHit = null;
+                ScatterTools.PlaceAt = null;
+            }
+            RefreshSceneLists();
+            Repaint();
+        });
+        GUIUtility.ExitGUI();
     }
 
     /// <summary>Glow and floating-sparkle settings, or buttons to add them.</summary>
@@ -688,7 +755,8 @@ public partial class GameBuilderWindow : EditorWindow
     private void Spawn(ObstacleBase.PayloadType payload, ObstacleSpawnType movement, int amount, float duration, bool usedUp, bool bouncy)
     {
         HashSet<ObstacleBase> before = new HashSet<ObstacleBase>(FindAll<ObstacleBase>());
-        PlatformLogic platform = SelectedOf<PlatformLogic>();
+        // Clicked in the Scene? Then the click decides: on the platform that was clicked, or on the ground
+        PlatformLogic platform = placeHit.HasValue ? placeHit.Value.collider.GetComponentInParent<PlatformLogic>() : SelectedOf<PlatformLogic>();
         PlatformPopulator onPlatform = platform != null ? platform.GetComponent<PlatformPopulator>() : null;
 
         if (onPlatform != null)
@@ -725,27 +793,47 @@ public partial class GameBuilderWindow : EditorWindow
         if (created == null) return;
 
         created.name = NiceName(created);
-        if (onPlatform == null) MoveToSceneViewGround(created.transform);
+        if (onPlatform == null) MoveToSceneViewGround(created.transform, placeHit?.point);
+        else if (placeHit.HasValue) MoveOnPlatform(created, placeHit.Value.point);
 
         // Pickups glow so players can spot them (click "Stop glowing" to turn it off)
         bool isPickup = payload != ObstacleBase.PayloadType.None && payload != ObstacleBase.PayloadType.Damage;
         if (isPickup) ScatterTools.AddGlow(created.gameObject, Sparkles.ColourFor(payload));
 
         RefreshSceneLists();
-        SelectAndFrame(created.gameObject);
+        if (placeHit.HasValue) Selection.activeGameObject = created.gameObject; // already looking there
+        else SelectAndFrame(created.gameObject);
     }
 
-    /// <summary>New ground creatures appear in the middle of the map; move them to where the student is looking.</summary>
-    private static void MoveToSceneViewGround(Transform obj)
+    /// <summary>Moves a creature made on a platform from the platform's middle to the clicked spot on it.</summary>
+    private static void MoveOnPlatform(ObstacleBase created, Vector3 point)
+    {
+        FollowPlatform follow = created.GetComponent<FollowPlatform>();
+        if (follow == null || follow.targetPlatform == null) return;
+        Transform platform = follow.targetPlatform;
+        Vector3 offset = Quaternion.Inverse(platform.rotation) * (point - platform.position);
+        Undo.RecordObject(follow, "Place");
+        Undo.RecordObject(created.transform, "Place");
+        follow.offsetX = offset.x;
+        follow.offsetZ = offset.z;
+        // FollowPlatform only moves it on the next editor update; move it now, so it sits on the right bit of the platform
+        created.transform.position = platform.position + platform.rotation * new Vector3(follow.offsetX, follow.offsetY, follow.offsetZ);
+        PlatformObstacle po = created as PlatformObstacle;
+        if (po != null) po.SitOnPlatformInEditor();
+        created.transform.position = platform.position + platform.rotation * new Vector3(follow.offsetX, follow.offsetY, follow.offsetZ);
+    }
+
+    /// <summary>New ground creatures appear in the middle of the map; move them to the clicked spot, or where the student is looking.</summary>
+    private static void MoveToSceneViewGround(Transform obj, Vector3? clicked = null)
     {
         SceneView view = SceneView.lastActiveSceneView;
         Terrain terrain = obj.GetComponentInParent<Terrain>();
         if (terrain == null) terrain = Find<Terrain>();
-        if (view == null || terrain == null) return;
+        if (terrain == null || (view == null && !clicked.HasValue)) return;
 
-        Vector3 target = view.pivot;
-        Transform cam = view.camera.transform;
-        if (Physics.Raycast(cam.position, cam.forward, out RaycastHit hit, 5000f)) target = hit.point;
+        Vector3 target = clicked ?? view.pivot;
+        Transform cam = view != null ? view.camera.transform : null;
+        if (!clicked.HasValue && cam != null && Physics.Raycast(cam.position, cam.forward, out RaycastHit hit, 5000f)) target = hit.point;
 
         Vector3 tPos = terrain.transform.position;
         Vector3 size = terrain.terrainData.size;

@@ -494,8 +494,6 @@ public abstract partial class ObstacleBase : MonoBehaviour
 
     protected virtual void OnDrawGizmosSelected()
     {
-        // (The old green 'trigger radius' ball isn't drawn: the hit zone below is what really touches the player)
-        DrawHitZoneGizmo();
-        DrawChaseGizmo();
+        // The hit zone and chase circles are drawn by Editor/ObstacleSceneDrawer.cs (they show even with Gizmos off)
     }
 }

@@ -34,7 +34,7 @@ public static class ScatterTools
         float myReach = Mathf.Max(width, depth) * 0.5f + (move == PlatformMove.SideToSide ? 3f : 0f);
         PlatformLogic[] existing = Object.FindObjectsByType<PlatformLogic>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         Vector3 spot = ground;
-        for (int i = 1; i < 20; i++)
+        for (int i = 1; i < 20 && !PlaceAt.HasValue; i++) // a clicked spot is used as it is
         {
             Vector3 here = spot;
             if (!existing.Any(e => e.TargetChild != null && Flat(e.TargetChild.position - here) < Reach(e) + myReach + 1.5f)) break;
@@ -582,9 +582,13 @@ public static class ScatterTools
     }
 
     /// <summary>Where the Scene view camera is looking, on the ground.</summary>
+    /// <summary>Set while placing by clicking in the Scene (ScenePlacer): LookPoint() returns this spot instead.</summary>
+    public static Vector3? PlaceAt;
+
     public static Vector3 LookPoint()
     {
         SceneView view = SceneView.lastActiveSceneView;
+        if (PlaceAt.HasValue) { Vector3 spot = PlaceAt.Value; spot.y = GroundHeight(spot); return spot; }
         if (view == null) return Vector3.zero;
         Vector3 target = view.pivot;
         Transform cam = view.camera.transform;

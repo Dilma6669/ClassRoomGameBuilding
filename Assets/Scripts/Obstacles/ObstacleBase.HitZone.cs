@@ -179,30 +179,4 @@ public abstract partial class ObstacleBase
 #endif
     }
 
-    /// <summary>Draws the hit zone in the Scene view: white = solid body, red = where it hurts / gets picked up.</summary>
-    private void DrawHitZoneGizmo()
-    {
-        Transform zone = transform.Find(HitZoneName);
-        if (zone == null) return;
-        Transform body = zone.Find("Body");
-        Transform touch = zone.Find("Touch");
-        if (body != null) DrawCylinder(body, new Color(1f, 1f, 1f, 0.9f));
-        if (touch != null) DrawCylinder(touch, payloadType == PayloadType.Damage ? new Color(1f, 0.25f, 0.2f, 0.9f) : new Color(0.3f, 1f, 0.4f, 0.9f));
-    }
-
-    private static void DrawCylinder(Transform part, Color colour)
-    {
-        Gizmos.color = colour;
-        Matrix4x4 m = part.localToWorldMatrix;
-        const int Sides = 24;
-        for (int i = 0; i < Sides; i++)
-        {
-            float a0 = i * Mathf.PI * 2f / Sides, a1 = (i + 1) * Mathf.PI * 2f / Sides;
-            Vector3 p0 = new Vector3(Mathf.Cos(a0) * CylinderWidth / 2f, 0f, Mathf.Sin(a0) * CylinderWidth / 2f);
-            Vector3 p1 = new Vector3(Mathf.Cos(a1) * CylinderWidth / 2f, 0f, Mathf.Sin(a1) * CylinderWidth / 2f);
-            Gizmos.DrawLine(m.MultiplyPoint3x4(p0 + Vector3.up * CylinderHeight / 2f), m.MultiplyPoint3x4(p1 + Vector3.up * CylinderHeight / 2f));
-            Gizmos.DrawLine(m.MultiplyPoint3x4(p0 - Vector3.up * CylinderHeight / 2f), m.MultiplyPoint3x4(p1 - Vector3.up * CylinderHeight / 2f));
-            if (i % 6 == 0) Gizmos.DrawLine(m.MultiplyPoint3x4(p0 + Vector3.up * CylinderHeight / 2f), m.MultiplyPoint3x4(p0 - Vector3.up * CylinderHeight / 2f));
-        }
-    }
 }

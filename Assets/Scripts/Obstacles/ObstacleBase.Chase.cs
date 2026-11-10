@@ -24,6 +24,9 @@ public abstract partial class ObstacleBase
 
     private Vector3 Home => homeParent != null ? homeParent.TransformPoint(homeLocal) : homeLocal;
 
+    /// <summary>Where it walks back to after giving up (its starting spot; before Play, where it is now).</summary>
+    public Vector3 ChaseHome => Application.isPlaying && homeSet ? Home : transform.position;
+
     /// <summary>The platform (or nothing) the creature's home spot moves with. Platform creatures override this.</summary>
     protected virtual Transform HomeSurface => null;
 
@@ -105,26 +108,5 @@ public abstract partial class ObstacleBase
         Rigidbody body = GetComponent<Rigidbody>();
         if (body != null && !body.isKinematic) { body.isKinematic = true; body.useGravity = false; }
         transform.position = new Vector3(next.x, y, next.z);
-    }
-
-    private void DrawChaseGizmo()
-    {
-        if (!chasePlayer || payloadType != PayloadType.Damage) return;
-        Vector3 centre = Application.isPlaying && homeSet ? Home : transform.position;
-        Gizmos.color = new Color(1f, 0.6f, 0f, 0.9f);
-        DrawCircle(transform.position, chaseStartDistance);
-        Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.6f);
-        DrawCircle(centre, chaseGiveUpDistance);
-    }
-
-    private static void DrawCircle(Vector3 centre, float radius)
-    {
-        const int Sides = 48;
-        for (int i = 0; i < Sides; i++)
-        {
-            float a0 = i * Mathf.PI * 2f / Sides, a1 = (i + 1) * Mathf.PI * 2f / Sides;
-            Gizmos.DrawLine(centre + new Vector3(Mathf.Cos(a0), 0f, Mathf.Sin(a0)) * radius,
-                            centre + new Vector3(Mathf.Cos(a1), 0f, Mathf.Sin(a1)) * radius);
-        }
     }
 }
