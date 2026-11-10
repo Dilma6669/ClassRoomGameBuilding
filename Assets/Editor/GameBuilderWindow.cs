@@ -556,7 +556,7 @@ public partial class GameBuilderWindow : EditorWindow
         }
 
         // ⚙️ Settings for the buttons below
-        if (ObstacleBaseEditor.BeginBox("⚙️ Options for new creatures", "Where new things go, how big new creatures are, and which models they get."))
+        if (ObstacleBaseEditor.BeginBox("⚙️ Default options for new creatures", "Where new things go, how big new creatures are, and which models they get."))
         {
             DrawClickToPlaceToggle();
             EditorGUILayout.Space(4);

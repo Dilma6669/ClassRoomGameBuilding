@@ -54,12 +54,12 @@ public abstract partial class ObstacleBase : MonoBehaviour
     [Tooltip("Initial rotation (Euler angles) applied to the obstacle.")]
     [Range(0f, 360f)] public float initialYRotation = 0f;
     
-    [Header("Payload Settings")] public PayloadType payloadType = PayloadType.Damage;
+    public PayloadType payloadType = PayloadType.Damage; // shown in the ✋ When you touch it box
     [Range(1, 100f)] public int payloadAmount = 10;
     [Range(1f, 60f)] public float buffDuration = 5f;
     public bool destroyOnTrigger = false;
 
-    [Header("🏀 Bounce Settings")] public bool isBouncy = false;
+    public bool isBouncy = false; // shown in the 🏀 Bounce settings box
     [Range(0.5f, 5f)] public float triggerRadius = 0.5f;
     [Range(5f, 50f)] public float launchForce = 25f;
     [Range(0f, 1f)] public float upwardBias = 0.5f;

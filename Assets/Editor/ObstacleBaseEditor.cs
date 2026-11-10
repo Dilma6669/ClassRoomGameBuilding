@@ -21,6 +21,8 @@ public class ObstacleBaseEditor : Editor
         "heightOffset", // drawn in the 📐 Transform settings box
         "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
         "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
+        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", // ✋ When you touch it box
+        "isBouncy", "launchForce", "upwardBias", "momentumTransfer", // 🏀 Bounce settings box
     };
 
     [System.NonSerialized] private static GUIStyle boxTitle;
@@ -98,30 +100,55 @@ public class ObstacleBaseEditor : Editor
             if (heightOffset != null) EditorGUILayout.PropertyField(heightOffset, true);
         }
         EndBox();
-        EditorGUILayout.Space(4);
 
+        // ✋ What it does when the player touches it
+        if (BeginBox("✋ When you touch it", "What it does to you (hurts, heals, gives a power-up), and how much."))
+        {
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("payloadType"), new GUIContent("What it does",
+                "Damage hurts you. Health / Stamina boosters fill your bars. Invincibility, Jump and Sprint buffs are power-ups for a while. None does nothing (e.g. a bounce ball)."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("payloadAmount"), new GUIContent("How much",
+                "How much damage it does, or how much health / stamina it gives (power-ups: how strong)."));
+            bool powerUp = o.payloadType == ObstacleBase.PayloadType.InvincibilityBuff || o.payloadType == ObstacleBase.PayloadType.JumpBuff
+                           || o.payloadType == ObstacleBase.PayloadType.SprintBuff;
+            if (many || powerUp)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("buffDuration"), new GUIContent("Power-up lasts (seconds)", "How long the power-up lasts."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("destroyOnTrigger"), Labels["destroyOnTrigger"]);
+        }
+        EndBox();
+
+        // 🏀 Launches you into the air
+        if (BeginBox("🏀 Bounce settings", "Whether it launches you into the air when you touch it."))
+        {
+            SerializedProperty bouncy = serializedObject.FindProperty("isBouncy");
+            EditorGUILayout.PropertyField(bouncy, new GUIContent("Is Bouncy", "Ticked: touching it launches you."));
+            if (many || bouncy.boolValue)
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("launchForce"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("upwardBias"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("momentumTransfer"));
+            }
+        }
+        EndBox();
+
+        // 🚶 How it moves (+ Chase)
+        bool creature = many || o.payloadType == ObstacleBase.PayloadType.Damage;
+        bool howItMoves = HowItMoves != null && !many;
+        if (creature || howItMoves)
+        {
+            if (BeginBox("🚶 Movement settings", creature ? "How it moves around, and whether it chases you." : "How it moves around."))
+            {
+                if (howItMoves) HowItMoves(o);
+                if (creature) DrawChase(o, many);
+            }
+            EndBox();
+        }
+
+        // Anything else (e.g. a pickup's sparkle settings)
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))
         {
             enterChildren = false;
-
-            // After the Bounce settings: the 🚶 Movement settings box (How it moves + Chase)
-            if (prop.name == "jumpsToDefeat")
-            {
-                bool creature = many || o.payloadType == ObstacleBase.PayloadType.Damage;
-                bool howItMoves = HowItMoves != null && !many;
-                if (creature || howItMoves)
-                {
-                    if (BeginBox("🚶 Movement settings", creature ? "How it moves around, and whether it chases you." : "How it moves around."))
-                    {
-                        if (howItMoves) HowItMoves(o);
-                        if (creature) DrawChase(o, many);
-                    }
-                    EndBox();
-                    EditorGUILayout.Space(4);
-                }
-            }
             if (prop.name == "m_Script" || DrawnLater.Contains(prop.name)) continue;
 
             if (!many)
