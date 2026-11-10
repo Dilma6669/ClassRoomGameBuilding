@@ -10,32 +10,16 @@ using UnityEngine;
 [CanEditMultipleObjects]
 public class CustomModelEditor : Editor
 {
-    // Each model's animations, looked up once (a model can have hundreds)
-    private static readonly System.Collections.Generic.Dictionary<GameObject, System.Collections.Generic.List<AnimationClip>> clipCache =
-        new System.Collections.Generic.Dictionary<GameObject, System.Collections.Generic.List<AnimationClip>>();
-
-    /// <summary>A dropdown of every animation the model has, plus "(none)". set is called (with Undo) when one is picked.</summary>
-    public static void AnimationDropdown(CustomModel cm, GUIContent label, AnimationClip current, System.Action<AnimationClip> set)
+    /// <summary>An animation box like Idle/Walk/Jump: drag any animation clip in (e.g. a Jump), or click ⊙ to pick one. set is called (with Undo).</summary>
+    public static void AnimationSlot(CustomModel cm, GUIContent label, AnimationClip current, System.Action<AnimationClip> set)
     {
-        if (cm == null || cm.model == null) return;
-        GameObject source = cm.animationsFrom != null ? cm.animationsFrom : cm.model;
-        if (!clipCache.TryGetValue(source, out System.Collections.Generic.List<AnimationClip> clips) || clips.Contains(null))
-        {
-            clips = CustomModel.ClipsForModel(source, out _);
-            clipCache[source] = clips;
-        }
-
-        string[] names = new string[clips.Count + 1];
-        names[0] = "(none)";
-        for (int i = 0; i < clips.Count; i++) names[i + 1] = clips[i].name.Replace('/', '-'); // '/' would make a sub-menu
-        int now = current != null ? clips.IndexOf(current) + 1 : 0;
-
+        if (cm == null) return;
         EditorGUI.BeginChangeCheck();
-        int picked = EditorGUILayout.Popup(label, now, names);
+        AnimationClip picked = (AnimationClip)EditorGUILayout.ObjectField(label, current, typeof(AnimationClip), false);
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(cm, label.text);
-            set(picked == 0 ? null : clips[picked - 1]);
+            set(picked);
             EditorUtility.SetDirty(cm);
         }
     }
@@ -84,11 +68,11 @@ public class CustomModelEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fall"), new GUIContent("Fall (coming down)"));
             if (targets.Length == 1 && cm.GetComponentInParent<ObstacleBase>() != null)
             {
-                AnimationDropdown(cm, new GUIContent("Attack (when it hurts you)", "Any of its animations, e.g. a Jump if it has no attack one."), cm.attack, c => cm.attack = c);
-                AnimationDropdown(cm, new GUIContent("Death (when it's beaten)", "Plays when it's beaten; it stays in the last pose, then shrinks away."), cm.death, c => cm.death = c);
+                AnimationSlot(cm, new GUIContent("Attack (when it hurts you)", "Drag in any animation, e.g. a Jump if it has no attack one."), cm.attack, c => cm.attack = c);
+                AnimationSlot(cm, new GUIContent("Death (when it's beaten)", "Plays when it's beaten; it stays in the last pose, then shrinks away."), cm.death, c => cm.death = c);
             }
             else if (targets.Length == 1 && cm.GetComponentInParent<Health>() != null)
-                AnimationDropdown(cm, new GUIContent("Hurt (when you get hurt)", "Plays when something hurts you. Any of its animations works."), cm.hurt, c => cm.hurt = c);
+                AnimationSlot(cm, new GUIContent("Hurt (when you get hurt)", "Plays when something hurts you. Drag in any animation."), cm.hurt, c => cm.hurt = c);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animationSpeed"));
             EditorGUI.indentLevel--;
 

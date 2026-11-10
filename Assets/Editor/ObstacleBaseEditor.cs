@@ -133,10 +133,10 @@ public class ObstacleBaseEditor : Editor
             return;
         }
 
-        CustomModelEditor.AnimationDropdown(cm, new GUIContent("Attack animation",
-            "Plays when it hurts you. Any of its animations works, e.g. a Jump if it has no attack animation."), cm.attack, c => cm.attack = c);
+        CustomModelEditor.AnimationSlot(cm, new GUIContent("Attack animation",
+            "Plays when it hurts you. Drag in any animation, e.g. a Jump if it has no attack animation."), cm.attack, c => cm.attack = c);
         if (cm.attack == null)
-            EditorGUILayout.LabelField("No attack animation: pick any of its animations above (a Jump works well).", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("No attack animation: drag any animation into the box above (a Jump works well).", EditorStyles.wordWrappedMiniLabel);
 
         // An 'it attacks you' animation chosen in the Sounds tab for this model plays instead
         foreach (ModelSounds ms in GameSounds.Load().modelSounds)
@@ -158,8 +158,8 @@ public class ObstacleBaseEditor : Editor
         CustomModel cm = many ? null : o.GetComponentInChildren<CustomModel>();
         if (cm != null && cm.model != null)
         {
-            CustomModelEditor.AnimationDropdown(cm, new GUIContent("Death animation",
-                "Plays when it's beaten; it stays in the last pose. Any of its animations works. (none) = it gets squashed flat instead."), cm.death, c => cm.death = c);
+            CustomModelEditor.AnimationSlot(cm, new GUIContent("Death animation",
+                "Plays when it's beaten; it stays in the last pose. Drag in any animation. Empty = it gets squashed flat instead."), cm.death, c => cm.death = c);
             if (cm.death == null)
                 EditorGUILayout.LabelField("No death animation: it gets squashed flat and disappears.", EditorStyles.wordWrappedMiniLabel);
         }
