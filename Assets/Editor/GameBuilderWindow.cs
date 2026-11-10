@@ -570,7 +570,7 @@ public partial class GameBuilderWindow : EditorWindow
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("🧩 Default models for new creatures", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard (in every level). " +
-                "To change one creature that's already made, click it in the 'Creature and Pickup List' instead.", EditorStyles.wordWrappedMiniLabel);
+                "To change one creature that's already made, click it in the 'Creatures and Pickups List' instead.", EditorStyles.wordWrappedMiniLabel);
             SettingsField("defaultWanderEnemy", "🕷 Wanderer");
             SettingsField("defaultPatrolEnemy", "🧟 Patroller");
             SettingsField("defaultStaticEnemy", "🐍 Guard");
@@ -597,7 +597,8 @@ public partial class GameBuilderWindow : EditorWindow
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
 
-        if (ObstacleBaseEditor.BeginBox("📋 Creature and Pickup List", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
+        EditorGUILayout.Space(6); // the same gap as between the boxes below
+        if (ObstacleBaseEditor.BeginBox("📋 Creatures and Pickups List", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
         {
             // A little narrower than the box, so it sits nicely inside it
             EditorGUILayout.BeginHorizontal();
@@ -648,8 +649,19 @@ public partial class GameBuilderWindow : EditorWindow
 
         }
 
+        // Delete the selected one: below its settings, above Scatter tools
+        if (selected != null)
+        {
+            EditorGUILayout.Space(12);
+            if (BigButton("🗑 Delete " + selected.name, new Color(0.95f, 0.5f, 0.5f)))
+            {
+                Undo.DestroyObjectImmediate(selected.gameObject);
+                GUIUtility.ExitGUI();
+            }
+        }
+
         // 🎲 Lots at once
-        if (ObstacleBaseEditor.BeginBox("🎲 Scatter tools", "Put lots of creatures and pickups down at once, on the ground and/or on platforms."))
+        if (ObstacleBaseEditor.BeginBox("🎲 Scatter tools", "Put lots of creatures and pickups down at once, on the ground and/or on platforms.", green: true))
         {
             Terrain terrain = Find<Terrain>();
             CreatureScatter scatter = terrain != null ? terrain.GetComponent<CreatureScatter>() : null;
@@ -661,17 +673,6 @@ public partial class GameBuilderWindow : EditorWindow
             }
         }
         ObstacleBaseEditor.EndBox();
-
-        // Delete the selected one: at the very bottom, away from everything else
-        if (selected != null)
-        {
-            EditorGUILayout.Space(12);
-            if (BigButton("🗑 Delete " + selected.name, new Color(0.95f, 0.5f, 0.5f)))
-            {
-                Undo.DestroyObjectImmediate(selected.gameObject);
-                GUIUtility.ExitGUI();
-            }
-        }
     }
 
     private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
