@@ -14,8 +14,8 @@ public static class TutorialLevelBuilder
 {
     public const string ScenePath = "Assets/Scenes/Tutorial.unity";
     private const string TemplateScene = LevelMaker.TemplatePath; // the empty level
-    private const string AssetFolder = "Assets/Tutorial";
-    private const string NatureFolder = "Assets/MyModels/NatureModelsPackTest/FBX/";
+    internal const string AssetFolder = "Assets/Tutorial";
+    internal const string NatureFolder = "Assets/MyModels/NatureModelsPackTest/FBX/";
 
     // Course runs along +Z from the start point, on a flattened meadow
     private static readonly Vector3 Start = new Vector3(20f, 0f, -40f);
@@ -72,7 +72,8 @@ public static class TutorialLevelBuilder
 
         BuildPlayerOptions options = new BuildPlayerOptions
         {
-            scenes = new[] { ScenePath },
+            // Tutorial Island first, then Adventure Park (its Finish sign leads there) if it's been built
+            scenes = File.Exists(ShowcaseLevelBuilder.ScenePath) ? new[] { ScenePath, ShowcaseLevelBuilder.ScenePath } : new[] { ScenePath },
             locationPathName = Path.Combine(TutorialBuildFolder, "TutorialIsland.exe"),
             target = BuildTarget.StandaloneWindows64,
             targetGroup = BuildTargetGroup.Standalone,
@@ -108,7 +109,8 @@ public static class TutorialLevelBuilder
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         // 2. Terrain: its own copy (so Level02's terrain isn't touched), with a meadow for the course
-        Terrain terrain = CreateTutorialTerrain();
+        // Flatten a meadow for the course, blending smoothly into the mountains
+        Terrain terrain = CreateTutorialTerrain(AssetFolder + "/TutorialTerrain.asset", new Rect(Start.x - 35f, Start.z - 25f, 70f, 295f), MeadowHeight);
         float G(float x, float z) => terrain.SampleHeight(new Vector3(x, 0f, z)) + terrain.GetPosition().y;
         Vector3 At(float side, float forward, float up = 0f) => new Vector3(Start.x + side, G(Start.x + side, Start.z + forward) + up, Start.z + forward);
 
@@ -154,7 +156,7 @@ public static class TutorialLevelBuilder
         // Platforms: plain, moving, rock
         PlatformController platforms = Object.FindAnyObjectByType<PlatformController>();
         Sign(signs, signMaterial, At(-6f, 72f), At(0f, 72f, 1.5f), "7. Platforms",
-            "Game Builder > Platforms: click a Quick platform (Floating, Moving, Elevator, Spinning...)\nand it appears where you are looking. 'Scatter' makes lots at once, with random sizes and movement.");
+            "Game Builder > Platforms: click a Quick platform (Floating, Moving, Elevator...), then click in the Scene where it goes.\n'New platforms float this high' sets how high. 'Move it...' moves one later. 'Scatter' makes lots at once.");
         GameObject p1 = MakePlatform(platforms, At(0f, 82f), 1.2f, 6f);
         GameObject p2 = MakePlatform(platforms, At(0f, 91f), 2.4f, 5f);
         PlatformLogic moving = p2.GetComponent<PlatformLogic>();
@@ -192,7 +194,7 @@ public static class TutorialLevelBuilder
         float arenaTop = TopOf(arena);
         AddCreatures(arena);
         Sign(signs, signMaterial, At(-9f, 158f), new Vector3(Start.x, arenaTop + 1.5f, Start.z + 155f), "11. Creatures",
-            "Careful, creatures hurt if you run into them! Game Builder > Creatures & Pickups: click a creature.\n'Scatter lots at once' puts many on the ground or on platforms. The glowing ball is Health.");
+            "Careful, creatures hurt if you run into them! Game Builder > Creatures & Pickups: click a creature, then click where it goes.\n'Scatter lots at once' puts many on the ground or on platforms. The glowing ball is Health.");
 
         // Stomp practice: one creature standing still on the ground
         AddStompCreature(At(0f, 180f));
@@ -219,10 +221,10 @@ public static class TutorialLevelBuilder
             "Game Builder > Levels & Build: 'New empty level' or 'Copy this level' makes a new level.\nUse the arrows to change the order, untick one to leave it out. The star level is where the game starts.");
 
         GameObject finish = Sign(signs, signMaterial, At(-4f, 244f), At(0f, 244f, 1.5f), "17. Finish!",
-            "You finished Tutorial Island! Now open Unity and build your own level with Game > Game Builder.\n'Build Game' (in Levels & Build) turns it into a game anyone can play. Have fun!");
+            "You finished Tutorial Island! Next stop: ADVENTURE PARK, where you'll see every feature in action...\n(This sign uses 'Go to another level when touched'.)");
         TriggerLogic finishTrigger = finish.GetComponent<TriggerLogic>();
         finishTrigger.changeScene = true;
-        finishTrigger.sceneToLoad = "Level01";
+        finishTrigger.sceneToLoad = ShowcaseLevelBuilder.SceneName;
 
         // 4. Save and add to the build (after the student's levels)
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
@@ -235,14 +237,14 @@ public static class TutorialLevelBuilder
 
     // ------------------------------------------------------------------ Terrain
 
-    private static Terrain CreateTutorialTerrain()
+    /// <summary>Creates the level's terrain with its own copy of the ground (dataPath) and a flat area for the course.</summary>
+    internal static Terrain CreateTutorialTerrain(string dataPath, Rect flatArea, float flatHeight)
     {
         EnvironmentController env = Object.FindAnyObjectByType<EnvironmentController>();
         env.CreateTerrain();
         Terrain terrain = env.GetComponentInChildren<Terrain>();
 
         // Own copy of the terrain data, so sculpting here never changes other levels
-        string dataPath = AssetFolder + "/TutorialTerrain.asset";
         AssetDatabase.DeleteAsset(dataPath);
         TerrainData copy = Object.Instantiate(terrain.terrainData);
         AssetDatabase.CreateAsset(copy, dataPath);
@@ -250,14 +252,11 @@ public static class TutorialLevelBuilder
         TerrainCollider tc = terrain.GetComponent<TerrainCollider>();
         if (tc != null) tc.terrainData = copy;
 
-        // Flatten a meadow for the course, blending smoothly into the mountains
-        FlattenArea(terrain,
-            new Rect(Start.x - 35f, Start.z - 25f, 70f, 295f),
-            MeadowHeight, 30f);
+        FlattenArea(terrain, flatArea, flatHeight, 30f);
         return terrain;
     }
 
-    private static void FlattenArea(Terrain terrain, Rect area, float height, float blend)
+    internal static void FlattenArea(Terrain terrain, Rect area, float height, float blend)
     {
         TerrainData data = terrain.terrainData;
         Vector3 origin = terrain.GetPosition();
@@ -381,7 +380,7 @@ public static class TutorialLevelBuilder
     // ------------------------------------------------------------------ Platforms & obstacles
 
     /// <summary>Creates a platform whose top is 'topHeight' above the ground point, about 'width' metres across.</summary>
-    private static GameObject MakePlatform(PlatformController controller, Vector3 groundPoint, float topHeight, float width)
+    internal static GameObject MakePlatform(PlatformController controller, Vector3 groundPoint, float topHeight, float width)
     {
         controller.CreatePlatform();
         GameObject root = Selection.activeGameObject;
@@ -406,14 +405,14 @@ public static class TutorialLevelBuilder
         return root;
     }
 
-    private static float TopOf(GameObject platform)
+    internal static float TopOf(GameObject platform)
     {
         PlatformLogic logic = platform.GetComponent<PlatformLogic>();
         Transform target = logic.TargetChild != null ? logic.TargetChild : platform.transform.Find("⚠️ DO NOT TOUCH").GetChild(0);
         return RendererBounds(target).max.y;
     }
 
-    private static Bounds RendererBounds(Transform root)
+    internal static Bounds RendererBounds(Transform root)
     {
         Bounds b = new Bounds(root.position, Vector3.zero);
         bool found = false;
@@ -475,7 +474,7 @@ public static class TutorialLevelBuilder
         }
     }
 
-    private static void Nudge(GameObject obstacle, float x, float z)
+    internal static void Nudge(GameObject obstacle, float x, float z)
     {
         if (obstacle == null) return;
         FollowPlatform follow = obstacle.GetComponent<FollowPlatform>();
@@ -542,7 +541,7 @@ public static class TutorialLevelBuilder
     // ------------------------------------------------------------------ Signs
 
     /// <summary>A yellow signpost with a title, plus a pop-up trigger with the explanation.</summary>
-    private static GameObject Sign(Transform parent, Material material, Vector3 postGround, Vector3 triggerCentre, string title, string message)
+    internal static GameObject Sign(Transform parent, Material material, Vector3 postGround, Vector3 triggerCentre, string title, string message)
     {
         // Signpost
         GameObject post = new GameObject("Sign - " + title);
@@ -582,7 +581,7 @@ public static class TutorialLevelBuilder
         return triggerGO;
     }
 
-    private static void AddPart(Transform parent, PrimitiveType type, Vector3 localPosition, Vector3 localScale, Material material)
+    internal static void AddPart(Transform parent, PrimitiveType type, Vector3 localPosition, Vector3 localScale, Material material)
     {
         GameObject part = GameObject.CreatePrimitive(type);
         Object.DestroyImmediate(part.GetComponent<Collider>());
@@ -592,7 +591,7 @@ public static class TutorialLevelBuilder
         part.GetComponent<Renderer>().sharedMaterial = material;
     }
 
-    private static Material GetSignMaterial()
+    internal static Material GetSignMaterial()
     {
         string path = AssetFolder + "/SignYellow.mat";
         Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -604,13 +603,16 @@ public static class TutorialLevelBuilder
         return mat;
     }
 
-    private static void AddToBuild()
+    private static void AddToBuild() => AddToBuild(ScenePath, null);
+
+    /// <summary>Adds the scene to Build Settings (or fixes its entry). New entries go right after 'after' if it's listed, else at the end.</summary>
+    internal static void AddToBuild(string scenePath, string after)
     {
         List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
         // Replace any old entry too, so its GUID matches the scene file
         // (Unity keeps a stale GUID if the path is already listed, so remove the entry first, then add it back)
-        GUID guid = new GUID(AssetDatabase.AssetPathToGUID(ScenePath));
-        int index = scenes.FindIndex(s => s.path == ScenePath);
+        GUID guid = new GUID(AssetDatabase.AssetPathToGUID(scenePath));
+        int index = scenes.FindIndex(s => s.path == scenePath);
         if (index >= 0 && scenes[index].guid == guid) return;
 
         bool enabled = index < 0 || scenes[index].enabled;
@@ -621,7 +623,8 @@ public static class TutorialLevelBuilder
         }
         else
         {
-            index = scenes.Count;
+            int afterIndex = after != null ? scenes.FindIndex(s => s.path == after) : -1;
+            index = afterIndex >= 0 ? afterIndex + 1 : scenes.Count;
         }
         scenes.Insert(index, new EditorBuildSettingsScene(guid, enabled));
         EditorBuildSettings.scenes = scenes.ToArray();
