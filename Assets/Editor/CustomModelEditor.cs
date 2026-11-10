@@ -83,7 +83,10 @@ public class CustomModelEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("jump"), new GUIContent("Jump (going up)"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fall"), new GUIContent("Fall (coming down)"));
             if (targets.Length == 1 && cm.GetComponentInParent<ObstacleBase>() != null)
+            {
                 AnimationDropdown(cm, new GUIContent("Attack (when it hurts you)", "Any of its animations, e.g. a Jump if it has no attack one."), cm.attack, c => cm.attack = c);
+                AnimationDropdown(cm, new GUIContent("Death (when it's beaten)", "Plays when it's beaten; it stays in the last pose, then shrinks away."), cm.death, c => cm.death = c);
+            }
             else if (targets.Length == 1 && cm.GetComponentInParent<Health>() != null)
                 AnimationDropdown(cm, new GUIContent("Hurt (when you get hurt)", "Plays when something hurts you. Any of its animations works."), cm.hurt, c => cm.hurt = c);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animationSpeed"));

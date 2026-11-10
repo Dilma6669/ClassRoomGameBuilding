@@ -399,7 +399,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
     private void Defeat()
     {
         defeated = true;
-        bool ownSound = PlayOwnMoment(AnimationMoment.IsBeaten, out float beatenLength);
+        bool ownSound = StartDeath(out float beatenLength);
         if (!ownSound) SoundManager.Play(SoundEvent.EnemyDeath, transform.position, gameObject);
         currentMovementStrategy = null;
         UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
@@ -407,19 +407,12 @@ public abstract partial class ObstacleBase : MonoBehaviour
         foreach (Collider c in GetComponentsInChildren<Collider>()) c.enabled = false;
         if (beatenLength > 0f)
         {
-            // It has its own "beaten" animation (e.g. falling over): play it, then vanish
-            StartCoroutine(VanishAfter(Mathf.Min(beatenLength, 3f)));
+            // It has its own death animation (e.g. falling over): play it, then shrink away (or vanish)
+            StartCoroutine(DieThenShrink(beatenLength));
             return;
         }
         if (sparkles) BurstSparkles(Sparkles.Style.Poof);
         StartCoroutine(Squash(true));
-    }
-
-    private System.Collections.IEnumerator VanishAfter(float seconds)
-    {
-        yield return new WaitForSeconds(seconds);
-        if (sparkles) BurstSparkles(Sparkles.Style.Poof);
-        Destroy(gameObject);
     }
 
     /// <summary>

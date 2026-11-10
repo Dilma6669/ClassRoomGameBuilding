@@ -10,6 +10,44 @@ public abstract partial class ObstacleBase
     [Tooltip("When it hurts you, it quickly turns to face you while its attack animation plays, then carries on.")]
     public bool faceYouWhenAttacking = true;
 
+    [Tooltip("After its death animation it shrinks away to nothing, then it's removed. Untick: it just disappears.")]
+    public bool shrinkAwayWhenBeaten = true;
+    [Tooltip("How long it lies there after its death animation before it starts shrinking (seconds).")]
+    [Range(0f, 5f)] public float waitBeforeShrinking = 0.5f;
+    [Tooltip("How long the shrinking takes (seconds).")]
+    [Range(0.1f, 5f)] public float shrinkTime = 1f;
+
+    /// <summary>Plays its death animation (if its model has one). Returns true if the animation had its own sound.</summary>
+    private bool StartDeath(out float length)
+    {
+        length = 0f;
+        if (!lookedForModel) { ownModel = GetComponentInChildren<CustomModel>(); lookedForModel = true; }
+        if (ownModel == null) return false;
+        length = ownModel.PlayDeath(out bool playedSound);
+        return playedSound;
+    }
+
+    /// <summary>Waits for the death animation, then shrinks away (or just disappears), with a sparkle burst, and is removed.</summary>
+    private System.Collections.IEnumerator DieThenShrink(float animationLength)
+    {
+        attackTimeLeft = turnBackLeft = 0f;
+        yield return new WaitForSeconds(Mathf.Min(animationLength, 6f));
+        if (shrinkAwayWhenBeaten)
+        {
+            yield return new WaitForSeconds(waitBeforeShrinking);
+            Vector3 startScale = transform.localScale;
+            float t = 0f;
+            while (t < shrinkTime)
+            {
+                t += Time.deltaTime;
+                transform.localScale = startScale * (1f - Mathf.SmoothStep(0f, 1f, t / shrinkTime));
+                yield return null;
+            }
+        }
+        if (sparkles) BurstSparkles(Sparkles.Style.Poof);
+        Destroy(gameObject);
+    }
+
     private const float TurnBackTime = 0.35f;
     private float attackTimeLeft;
     private float turnBackLeft;

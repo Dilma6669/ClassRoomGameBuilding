@@ -55,6 +55,8 @@ public class CustomModel : MonoBehaviour
     public AnimationClip attack;
     [Tooltip("The player: plays when something hurts you (found by name: Hit, Hurt, Damage...). An animation picked in Game Builder > Sounds for 'gets hurt' is used instead.")]
     public AnimationClip hurt;
+    [Tooltip("Creatures: plays when it's beaten, and it stays in the last pose (found by name: Death, Die, Dead...). An animation picked in Game Builder > Sounds for 'it is beaten' is used instead.")]
+    public AnimationClip death;
 
     [Tooltip("Speed up or slow down all animations.")]
     [Range(0.1f, 3f)] public float animationSpeed = 1f;
@@ -64,6 +66,7 @@ public class CustomModel : MonoBehaviour
     [SerializeField, HideInInspector] private GameObject clipsFoundFrom;
     [SerializeField, HideInInspector] private bool attackLookedFor; // models set up before 'attack' existed look for one once
     [SerializeField, HideInInspector] private bool hurtLookedFor;
+    [SerializeField, HideInInspector] private bool deathLookedFor;
     [SerializeField, HideInInspector] private Transform modelInstance;
     [SerializeField, HideInInspector] private float fitScale = 1f;
     [SerializeField, HideInInspector] private Vector3 modelAnchor;   // bottom-centre of the model, in model space
@@ -91,7 +94,7 @@ public class CustomModel : MonoBehaviour
     {
 #if UNITY_EDITOR
         // Opened in the Editor and set up before the attack/hurt animations existed: look for them now
-        if (!Application.isPlaying && (!attackLookedFor || !hurtLookedFor) && model != null && model == builtFrom)
+        if (!Application.isPlaying && (!attackLookedFor || !hurtLookedFor || !deathLookedFor) && model != null && model == builtFrom)
         {
             EditorApplication.delayCall -= DelayedRefresh;
             EditorApplication.delayCall += DelayedRefresh;
@@ -131,7 +134,7 @@ public class CustomModel : MonoBehaviour
             MarkDirty();
         }
         // Set up before the 'attack' animation existed: look for one now (the other animations stay as they are)
-        else if (!Application.isPlaying && model != null && model == builtFrom && (!attackLookedFor || !hurtLookedFor))
+        else if (!Application.isPlaying && model != null && model == builtFrom && (!attackLookedFor || !hurtLookedFor || !deathLookedFor))
         {
             AnimationClip i = idle, w = walk, r = run, j = jump, f = fall;
             AutoFindClips();
@@ -582,6 +585,7 @@ public class CustomModel : MonoBehaviour
     private int actionInput = -1;
     private AnimationClipPlayable actionPlayable;
     private float actionWeight;
+    private bool actionHold; // a death animation: stays in its last pose
     private float actionTimeLeft;
     private bool isHumanoidRig;
     private float nowAndThenTimer = -1f;
@@ -610,7 +614,7 @@ public class CustomModel : MonoBehaviour
             SoundManager.PlayAnimationSound(pick, transform.position, GetComponentInParent<ObstacleBase>() == null);
             playedSound = true;
         }
-        return PlayAction(pick.animation);
+        return PlayAction(pick.animation, moment == AnimationMoment.IsBeaten); // a death pose stays
     }
 
     /// <summary>
@@ -624,6 +628,17 @@ public class CustomModel : MonoBehaviour
         return PlayAction(attack);
     }
 
+    /// <summary>
+    /// A creature is beaten: plays the 'it is beaten' animation picked in Game Builder > Sounds, or else its own death
+    /// animation, and stays in the last pose. Returns how long it lasts (0 = none).
+    /// </summary>
+    public float PlayDeath(out bool playedSound)
+    {
+        float length = PlayMoment(AnimationMoment.IsBeaten, out playedSound);
+        if (length > 0f || !Application.isPlaying) return length;
+        return PlayAction(death, true);
+    }
+
     /// <summary>The player got hurt and nothing was picked in Game Builder > Sounds: plays the model's own hurt animation.</summary>
     public float PlayHurt()
     {
@@ -631,7 +646,7 @@ public class CustomModel : MonoBehaviour
         return PlayAction(hurt);
     }
 
-    private float PlayAction(AnimationClip clip)
+    private float PlayAction(AnimationClip clip, bool holdLastFrame = false)
     {
         if (!graph.IsValid() || actionInput < 0 || clip == null || clip.length <= 0f) return 0f;
         if (clip.humanMotion != isHumanoidRig) return 0f; // would break the pose
@@ -646,12 +661,25 @@ public class CustomModel : MonoBehaviour
         graph.Connect(actionPlayable, 0, mixer, actionInput);
         float length = clip.length / Mathf.Max(0.1f, animationSpeed);
         actionTimeLeft = length;
+        actionHold = holdLastFrame;
         return length;
     }
 
     private void UpdateAction(float dt)
     {
         actionTimeLeft -= dt;
+        if (actionHold)
+        {
+            // A death animation: blend in and stay in its last pose (no blending back to standing)
+            actionWeight = Mathf.MoveTowards(actionWeight, 1f, dt * 8f);
+            if (actionTimeLeft <= 0f && actionPlayable.IsValid() && actionPlayable.GetSpeed() != 0.0)
+            {
+                AnimationClip clip = actionPlayable.GetAnimationClip();
+                if (clip != null) actionPlayable.SetTime(Mathf.Max(0f, clip.length - 0.02f));
+                actionPlayable.SetSpeed(0.0);
+            }
+            return;
+        }
         // Blend in quickly, and back out just before it ends
         float target = actionTimeLeft > 0.15f ? 1f : 0f;
         actionWeight = Mathf.MoveTowards(actionWeight, target, dt * 8f);
@@ -703,8 +731,8 @@ public class CustomModel : MonoBehaviour
 
     public void ClearClips()
     {
-        idle = walk = run = jump = fall = attack = hurt = null;
-        attackLookedFor = hurtLookedFor = false;
+        idle = walk = run = jump = fall = attack = hurt = death = null;
+        attackLookedFor = hurtLookedFor = deathLookedFor = false;
     }
 
     /// <summary>
@@ -749,7 +777,8 @@ public class CustomModel : MonoBehaviour
         if (fall == null) fall = BestClip(clips, source.name, "fall", "inair", "in_air", "air", "glide");
         if (attack == null) attack = BestClip(clips, source.name, "scratch", "bite", "attack", "punch", "kick", "claw", "strike", "sting", "peck", "swipe", "slash");
         if (hurt == null) hurt = BestClip(clips, source.name, "hit", "hurt", "damage", "flinch", "react");
-        attackLookedFor = hurtLookedFor = true;
+        if (death == null) death = BestClip(clips, source.name, "death", "die", "dead", "defeat", "dying");
+        attackLookedFor = hurtLookedFor = deathLookedFor = true;
 
         // A model with just one animation (e.g. a flapping bird) plays it all the time
         if (idle == null && walk == null && run == null && clips.Count > 0) idle = clips[0];

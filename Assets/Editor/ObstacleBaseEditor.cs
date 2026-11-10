@@ -17,6 +17,7 @@ public class ObstacleBaseEditor : Editor
         "chasePlayer", "chaseStartDistance", "chaseGiveUpDistance", "chaseSpeed",
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
+        "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime",
     };
 
     private static readonly Dictionary<string, GUIContent> Labels = new Dictionary<string, GUIContent>
@@ -54,6 +55,7 @@ public class ObstacleBaseEditor : Editor
         DrawHitZone(o, many);
         if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawChase(o, many);
         if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawAttack(o, many);
+        if (many || (o.payloadType == ObstacleBase.PayloadType.Damage && o.jumpsToDefeat > 0)) DrawBeaten(o, many);
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -138,6 +140,31 @@ public class ObstacleBaseEditor : Editor
                 EditorGUILayout.LabelField("Game Builder > Sounds has an 'it attacks you' animation for this model, so that one plays instead.", EditorStyles.wordWrappedMiniLabel);
                 break;
             }
+        }
+    }
+
+    /// <summary>💀 When it's beaten: its death animation, then shrinking away.</summary>
+    private void DrawBeaten(ObstacleBase o, bool many)
+    {
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("💀 When it's beaten", EditorStyles.boldLabel);
+        CustomModel cm = many ? null : o.GetComponentInChildren<CustomModel>();
+        if (cm != null && cm.model != null)
+        {
+            CustomModelEditor.AnimationDropdown(cm, new GUIContent("Death animation",
+                "Plays when it's beaten; it stays in the last pose. Any of its animations works. (none) = it gets squashed flat instead."), cm.death, c => cm.death = c);
+            if (cm.death == null)
+                EditorGUILayout.LabelField("No death animation: it gets squashed flat and disappears.", EditorStyles.wordWrappedMiniLabel);
+        }
+
+        SerializedProperty shrink = serializedObject.FindProperty("shrinkAwayWhenBeaten");
+        EditorGUILayout.PropertyField(shrink, new GUIContent("Shrinks away afterwards", shrink.tooltip));
+        if (many || shrink.boolValue)
+        {
+            SerializedProperty wait = serializedObject.FindProperty("waitBeforeShrinking");
+            EditorGUILayout.PropertyField(wait, new GUIContent("Lies there for (seconds)", wait.tooltip));
+            SerializedProperty time = serializedObject.FindProperty("shrinkTime");
+            EditorGUILayout.PropertyField(time, new GUIContent("Shrinks over (seconds)", time.tooltip));
         }
     }
 
