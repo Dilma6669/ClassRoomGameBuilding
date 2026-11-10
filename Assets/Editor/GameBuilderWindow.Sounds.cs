@@ -89,7 +89,10 @@ public partial class GameBuilderWindow
 
         // ---------------- One model
         Section("🎭 Sounds for one model");
-        DrawModelSounds(sounds);
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            DrawModelSounds(sounds);
+        }
 
         // ---------------- Music
         Section("📀 Music (soundtrack)");

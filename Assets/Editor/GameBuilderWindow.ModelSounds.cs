@@ -28,7 +28,7 @@ public partial class GameBuilderWindow
 
     private void DrawModelSounds(GameSounds sounds)
     {
-        EditorGUILayout.HelpBox("Pick a model (from Assets/MyModels or the Library) to see its animations. Drag a sound onto an animation and it plays every time that animation plays, on the player or on a creature.\nA model's own sound beats the general sound. Anything left empty uses the general sound.", MessageType.None);
+        EditorGUILayout.LabelField("Pick a model (from Assets/MyModels or the Library) to see its animations. Drag a sound onto an animation and it plays every time that animation plays, on the player or on a creature.\nA model's own sound beats the general sound. Anything left empty uses the general sound.", EditorStyles.wordWrappedMiniLabel);
 
         if (myModels == null) myModels = FindMyModels();
 
@@ -76,7 +76,9 @@ public partial class GameBuilderWindow
 
         if (soundModel == null) return;
 
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        // Slightly narrower than the section box, so it sits inside it
+        GUIStyle modelBox = new GUIStyle(EditorStyles.helpBox) { margin = new RectOffset(10, 10, 6, 6) };
+        using (new EditorGUILayout.VerticalScope(modelBox))
         {
             using (new EditorGUILayout.HorizontalScope())
             {
