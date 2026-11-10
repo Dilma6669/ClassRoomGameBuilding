@@ -238,7 +238,7 @@ public static class TutorialLevelBuilder
     // ------------------------------------------------------------------ Terrain
 
     /// <summary>Creates the level's terrain with its own copy of the ground (dataPath) and a flat area for the course.</summary>
-    internal static Terrain CreateTutorialTerrain(string dataPath, Rect flatArea, float flatHeight)
+    internal static Terrain CreateTutorialTerrain(string dataPath, Rect flatArea, float flatHeight, int newMountainsSeed = 0)
     {
         EnvironmentController env = Object.FindAnyObjectByType<EnvironmentController>();
         env.CreateTerrain();
@@ -252,6 +252,8 @@ public static class TutorialLevelBuilder
         TerrainCollider tc = terrain.GetComponent<TerrainCollider>();
         if (tc != null) tc.terrainData = copy;
 
+        // Different mountains from the other levels? (0 = keep the normal ones)
+        if (newMountainsSeed != 0) TerrainShaper.NewMountains(terrain, newMountainsSeed, flatArea, flatHeight);
         FlattenArea(terrain, flatArea, flatHeight, 30f);
         return terrain;
     }
@@ -436,7 +438,7 @@ public static class TutorialLevelBuilder
         populator.baseSettings.payloadAmount = 10;
         populator.baseSettings.isBouncy = false;
         populator.baseSettings.destroyOnTrigger = false;
-        populator.baseSettings.objectScale = 1.2f;
+        populator.baseSettings.objectScale = 2f;
         populator.wanderSettings.wanderRadius = 4f;
         populator.wanderSettings.minMoveSpeed = 1.5f;
         populator.wanderSettings.maxMoveSpeed = 2.5f;
@@ -496,7 +498,7 @@ public static class TutorialLevelBuilder
         populator.baseSettings.payloadAmount = 10;
         populator.baseSettings.isBouncy = false;
         populator.baseSettings.destroyOnTrigger = false;
-        populator.baseSettings.objectScale = 1.2f;
+        populator.baseSettings.objectScale = 1.3f; // the player jumps about 1.7 m, so it must stay low enough to land on
         populator.CreateSingleObstacle();
 
         GameObject creature = Selection.activeGameObject;

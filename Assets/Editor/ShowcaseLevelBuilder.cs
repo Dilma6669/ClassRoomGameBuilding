@@ -77,7 +77,7 @@ public static class ShowcaseLevelBuilder
         try
         {
             // 2. Ground: its own copy, with a wide flat park (room for exhibits on both sides of the path)
-            terrain = TutorialLevelBuilder.CreateTutorialTerrain(TerrainPath, new Rect(Start.x - 50f, Start.z - 25f, 100f, 250f), ParkHeight);
+            terrain = TutorialLevelBuilder.CreateTutorialTerrain(TerrainPath, new Rect(Start.x - 50f, Start.z - 25f, 100f, 250f), ParkHeight, newMountainsSeed: 7);
             signs = new GameObject("Park Signs").transform;
             signMaterial = TutorialLevelBuilder.GetSignMaterial();
             platforms = Object.FindAnyObjectByType<PlatformController>();
@@ -230,7 +230,7 @@ public static class ShowcaseLevelBuilder
         cs.place = new ScatterPlace { area = ScatterArea.AroundSceneView, areaSize = 30f, spacing = 2f, keepAwayFromStart = 5f };
         cs.groups = new List<CreatureScatter.Group>
         {
-            new CreatureScatter.Group { name = "Sky garden spiders", kind = CreatureScatter.Kind.Wanderer, howMany = 4, sizeRange = new Vector2(0.7f, 0.9f),
+            new CreatureScatter.Group { name = "Sky garden spiders", kind = CreatureScatter.Kind.Wanderer, howMany = 4, sizeRange = new Vector2(1.4f, 1.7f),
                 speedRange = new Vector2(1f, 1.5f), roamRange = new Vector2(1f, 1.5f), onGround = false, onStillPlatforms = true, onMovingPlatforms = true },
             new CreatureScatter.Group { name = "Sky garden health", kind = CreatureScatter.Kind.Health, howMany = 3, sizeRange = Vector2.one, glow = true,
                 onGround = false, onStillPlatforms = true, onMovingPlatforms = true },
@@ -251,21 +251,21 @@ public static class ShowcaseLevelBuilder
             "CREATURE ZOO: any model in Assets/MyModels can be a creature: drag it onto one. Here: a wandering Fox, a Horse that\n" +
             "walks back & forth, a Snake guard and a BOUNCY spider. The GIANT Dinosaur needs 3 jumps: jump on it from the platform!", 5f);
 
-        ObstacleBase fox = SpawnOnGround(At(20f, 76f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, Model("Fox"));
+        ObstacleBase fox = SpawnOnGround(At(20f, 76f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, Model("Fox"), 2f);
         SetWander(fox, 5f, 1.5f, 2.5f);
         Folder(fox, folder, "Fox");
 
-        ObstacleBase horse = SpawnOnGround(At(30f, 82f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, Model("Horse"));
+        ObstacleBase horse = SpawnOnGround(At(30f, 82f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, Model("Horse"), 3f);
         SetPatrol(horse, 8f, 1.5f, 2.5f);
         Turn(horse, 0f);
         Folder(horse, folder, "Horse");
 
-        ObstacleBase snake = SpawnOnGround(At(16f, 90f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Static, 10, 5f, false, Model("Snake"));
+        ObstacleBase snake = SpawnOnGround(At(16f, 90f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Static, 10, 5f, false, Model("Snake"), 4f);
         Turn(snake, 270f); // looking at the path
         Folder(snake, folder, "Snake");
 
-        // A giant: 5 times bigger, 3 jumps to beat, with a platform beside it to jump from
-        ObstacleBase dino = SpawnOnGround(At(28f, 100f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Static, 15, 5f, false, Model("Dinosaur"), 5f);
+        // A giant: 9 times bigger (about 5 m tall), 3 jumps to beat, with a platform beside it to jump from
+        ObstacleBase dino = SpawnOnGround(At(28f, 100f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Static, 15, 5f, false, Model("Dinosaur"), 9f);
         if (dino != null)
         {
             dino.jumpsToDefeat = 3;
@@ -274,12 +274,12 @@ public static class ShowcaseLevelBuilder
             dino.UpdateHitZone(true);
         }
         Folder(dino, folder, "Giant Dinosaur");
-        PlatformLogic jumpFrom = Quick(ScatterTools.PlatformMove.Still, 28f, 95.5f, 3.6f);
+        PlatformLogic jumpFrom = Quick(ScatterTools.PlatformMove.Still, 28f, 95f, 6.2f);
         jumpFrom.name = "Jump From Here";
         Folder(jumpFrom, folder);
 
         // Runs into you and throws you back ('Is Bouncy' on a creature)
-        ObstacleBase bouncy = SpawnOnGround(At(18f, 110f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 5, 5f, false, Model("Spider"), 1.3f);
+        ObstacleBase bouncy = SpawnOnGround(At(18f, 110f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 5, 5f, false, Model("Spider"), 2f);
         if (bouncy != null)
         {
             bouncy.isBouncy = true;
@@ -307,7 +307,7 @@ public static class ShowcaseLevelBuilder
             "Look out: that zombie CHASES you if you go near it! Click a creature and tick 'Chase the player'.\n" +
             "'Starts chasing within' and 'Gives up past' are its orange and red circles in the Scene. Run away to escape!", 5f);
 
-        ObstacleBase zombie = SpawnOnGround(At(11f, 134f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, Model("Zombie"));
+        ObstacleBase zombie = SpawnOnGround(At(11f, 134f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, Model("Zombie"), 2f);
         if (zombie != null)
         {
             SetPatrol(zombie, 3f, 1f, 1.5f);
