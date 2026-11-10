@@ -122,7 +122,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 8ff3faa70376bc54ba441170976a31e7, type: 3}
   - {fileID: 8300000, guid: 770c9251589679d4bb273bbd546319e7, type: 3}
   playMusic: 1
-  musicOrder: 0
+  musicOrder: 2
   musicInMenus: 1
   startMusicVolume: 0.5
   startEffectsVolume: 0.8

@@ -21,7 +21,8 @@ public class GameSounds : ScriptableObject
     [Tooltip("Songs that play in the background. Add or remove as many as you like.")]
     public List<AudioClip> soundtrack = new List<AudioClip>();
     public bool playMusic = true;
-    public MusicOrder musicOrder = MusicOrder.InOrder;
+    [Tooltip("How the music starts (players can change it in Esc > Sound & Music). Repeat one song is the default.")]
+    public MusicOrder musicOrder = MusicOrder.RepeatOneSong;
     [Tooltip("Keep the music playing while a menu is open.")]
     public bool musicInMenus = true;
 

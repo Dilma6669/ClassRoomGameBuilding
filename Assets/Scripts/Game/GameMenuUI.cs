@@ -29,9 +29,7 @@ public class GameMenuUI : MonoBehaviour
     private TextMeshProUGUI nowPlaying;
     private TextMeshProUGUI pauseButtonLabel;
     private TextMeshProUGUI orderButtonLabel;
-    private Button repeatButton;
-    private Button shuffleButton;
-    private TextMeshProUGUI repeatButtonLabel;
+    private Image modeIcon;
     private RectTransform trackListContent;
     private readonly List<Image> trackImages = new List<Image>();
     private float lastPreviewTime;
@@ -453,16 +451,19 @@ public class GameMenuUI : MonoBehaviour
         Button pause = UIBuilder.Button(row, "Pause", bodyFont, 26, UIBuilder.AccentColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.ToggleMusicPause(); RefreshSoundScreen(); });
         pauseButtonLabel = pause.GetComponentInChildren<TextMeshProUGUI>();
         UIBuilder.Button(row, "Next >", bodyFont, 26, UIBuilder.ButtonColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.NextTrack(); RefreshSoundScreen(); });
-        // Shuffle: play the songs in a mixed-up order (lit up when it's on; off = in order)
-        shuffleButton = UIBuilder.Button(row, "Shuffle: Off", bodyFont, 26, UIBuilder.ButtonColor, () => CycleOrder());
-        orderButtonLabel = shuffleButton.GetComponentInChildren<TextMeshProUGUI>();
-        // Repeat: keep playing the same song (lit up when it's on)
-        repeatButton = UIBuilder.Button(row, "Repeat: Off", bodyFont, 26, UIBuilder.ButtonColor, () =>
-        {
-            if (SoundManager.Instance != null) SoundManager.Instance.RepeatSong = !SoundManager.Instance.RepeatSong;
-            RefreshSoundScreen();
-        });
-        repeatButtonLabel = repeatButton.GetComponentInChildren<TextMeshProUGUI>();
+        // One music mode button: In order -> Repeat song -> Shuffle, with an icon for each
+        Button mode = UIBuilder.Button(row, "Repeat", bodyFont, 24, UIBuilder.ButtonColor, () => CycleOrder());
+        orderButtonLabel = mode.GetComponentInChildren<TextMeshProUGUI>();
+        UIBuilder.Stretch(orderButtonLabel.rectTransform, 64, 6, 0, 0);
+        orderButtonLabel.alignment = TextAlignmentOptions.Left;
+        modeIcon = UIBuilder.Image(mode.transform, "Icon", Color.white);
+        modeIcon.raycastTarget = false;
+        modeIcon.preserveAspect = true;
+        RectTransform iconRect = modeIcon.rectTransform;
+        iconRect.anchorMin = iconRect.anchorMax = new Vector2(0f, 0.5f);
+        iconRect.pivot = new Vector2(0f, 0.5f);
+        iconRect.anchoredPosition = new Vector2(10f, 0f);
+        iconRect.sizeDelta = new Vector2(48f, 48f);
 
         // The songs: click one to play it
         Image listBG = UIBuilder.Image(p, "TrackListBackground", UIBuilder.PanelLightColor);
@@ -480,7 +481,8 @@ public class GameMenuUI : MonoBehaviour
     {
         SoundManager sm = SoundManager.Instance;
         if (sm == null) return;
-        sm.Order = sm.Order == GameSounds.MusicOrder.Shuffle ? GameSounds.MusicOrder.InOrder : GameSounds.MusicOrder.Shuffle;
+        // In order -> Repeat song -> Shuffle -> In order...
+        sm.Mode = (SoundManager.MusicMode)(((int)sm.Mode + 1) % 3);
         RefreshSoundScreen();
     }
 
@@ -526,12 +528,12 @@ public class GameMenuUI : MonoBehaviour
         else nowPlaying.text = (sm.IsMusicPaused ? "Paused: " : "Now playing: ") + sm.TrackName(sm.CurrentTrack);
 
         pauseButtonLabel.text = sm.IsMusicPaused ? "Play" : "Pause";
-        bool shuffle = sm.Order == GameSounds.MusicOrder.Shuffle;
-        orderButtonLabel.text = shuffle ? "Shuffle: On" : "Shuffle: Off";
-        shuffleButton.GetComponent<Image>().color = shuffle ? UIBuilder.AccentColor : UIBuilder.ButtonColor;
-        bool repeat = sm.RepeatSong;
-        repeatButtonLabel.text = repeat ? "Repeat: On" : "Repeat: Off";
-        repeatButton.GetComponent<Image>().color = repeat ? UIBuilder.AccentColor : UIBuilder.ButtonColor;
+        switch (sm.Mode)
+        {
+            case SoundManager.MusicMode.RepeatSong: orderButtonLabel.text = "Repeat"; modeIcon.sprite = MusicIcons.Repeat; break;
+            case SoundManager.MusicMode.Shuffle: orderButtonLabel.text = "Shuffle"; modeIcon.sprite = MusicIcons.Shuffle; break;
+            default: orderButtonLabel.text = "In order"; modeIcon.sprite = MusicIcons.InOrder; break;
+        }
 
         for (int i = 0; i < trackImages.Count; i++)
         {

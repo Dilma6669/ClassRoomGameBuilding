@@ -287,6 +287,19 @@ public class SoundManager : MonoBehaviour
         }
     }
 
+    public enum MusicMode { InOrder, RepeatSong, Shuffle }
+
+    /// <summary>The one music button in Esc > Sound & Music: In order -> Repeat song -> Shuffle.</summary>
+    public MusicMode Mode
+    {
+        get => RepeatSong ? MusicMode.RepeatSong : Order == GameSounds.MusicOrder.Shuffle ? MusicMode.Shuffle : MusicMode.InOrder;
+        set
+        {
+            RepeatSong = value == MusicMode.RepeatSong;
+            Order = value == MusicMode.Shuffle ? GameSounds.MusicOrder.Shuffle : GameSounds.MusicOrder.InOrder;
+        }
+    }
+
     /// <summary>
     /// Keep playing the same song over and over. Starts on if the Game Builder's order is
     /// 'Repeat one song'; players switch it in Esc > Sound & Music.
