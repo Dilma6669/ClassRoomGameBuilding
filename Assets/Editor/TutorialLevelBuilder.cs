@@ -64,6 +64,33 @@ public static class TutorialLevelBuilder
 
     public static string TutorialBuildFolder => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Build", "Tutorial");
 
+    [MenuItem("Game/Tutorial/Build Tutorial Game for Mac (for the class)", priority = 43)]
+    public static void BuildTutorialGameMacMenu()
+    {
+        if (!GameMenuItems.MacSupported)
+        {
+            EditorUtility.DisplayDialog("Mac builds aren't set up", "Add 'Mac Build Support (Mono)' to this Unity in Unity Hub first.", "OK");
+            return;
+        }
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+        if (!File.Exists(ScenePath)) Build();
+        string zip = BuildTutorialGameMac();
+        if (zip != null && EditorUtility.DisplayDialog("Mac tutorial ready", "Zipped here:\n" + zip + "\n\nSend the zip to Mac users. It has a 'HOW TO OPEN ON A MAC' note inside.", "Show me", "OK"))
+            EditorUtility.RevealInFinder(zip);
+        else if (zip == null)
+            EditorUtility.DisplayDialog("Build failed", "The Mac tutorial didn't build. Check the Console for red errors.", "OK");
+    }
+
+    /// <summary>Tutorial Island (+ Adventure Park) as a Mac app, zipped to Build/TutorialIsland (Mac).zip. Returns the zip's path, or null.</summary>
+    public static string BuildTutorialGameMac()
+    {
+        string root = Directory.GetParent(Application.dataPath).FullName;
+        string[] scenes = File.Exists(ShowcaseLevelBuilder.ScenePath) ? new[] { ScenePath, ShowcaseLevelBuilder.ScenePath } : new[] { ScenePath };
+        UnityEditor.Build.Reporting.BuildReport report = GameMenuItems.BuildMacApp(scenes, Path.Combine(root, "Build", "TutorialMac"), "TutorialIsland");
+        if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded) return null;
+        return MacZip.ZipApp(Path.Combine(root, "Build", "TutorialMac", "TutorialIsland.app"), Path.Combine(root, "Build", "TutorialIsland (Mac).zip"));
+    }
+
     /// <summary>Builds a game with ONLY the tutorial level into Build/Tutorial (the class's level order isn't touched).</summary>
     public static UnityEditor.Build.Reporting.BuildReport BuildTutorialGame()
     {

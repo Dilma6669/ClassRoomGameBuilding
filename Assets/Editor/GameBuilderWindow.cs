@@ -1324,17 +1324,18 @@ public partial class GameBuilderWindow : EditorWindow
 
         if (Box("📦 Share your game", "Turn your game into a program anyone can play."))
         {
-        EditorGUILayout.HelpBox("Builds a Windows game into the Build/Windows folder. Copy that whole folder to share it.", MessageType.None);
+        EditorGUILayout.HelpBox("Make your game into something anyone can play, without Unity: a Windows game, or a Mac game.", MessageType.None);
         GUI.enabled = !EditorApplication.isPlaying;
-        if (BigButton("📦 Build Game (Windows)", new Color(0.2f, 0.8f, 0.3f)))
-        {
-            GameMenuItems.BuildWindowsMenu();
-            GUIUtility.ExitGUI();
-        }
+        int buildButton = ButtonGrid(2, new[] { "🪟 Build Game (Windows)", "🍎 Build Game (Mac)" },
+            new Color?[] { new Color(0.2f, 0.8f, 0.3f), new Color(0.2f, 0.8f, 0.3f) });
+        if (buildButton == 0) { GameMenuItems.BuildWindowsMenu(); GUIUtility.ExitGUI(); }
+        if (buildButton == 1) { GameMenuItems.BuildMacMenu(); GUIUtility.ExitGUI(); }
         GUI.enabled = true;
-        if (Directory.Exists("Build/Windows") && GUILayout.Button("📂 Open the build folder"))
+        EditorGUILayout.LabelField("Windows: copy the whole Build/Windows folder. Mac: send the '(Mac).zip' in the Build folder " +
+            "(it has a note inside on how to open it).", EditorStyles.wordWrappedMiniLabel);
+        if (Directory.Exists("Build") && GUILayout.Button("📂 Open the build folder"))
         {
-            EditorUtility.RevealInFinder(Path.GetFullPath("Build/Windows"));
+            EditorUtility.RevealInFinder(Path.GetFullPath(Directory.Exists("Build/Windows") ? "Build/Windows" : "Build"));
         }
         }
         EndBox();

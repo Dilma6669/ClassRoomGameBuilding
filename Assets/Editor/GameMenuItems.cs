@@ -214,4 +214,91 @@ public static class GameMenuItems
         }
         return report;
     }
+
+    // ------------------------------------------------------------------ Mac
+
+    public static bool MacSupported => BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, BuildTarget.StandaloneOSX);
+
+    [MenuItem("Game/Build Game (Mac)", priority = 22)]
+    public static void BuildMacMenu()
+    {
+        if (!MacSupported)
+        {
+            EditorUtility.DisplayDialog("Mac builds aren't set up",
+                "This Unity can't make Mac games yet. In Unity Hub: Installs > the ⚙ next to this Unity version > Add modules > tick 'Mac Build Support (Mono)'.", "OK");
+            return;
+        }
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+        string zip = BuildMac(out BuildReport report);
+        if (report == null) return;
+        if (report.summary.result == BuildResult.Succeeded && zip != null)
+        {
+            if (EditorUtility.DisplayDialog("Mac build finished!",
+                    "Your Mac game is zipped here:\n" + zip + "\n\nSend the zip to Mac users. It has a 'HOW TO OPEN ON A MAC' note inside.",
+                    "Show in Explorer", "Close"))
+            {
+                EditorUtility.RevealInFinder(zip);
+            }
+        }
+        else
+        {
+            EditorUtility.DisplayDialog("Build failed",
+                "The Mac build did not finish (" + report.summary.totalErrors + " errors). Check the Console window for red error messages.", "OK");
+        }
+    }
+
+    /// <summary>Builds every enabled scene to Build/Mac/&lt;Game&gt;.app and zips it (Build/&lt;Game&gt; (Mac).zip). Returns the zip's path.</summary>
+    public static string BuildMac(out BuildReport report)
+    {
+        report = null;
+        EnsureSettingsAsset();
+        string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+        if (scenes.Length == 0)
+        {
+            Debug.LogError("No scenes in Build Settings. Open a level and use Game > Add Open Scene to Build.");
+            return null;
+        }
+
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string gameName = string.Join("_", PlayerSettings.productName.Split(Path.GetInvalidFileNameChars()));
+        string folder = Path.Combine(projectRoot, "Build", "Mac");
+        report = BuildMacApp(scenes, folder, gameName);
+        if (report.summary.result != BuildResult.Succeeded) return null;
+        return MacZip.ZipApp(Path.Combine(folder, gameName + ".app"), Path.Combine(projectRoot, "Build", gameName + " (Mac).zip"));
+    }
+
+    /// <summary>Builds the scenes as a Mac app (Intel and Apple-chip Macs) into an empty folder.</summary>
+    public static BuildReport BuildMacApp(string[] scenes, string folder, string appName)
+    {
+        if (Directory.Exists(folder)) Directory.Delete(folder, true);
+        SetMacUniversal();
+        BuildPlayerOptions options = new BuildPlayerOptions
+        {
+            scenes = scenes,
+            locationPathName = Path.Combine(folder, appName + ".app"),
+            target = BuildTarget.StandaloneOSX,
+            targetGroup = BuildTargetGroup.Standalone,
+            options = BuildOptions.None
+        };
+        BuildReport report = BuildPipeline.BuildPlayer(options);
+        Debug.Log("Mac build " + report.summary.result + ": " + options.locationPathName + " (" + report.summary.totalErrors + " errors)");
+        return report;
+    }
+
+    /// <summary>Intel + Apple silicon in one app. The setting lives in the Mac module, so it's set by name (no error if it's missing).</summary>
+    private static void SetMacUniversal()
+    {
+        System.Type settings = System.AppDomain.CurrentDomain.GetAssemblies()
+            .Select(a => a.GetType("UnityEditor.OSXStandalone.UserBuildSettings"))
+            .FirstOrDefault(t => t != null);
+        System.Reflection.PropertyInfo arch = settings?.GetProperty("architecture", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        if (arch == null) return;
+        try
+        {
+            object universal = System.Enum.Parse(arch.PropertyType, "x64ARM64");
+            arch.SetValue(null, universal);
+        }
+        catch (System.Exception e) { Debug.LogWarning("Couldn't set the Mac build to Intel + Apple silicon: " + e.Message); }
+    }
 }
