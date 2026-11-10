@@ -66,7 +66,7 @@ public partial class GameBuilderWindow
     }
 
     /// <summary>A folder's row in a list: ▼/▶ 📁 name (count), ✏️ rename, ✕ remove. Returns true if it's open.</summary>
-    private bool DrawFolderRow(string key, string folder, int count, List<Component> things)
+    private bool DrawFolderRow(string key, string folder, int count, List<Component> things, List<Component> all)
     {
         string k = "folder/" + key + "/" + folder;
         bool open = FolderOpen(key, folder);
@@ -96,6 +96,7 @@ public partial class GameBuilderWindow
                 foldouts[k] = !open;
                 open = !open;
             }
+            HandleDrop(key, GUILayoutUtility.GetLastRect(), folder, null, all, true); // drop onto a folder = put it in (at the end)
             if (GUILayout.Button(new GUIContent("✏️", "Rename this folder"), GUILayout.Width(28)))
             {
                 renamingKey = key;

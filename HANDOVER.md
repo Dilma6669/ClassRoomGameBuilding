@@ -4,6 +4,13 @@ _Last updated: 2026-11-10 (session 7: Game Builder made easier). Written so a fr
 
 ## ▶ START HERE (state at the end of 2026-11-10)
 
+### ✅ DONE (session 7): list order + drag-and-drop
+- `Editor/GameBuilderWindow.ListOrder.cs`. Rows are a custom control (`RowControl`): click selects, Ctrl/Shift-click adds to the selection, dragging past 6 px starts a `DragAndDrop` that carries only generic data (`"GameBuilderList"` = the list key, no objectReferences, so it can't drop into the Scene or Hierarchy). Drop targets (`HandleDrop`): a folder header (into that folder, at the end; it lights up), a row (just above that row, in its folder; a line shows where), and a "⬆ Drop here to take it out of its folder" strip that appears while dragging something from a folder. Dragging one of several selected rows moves them all.
+- The selected row (single selection) has ▲ ▼. `MoveItems` puts the things in place and renumbers that group's `ListFolder.order` (10, 20...) in one Undo step. Groups are sorted by `order`, then by name (`Ordered`). Folders are still A to Z.
+- `ListFolder` got an `order` field (default int.MaxValue/2 = "not ordered yet", sorted by name).
+- Tested by calling MoveItems directly: into a new folder, ▲, drop above a row, drop on the no-folder strip, undo. NOT tested with a real mouse drag.
+- ⚠ The teacher was working IN THE OPEN TUTORIAL LEVEL (they made a "Custom Enemies" folder there). Don't test in, reload or discard the open level without asking. Remind them that a Tutorial rebuild wipes changes made there; build in their own level instead.
+
 ### ✅ DONE (session 7, very last): names + folders in the lists
 - **Unique names:** new creatures/pickups (`Spawn`) and quick platforms get numbered names via `GameBuilderWindow.UniqueName` ("Wanderer", "Wanderer 2"...). New pop-up signs are "Pop-up Sign", "Pop-up Sign 2"... (`TriggerController.CreateTrigger`, was "UITrigger"; nothing looked that name up).
 - **Name + 📁 Folder box** at the top of the selected platform / creature / sign / checkpoint panel (`GameBuilderWindow.Folders.cs`, `DrawNameAndFolder`): a DelayedTextField renames it (with Undo); the Folder dropdown offers (no folder) / the existing folders / "➕ New folder…" (an inline name box and a "Make it" button). With several selected, it applies to all of them (Ctrl/Shift-click rows in the list to multi-select).

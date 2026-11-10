@@ -10,4 +10,7 @@ using UnityEngine;
 public class ListFolder : MonoBehaviour
 {
     public string folder = "";
+
+    /// <summary>Its place in the list (smaller = higher). Set by ▲ ▼ and drag-and-drop in the Game Builder.</summary>
+    public int order = int.MaxValue / 2;
 }

@@ -1257,51 +1257,44 @@ public partial class GameBuilderWindow : EditorWindow
         }
 
         HashSet<T> selected = SelectedAll<T>();
+        List<Component> all = items.Cast<Component>().ToList();
+        List<Component> chosen = selected.Cast<Component>().ToList();
+        if (Event.current.type == EventType.DragExited) { dragItems = null; dropTarget = null; }
 
-        // Things without a folder first, then each folder (📁) with its things inside, A to Z
-        List<T> loose = items.Where(i => FolderOf(i) == "").ToList();
-        List<IGrouping<string, T>> folders = items.Where(i => FolderOf(i) != "").GroupBy(FolderOf)
-            .OrderBy(g => g.Key, System.StringComparer.OrdinalIgnoreCase).ToList();
+        // Things without a folder first, then each folder (📁) A to Z. Inside each: your order (▲ ▼ / drag), then by name.
+        List<Component> loose = Ordered(all.Where(i => FolderOf(i) == ""));
+        List<string> folders = all.Select(FolderOf).Where(f => f != "").Distinct()
+            .OrderBy(f => f, System.StringComparer.OrdinalIgnoreCase).ToList();
 
-        int rows = loose.Count + folders.Sum(g => 1 + (FolderOpen(key, g.Key) ? g.Count() : 0));
+        int rows = loose.Count + folders.Sum(f => 1 + (FolderOpen(key, f) ? all.Count(i => FolderOf(i) == f) : 0));
         listScrolls.TryGetValue(key, out Vector2 listScroll);
         bool scrolls = rows > 9;
         if (scrolls) listScroll = EditorGUILayout.BeginScrollView(listScroll, EditorStyles.helpBox, GUILayout.Height(230));
         else EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-        foreach (T item in loose) DrawListRow(item, selected.Contains(item), label(item), 0);
-
-        foreach (IGrouping<string, T> folder in folders)
+        // While dragging something that's in a folder: a strip to drop it back out
+        if (dragItems != null && dragKey == key && dragItems.Any(d => FolderOf(d) != ""))
         {
-            if (DrawFolderRow(key, folder.Key, folder.Count(), folder.Cast<Component>().ToList()))
+            Rect strip = GUILayoutUtility.GetRect(new GUIContent("x"), rowStyle, GUILayout.ExpandWidth(true));
+            GUI.Box(strip, "⬆ Drop here to take it out of its folder", EditorStyles.helpBox);
+            HandleDrop(key, strip, "", null, all, true);
+        }
+
+        foreach (Component item in loose) DrawListRow(key, item, loose, "", selected.Contains((T)item), label((T)item), 0, chosen, all);
+
+        foreach (string folder in folders)
+        {
+            List<Component> inside = Ordered(all.Where(i => FolderOf(i) == folder));
+            if (DrawFolderRow(key, folder, inside.Count, inside, all))
             {
-                foreach (T item in folder) DrawListRow(item, selected.Contains(item), label(item), 18);
+                foreach (Component item in inside) DrawListRow(key, item, inside, folder, selected.Contains((T)item), label((T)item), 18, chosen, all);
             }
         }
 
         if (scrolls) EditorGUILayout.EndScrollView();
         else EditorGUILayout.EndVertical();
         listScrolls[key] = listScroll;
-    }
-
-    private void DrawListRow(Component item, bool isSelected, string text, float indent)
-    {
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (indent > 0f) GUILayout.Space(indent);
-            if (GUILayout.Button((isSelected ? "▶ " : "") + text, isSelected ? rowSelectedStyle : rowStyle))
-            {
-                // Ctrl/Shift-click adds it to the selection (to put several into a folder at once)
-                Event e = Event.current;
-                if (e != null && (e.control || e.shift || e.command))
-                {
-                    List<Object> now = Selection.objects.ToList();
-                    if (now.Contains(item.gameObject)) now.Remove(item.gameObject); else now.Add(item.gameObject);
-                    Selection.objects = now.ToArray();
-                }
-                else SelectAndFrame(item.gameObject);
-            }
-        }
+        if (dragItems != null) EditorGUILayout.LabelField("Drop it on a folder, or on a row to put it just above that row.", EditorStyles.miniLabel);
     }
 
     private void NotSetUp()
