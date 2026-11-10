@@ -116,13 +116,15 @@ public partial class GameBuilderWindow
     /// At the top of a selected thing's panel: its Name (rename it) and its 📁 Folder.
     /// With several selected, the folder choice goes to all of them.
     /// </summary>
-    private void DrawNameAndFolder<T>(T item, string key, List<T> all) where T : Component
+    /// <param name="boxTitle">Set: drawn in a box with this title in its own coloured bar (like '📐 Transform settings').</param>
+    private void DrawNameAndFolder<T>(T item, string key, List<T> all, string boxTitle = null) where T : Component
     {
         if (item == null) return;
         List<T> chosen = SelectedAll<T>().ToList();
         if (!chosen.Contains(item)) chosen.Add(item);
 
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        if (boxTitle != null) ObstacleBaseEditor.BeginBox(boxTitle, "Its name, and which folder it's in (in the list above).");
+        using (new EditorGUILayout.VerticalScope(boxTitle != null ? GUIStyle.none : EditorStyles.helpBox))
         {
             if (chosen.Count == 1)
             {
@@ -184,6 +186,7 @@ public partial class GameBuilderWindow
             if (chosen.Count == 1)
                 EditorGUILayout.LabelField("Tip: Ctrl-click more in the list to put several into a folder at once.", EditorStyles.miniLabel);
         }
+        if (boxTitle != null) ObstacleBaseEditor.EndBox();
     }
 
     /// <summary>'Wanderer' if the name is free, else 'Wanderer 2', 'Wanderer 3'...</summary>
