@@ -35,7 +35,7 @@ public partial class GameBuilderWindow
 
         MonoBehaviour driver = o.GetComponent<IObstacleMovement>() as MonoBehaviour;
         if (driver != null && now != Movement.Still) DrawInspector(driver);
-        if (creature) EditorGUILayout.LabelField("Want it to chase the player? Tick 'Chase the player' near the bottom of its settings above.", EditorStyles.wordWrappedMiniLabel);
+        if (creature) EditorGUILayout.LabelField("Want it to chase the player? Tick 'Chase the player' in its settings above (under Bounce Settings).", EditorStyles.wordWrappedMiniLabel);
     }
 
     /// <summary>Swaps the movement script (the ground and platform versions are different scripts).</summary>

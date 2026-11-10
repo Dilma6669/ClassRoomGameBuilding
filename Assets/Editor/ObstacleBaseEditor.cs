@@ -45,9 +45,14 @@ public class ObstacleBaseEditor : Editor
             enterChildren = false;
             if (prop.name == "m_Script" || DrawnLater.Contains(prop.name)) continue;
 
-            // Height Alignment (ground creatures only) goes before Jump On Top
+            // After the Bounce settings: Chase the player, then Height Alignment (ground creatures only), then Jump On Top
             if (prop.name == "jumpsToDefeat")
             {
+                if (many || o.payloadType == ObstacleBase.PayloadType.Damage)
+                {
+                    DrawChase(o, many);
+                    EditorGUILayout.Space(4);
+                }
                 SerializedProperty height = serializedObject.FindProperty("heightOffset");
                 if (height != null) EditorGUILayout.PropertyField(height, true);
             }
@@ -68,7 +73,6 @@ public class ObstacleBaseEditor : Editor
         }
 
         DrawHitZone(o, many);
-        if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawChase(o, many);
         if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawAttack(o, many);
         if (many || (o.payloadType == ObstacleBase.PayloadType.Damage && o.jumpsToDefeat > 0)) DrawBeaten(o, many);
 
