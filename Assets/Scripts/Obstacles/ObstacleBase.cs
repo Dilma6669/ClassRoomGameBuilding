@@ -408,6 +408,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
         if (beatenLength > 0f)
         {
             // It has its own death animation (e.g. falling over): play it, then shrink away (or vanish)
+            if (sparkles && deathSparkleWhen != SparkleMoment.WhenItDisappears) BurstSparkles(Sparkles.Style.Poof);
             StartCoroutine(DieThenShrink(beatenLength));
             return;
         }

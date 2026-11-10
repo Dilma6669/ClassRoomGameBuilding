@@ -27,6 +27,13 @@ public static class ScatterTools
         set => EditorPrefs.SetFloat("GameBuilder.PlatformHeight", value);
     }
 
+    /// <summary>How big new creatures are (the Creatures tab's slider; 2 to start with, about the player's height for a zombie). Pickups aren't changed.</summary>
+    public static float NewCreatureSize
+    {
+        get => EditorPrefs.GetFloat("GameBuilder.CreatureSize", 2f);
+        set => EditorPrefs.SetFloat("GameBuilder.CreatureSize", value);
+    }
+
     public static PlatformLogic QuickPlatform(PlatformController controller, PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
     {
         Vector3 ground = LookPoint();
@@ -428,7 +435,7 @@ public static class ScatterTools
     {
         Kind(g.kind, out ObstacleBase.PayloadType payload, out int amount, out float duration, out bool usedUp, out bool bouncy);
         b.payloadType = payload; b.payloadAmount = amount; b.buffDuration = duration; b.destroyOnTrigger = usedUp; b.isBouncy = bouncy;
-        b.objectScale = RandomIn(g.sizeRange) * (bouncy ? 1.4f : 1f);
+        b.objectScale = RandomIn(g.sizeRange) * (bouncy ? 1.4f : 1f) * (IsCreature(g.kind) ? NewCreatureSize : 1f); // 1 = the normal creature size
         if (bouncy) b.launchForce = 30f;
     }
 
@@ -436,7 +443,7 @@ public static class ScatterTools
     {
         Kind(g.kind, out ObstacleBase.PayloadType payload, out int amount, out float duration, out bool usedUp, out bool bouncy);
         b.payloadType = payload; b.payloadAmount = amount; b.buffDuration = duration; b.destroyOnTrigger = usedUp; b.isBouncy = bouncy;
-        b.objectScale = RandomIn(g.sizeRange) * (bouncy ? 1.4f : 1f);
+        b.objectScale = RandomIn(g.sizeRange) * (bouncy ? 1.4f : 1f) * (IsCreature(g.kind) ? NewCreatureSize : 1f); // 1 = the normal creature size
         if (bouncy) b.launchForce = 30f;
     }
 

@@ -560,6 +560,12 @@ public partial class GameBuilderWindow : EditorWindow
             : "New things will go on the ground where the Scene view is looking. Select a platform to put them on it instead.");
 
         Section("🕷 Creatures (they hurt!)");
+        float newSize = EditorGUILayout.Slider(new GUIContent("New creatures are this big",
+            "Size of new creatures (and scattered ones). 2 = a zombie about as tall as the player. " +
+            "Change one afterwards with its Object Scale. Pickups aren't changed."),
+            ScatterTools.NewCreatureSize, 0.5f, 6f);
+        if (!Mathf.Approximately(newSize, ScatterTools.NewCreatureSize)) ScatterTools.NewCreatureSize = newSize;
+        EditorGUILayout.LabelField("Tip: the player jumps about 1.7 m, so very tall creatures can only be jumped on from something higher.", EditorStyles.wordWrappedMiniLabel);
         PlaceRow(3,
             ("🕷 Wanderer\nwalks around", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, false)),
             ("🧟 Patroller\nwalks back & forth", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, false)),
@@ -787,6 +793,7 @@ public partial class GameBuilderWindow : EditorWindow
             onPlatform.baseSettings.buffDuration = duration;
             onPlatform.baseSettings.destroyOnTrigger = usedUp;
             onPlatform.baseSettings.isBouncy = bouncy;
+            if (payload == ObstacleBase.PayloadType.Damage) onPlatform.baseSettings.objectScale = ScatterTools.NewCreatureSize;
             onPlatform.CreateSingleObstacle();
             JsonUtility.FromJsonOverwrite(saved, onPlatform);
         }
@@ -803,6 +810,7 @@ public partial class GameBuilderWindow : EditorWindow
             ground.baseSettings.destroyOnTrigger = usedUp;
             ground.baseSettings.isBouncy = bouncy;
             if (bouncy) { ground.baseSettings.launchForce = 30f; ground.baseSettings.objectScale = 1.4f; }
+            if (payload == ObstacleBase.PayloadType.Damage) ground.baseSettings.objectScale = ScatterTools.NewCreatureSize;
             ground.CreateSingleObstacle();
             JsonUtility.FromJsonOverwrite(saved, ground);
         }

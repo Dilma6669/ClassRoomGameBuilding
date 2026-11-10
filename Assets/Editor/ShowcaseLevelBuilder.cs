@@ -61,6 +61,8 @@ public static class ShowcaseLevelBuilder
         if (!AssetDatabase.IsValidFolder(TutorialLevelBuilder.AssetFolder)) AssetDatabase.CreateFolder("Assets", "Tutorial");
         folderOrder.Clear();
         float oldHeight = ScatterTools.NewPlatformHeight;
+        float oldCreatureSize = ScatterTools.NewCreatureSize;
+        ScatterTools.NewCreatureSize = 1f; // the park sets its creatures' sizes itself
 
         // 1. Start from the empty template level, overwriting in place so the scene keeps its GUID
         if (File.Exists(ScenePath))
@@ -117,6 +119,7 @@ public static class ShowcaseLevelBuilder
         finally
         {
             ScatterTools.NewPlatformHeight = oldHeight;
+            ScatterTools.NewCreatureSize = oldCreatureSize;
             ScatterTools.PlaceAt = null;
             Random.InitState(System.Environment.TickCount);
         }

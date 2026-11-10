@@ -17,8 +17,12 @@ public class ObstacleBaseEditor : Editor
         "chasePlayer", "chaseStartDistance", "chaseGiveUpDistance", "chaseSpeed",
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
-        "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime",
+        "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime", "deathSparkleWhen",
     };
+
+    private static readonly HashSet<string> SparkleProps = new HashSet<string> { "sparkles", "sparkleStyle", "customSparkleColour", "sparkleColour", "sparkleAmount", "sparkleSize" };
+
+    private static bool IsBeatable(ObstacleBase o) => o.payloadType == ObstacleBase.PayloadType.Damage && o.jumpsToDefeat > 0;
 
     private static readonly Dictionary<string, GUIContent> Labels = new Dictionary<string, GUIContent>
     {
@@ -47,6 +51,9 @@ public class ObstacleBaseEditor : Editor
                 if ((prop.name == "sparkleStyle" || prop.name == "customSparkleColour" || prop.name == "sparkleAmount" || prop.name == "sparkleSize") && !o.sparkles) continue;
                 if (prop.name == "sparkleColour" && (!o.sparkles || !o.customSparkleColour)) continue;
             }
+
+            // Creatures that can be beaten: the sparkle settings are shown in '💀 When it's beaten' instead
+            if (!many && IsBeatable(o) && SparkleProps.Contains(prop.name)) continue;
 
             if (Labels.TryGetValue(prop.name, out GUIContent label)) EditorGUILayout.PropertyField(prop, label);
             else EditorGUILayout.PropertyField(prop, true);
@@ -166,6 +173,18 @@ public class ObstacleBaseEditor : Editor
             SerializedProperty time = serializedObject.FindProperty("shrinkTime");
             EditorGUILayout.PropertyField(time, new GUIContent("Shrinks over (seconds)", time.tooltip));
         }
+
+        if (many) return; // with several selected, the sparkle settings are in the main list above
+        SerializedProperty sparkles = serializedObject.FindProperty("sparkles");
+        EditorGUILayout.PropertyField(sparkles, new GUIContent("✨ Sparkle burst", "A burst of sparkles when it's beaten."));
+        if (!sparkles.boolValue) return;
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("deathSparkleWhen"), new GUIContent("Sparkles when", "When it disappears at the end, as soon as it's beaten, or both."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sparkleStyle"), new GUIContent("Sparkle style"));
+        SerializedProperty own = serializedObject.FindProperty("customSparkleColour");
+        EditorGUILayout.PropertyField(own, new GUIContent("Pick my own colour", own.tooltip));
+        if (own.boolValue) EditorGUILayout.PropertyField(serializedObject.FindProperty("sparkleColour"), new GUIContent("Sparkle colour"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sparkleAmount"), new GUIContent("How many sparkles"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sparkleSize"), new GUIContent("Sparkle size"));
     }
 
     private void DrawChase(ObstacleBase o, bool many)

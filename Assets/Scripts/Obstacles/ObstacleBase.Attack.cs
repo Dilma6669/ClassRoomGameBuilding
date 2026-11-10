@@ -10,6 +10,10 @@ public abstract partial class ObstacleBase
     [Tooltip("When it hurts you, it quickly turns to face you while its attack animation plays, then carries on.")]
     public bool faceYouWhenAttacking = true;
 
+    public enum SparkleMoment { WhenItDisappears, AsSoonAsItsBeaten, Both }
+    [Tooltip("When its Sparkle Burst goes off: when it disappears at the end, as soon as it's beaten, or both.")]
+    public SparkleMoment deathSparkleWhen = SparkleMoment.WhenItDisappears;
+
     [Tooltip("After its death animation it shrinks away to nothing, then it's removed. Untick: it just disappears.")]
     public bool shrinkAwayWhenBeaten = true;
     [Tooltip("How long it lies there after its death animation before it starts shrinking (seconds).")]
@@ -44,7 +48,7 @@ public abstract partial class ObstacleBase
                 yield return null;
             }
         }
-        if (sparkles) BurstSparkles(Sparkles.Style.Poof);
+        if (sparkles && deathSparkleWhen != SparkleMoment.AsSoonAsItsBeaten) BurstSparkles(Sparkles.Style.Poof);
         Destroy(gameObject);
     }
 
