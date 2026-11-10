@@ -38,7 +38,7 @@ public partial class GameBuilderWindow : EditorWindow
     private List<Checkpoint> checkpoints = new List<Checkpoint>();
     private List<Material> skyMaterials;
 
-    private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle;
+    [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle;
 
     [MenuItem("Game/🎮 Game Builder", priority = -100)]
     public static void Open()
@@ -94,24 +94,32 @@ public partial class GameBuilderWindow : EditorWindow
     private void OnGUI()
     {
         InitStyles();
-        DrawTopBar();
-        DrawTabs();
-
-        scroll = EditorGUILayout.BeginScrollView(scroll);
-        EditorGUILayout.Space(4);
-        switch (tab)
+        BeginTheme();
+        try
         {
-            case Tab.Player: DrawPlayerTab(); break;
-            case Tab.Level: DrawLevelTab(); break;
-            case Tab.Platforms: DrawPlatformsTab(); break;
-            case Tab.Creatures: DrawCreaturesTab(); break;
-            case Tab.Scenery: DrawSceneryTab(); break;
-            case Tab.Signs: DrawSignsTab(); break;
-            case Tab.Sounds: DrawSoundsTab(); break;
-            case Tab.Build: DrawBuildTab(); break;
+            DrawTopBar();
+            DrawTabs();
+
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            EditorGUILayout.Space(4);
+            switch (tab)
+            {
+                case Tab.Player: DrawPlayerTab(); break;
+                case Tab.Level: DrawLevelTab(); break;
+                case Tab.Platforms: DrawPlatformsTab(); break;
+                case Tab.Creatures: DrawCreaturesTab(); break;
+                case Tab.Scenery: DrawSceneryTab(); break;
+                case Tab.Signs: DrawSignsTab(); break;
+                case Tab.Sounds: DrawSoundsTab(); break;
+                case Tab.Build: DrawBuildTab(); break;
+            }
+            EditorGUILayout.Space(20);
+            EditorGUILayout.EndScrollView();
         }
-        EditorGUILayout.Space(20);
-        EditorGUILayout.EndScrollView();
+        finally
+        {
+            EndTheme();
+        }
     }
 
     private void DrawTopBar()

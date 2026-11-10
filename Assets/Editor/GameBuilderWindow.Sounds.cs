@@ -8,7 +8,7 @@ using UnityEngine;
 public partial class GameBuilderWindow
 {
     private double soundsSaveAt;
-    private GUIStyle soundHeaderStyle;
+    [System.NonSerialized] private GUIStyle soundHeaderStyle;
 
     // The order the moments are listed in the tab
     private static readonly SoundEvent[] TabOrder =
@@ -50,7 +50,12 @@ public partial class GameBuilderWindow
         Title("🔊 Sounds & Music", "Drag a sound file (.wav, .mp3 or .ogg) from the Project window onto a slot. Keep your sounds in the Assets/MySounds folder.\nThese sounds are used in EVERY level. In the game, players press Esc > Sound & Music to change the volume and pick songs.");
 
         GameSounds sounds = SoundTools.EnsureAsset();
-        if (soundHeaderStyle == null) soundHeaderStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 13 };
+        if (soundHeaderStyle == null)
+        {
+            soundHeaderStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 13, fontStyle = FontStyle.Bold };
+            // Near-white so the titles stand out on the blue boxes
+            soundHeaderStyle.normal.textColor = EditorGUIUtility.isProSkin ? new Color(0.93f, 0.95f, 1f) : Color.black;
+        }
 
         using (new EditorGUILayout.HorizontalScope())
         {
