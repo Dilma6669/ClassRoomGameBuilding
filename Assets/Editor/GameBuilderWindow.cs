@@ -594,9 +594,10 @@ public partial class GameBuilderWindow : EditorWindow
             Section("✏️ " + selected.name);
             DrawNameAndFolder(selected, "obstacles", obstacles);
             DrawPosition(selected.transform, selected.name, hit => MoveObstacleTo(selected, hit), () => PutObstacleOnGround(selected));
-            DrawInspector(selected);
-
-            DrawMovement(selected);
+            // 'How it moves' is drawn inside the creature's '🚶 Movement settings' box
+            ObstacleBaseEditor.HowItMoves = DrawMovement;
+            try { DrawInspector(selected); }
+            finally { ObstacleBaseEditor.HowItMoves = null; }
 
             DrawGlow(selected.gameObject, Sparkles.ColourFor(selected.payloadType));
 
@@ -1242,6 +1243,7 @@ public partial class GameBuilderWindow : EditorWindow
         using (new EditorGUILayout.VerticalScope(boxed ? EditorStyles.helpBox : GUIStyle.none))
         {
             // Lets a panel hide things the Game Builder already shows another way
+            bool wasDrawing = DrawingInGameBuilder; // one inspector can be drawn inside another (How it moves)
             DrawingInGameBuilder = true;
             try
             {
@@ -1250,7 +1252,7 @@ public partial class GameBuilderWindow : EditorWindow
                 if (ed.GetType().Name == "GenericInspector") KidInspector.DrawDefault(ed.serializedObject);
                 else ed.OnInspectorGUI();
             }
-            finally { DrawingInGameBuilder = false; }
+            finally { DrawingInGameBuilder = wasDrawing; }
         }
     }
 

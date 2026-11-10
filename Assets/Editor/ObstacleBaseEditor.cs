@@ -24,6 +24,31 @@ public class ObstacleBaseEditor : Editor
 
     [System.NonSerialized] private static GUIStyle boxTitle;
 
+    /// <summary>Set by the Game Builder while it draws a creature: draws its 'How it moves' buttons inside the Movement box.</summary>
+    public static System.Action<ObstacleBase> HowItMoves;
+
+    /// <summary>Starts a bordered box whose title sits in its own coloured bar. End it with EndBox().</summary>
+    private static void BeginBox(string title, string subtitle)
+    {
+        EditorGUILayout.Space(10);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        if (boxTitle == null)
+        {
+            boxTitle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 15, alignment = TextAnchor.MiddleLeft };
+            boxTitle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : new Color(0.1f, 0.15f, 0.25f);
+        }
+        Rect bar = GUILayoutUtility.GetRect(0f, 28f, GUILayout.ExpandWidth(true));
+        EditorGUI.DrawRect(bar, EditorGUIUtility.isProSkin ? new Color(0.2f, 0.34f, 0.55f) : new Color(0.62f, 0.76f, 0.93f));
+        GUI.Label(new Rect(bar.x + 8f, bar.y, bar.width - 16f, bar.height), title, boxTitle);
+        if (!string.IsNullOrEmpty(subtitle)) EditorGUILayout.LabelField(subtitle, EditorStyles.miniLabel);
+    }
+
+    private static void EndBox()
+    {
+        EditorGUILayout.Space(2);
+        EditorGUILayout.EndVertical();
+    }
+
     private static readonly HashSet<string> SparkleProps = new HashSet<string> { "sparkles", "sparkleStyle", "customSparkleColour", "sparkleColour", "sparkleAmount", "sparkleSize" };
 
     private static bool IsBeatable(ObstacleBase o) => o.payloadType == ObstacleBase.PayloadType.Damage && o.jumpsToDefeat > 0;
@@ -47,12 +72,17 @@ public class ObstacleBaseEditor : Editor
         {
             enterChildren = false;
 
-            // After the Bounce settings: Chase the player, then Height Alignment (ground creatures only)
+            // After the Bounce settings: the 🚶 Movement settings box (How it moves + Chase), then Height Alignment (ground creatures only)
             if (prop.name == "jumpsToDefeat")
             {
-                if (many || o.payloadType == ObstacleBase.PayloadType.Damage)
+                bool creature = many || o.payloadType == ObstacleBase.PayloadType.Damage;
+                bool howItMoves = HowItMoves != null && !many;
+                if (creature || howItMoves)
                 {
-                    DrawChase(o, many);
+                    BeginBox("🚶 Movement settings", creature ? "How it moves around, and whether it chases you." : "How it moves around.");
+                    if (howItMoves) HowItMoves(o);
+                    if (creature) DrawChase(o, many);
+                    EndBox();
                     EditorGUILayout.Space(4);
                 }
                 SerializedProperty height = serializedObject.FindProperty("heightOffset");
@@ -78,19 +108,14 @@ public class ObstacleBaseEditor : Editor
         if (many || o.payloadType == ObstacleBase.PayloadType.Damage)
         {
             // Everything about hurting and being beaten, in one box
-            EditorGUILayout.Space(10);
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            if (boxTitle == null) boxTitle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 15 };
-            EditorGUILayout.LabelField("⚔️ Battle settings", boxTitle, GUILayout.Height(22));
-            EditorGUILayout.LabelField("How it hurts you, and how you beat it.", EditorStyles.miniLabel);
+            BeginBox("⚔️ Battle settings", "How it hurts you, and how you beat it.");
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("jumpsToDefeat"), Labels["jumpsToDefeat"]); // with its 🦶 Jump On Top title
             EditorGUILayout.PropertyField(serializedObject.FindProperty("stompBounce"));
             DrawHitZone(o, many);
             DrawAttack(o, many);
             if (many || o.jumpsToDefeat > 0) DrawBeaten(o, many);
-            EditorGUILayout.Space(2);
-            EditorGUILayout.EndVertical();
+            EndBox();
         }
         else
         {

@@ -19,7 +19,8 @@ public partial class GameBuilderWindow
     private void DrawMovement(ObstacleBase o)
     {
         bool creature = o.payloadType == ObstacleBase.PayloadType.Damage;
-        Section("🚶 How it moves");
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("🚶 How it moves", EditorStyles.boldLabel);
         Movement now = MovementOf(o);
         Movement[] all = { Movement.Still, Movement.Wander, Movement.Patrol };
         string[] labels = creature
@@ -35,7 +36,6 @@ public partial class GameBuilderWindow
 
         MonoBehaviour driver = o.GetComponent<IObstacleMovement>() as MonoBehaviour;
         if (driver != null && now != Movement.Still) DrawInspector(driver);
-        if (creature) EditorGUILayout.LabelField("Want it to chase the player? Tick 'Chase the player' in its settings above (under Bounce Settings).", EditorStyles.wordWrappedMiniLabel);
     }
 
     /// <summary>Swaps the movement script (the ground and platform versions are different scripts).</summary>
