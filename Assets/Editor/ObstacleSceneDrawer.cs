@@ -49,8 +49,35 @@ public static class ObstacleSceneDrawer
         Transform body = zone.Find("Body");
         Transform touch = zone.Find("Touch");
         Color touchColour = o.payloadType == ObstacleBase.PayloadType.Damage ? new Color(1f, 0.25f, 0.2f) : new Color(0.3f, 1f, 0.4f);
-        if (touch != null && touch.GetComponent<Collider>() is Collider tc && tc.enabled) DrawCylinder(touch, touchColour);
-        if (body != null) DrawCylinder(body, Color.white);
+        DrawPart(touch, touchColour, true);
+        DrawPart(body, Color.white, false);
+    }
+
+    /// <summary>Draws one part of the hit zone: a wire ball for a Ball shape, else a wire cylinder.</summary>
+    private static void DrawPart(Transform part, Color colour, bool onlyIfOn)
+    {
+        if (part == null) return;
+        SphereCollider ball = part.GetComponent<SphereCollider>();
+        if (ball != null && ball.enabled)
+        {
+            DrawBall(ball, colour);
+            return;
+        }
+        MeshCollider mesh = part.GetComponent<MeshCollider>();
+        if (onlyIfOn && (mesh == null || !mesh.enabled)) return;
+        DrawCylinder(part, colour);
+    }
+
+    private static void DrawBall(SphereCollider ball, Color colour)
+    {
+        Vector3 centre = ball.transform.TransformPoint(ball.center);
+        float r = ball.radius * Mathf.Max(ball.transform.lossyScale.x, ball.transform.lossyScale.y, ball.transform.lossyScale.z);
+        Color oldColour = Handles.color;
+        Handles.color = colour;
+        Handles.DrawWireDisc(centre, Vector3.up, r, 2f);
+        Handles.DrawWireDisc(centre, Vector3.right, r, 2f);
+        Handles.DrawWireDisc(centre, Vector3.forward, r, 2f);
+        Handles.color = oldColour;
     }
 
     /// <summary>A wire cylinder over Unity's built-in cylinder mesh (2 m wide, 2 m tall before scaling).</summary>

@@ -12,6 +12,16 @@ public abstract partial class ObstacleBase
 {
     public const string HitZoneName = "Hit Zone (auto)";
 
+    public enum HitZoneShape { Automatic, Cylinder, Ball }
+    [Tooltip("Automatic: bounce balls and pickups are a Ball, creatures a Cylinder.\n" +
+             "Cylinder: a flat top you can land on (best for jumping on creatures).\n" +
+             "Ball: round, so you bounce off it at all sorts of angles depending on where you hit it.")]
+    public HitZoneShape hitZoneShape = HitZoneShape.Automatic;
+
+    /// <summary>Is the hit zone a ball (sphere) rather than an upright cylinder?</summary>
+    public bool HitZoneIsBall => hitZoneShape == HitZoneShape.Ball ||
+                                 (hitZoneShape == HitZoneShape.Automatic && (isBouncy || payloadType != PayloadType.Damage));
+
     [Tooltip("Fit the hit zone to the model automatically (recommended). Untick to set the width and height yourself.")]
     public bool fitHitZoneToModel = true;
     [Tooltip("How wide the hit zone is (at Object Scale 1).")]
@@ -67,18 +77,44 @@ public abstract partial class ObstacleBase
         // touchDistance is in metres; the zone is scaled by objectScale
         float reach = touchDistance / Mathf.Max(0.01f, objectScale);
 
-        MeshCollider body = Part(zone, "Body", false);
-        SetIfDifferent(body.transform, hitZoneBottom + Vector3.up * (h / 2f), new Vector3(w / CylinderWidth, h / CylinderHeight, w / CylinderWidth));
+        bool ball = HitZoneIsBall;
+        Collider body, touch;
+        if (ball)
+        {
+            // A round ball fitted to the model (as wide as it is on average), with the touch ball 'reach' bigger all round
+            float d = Mathf.Max(0.05f, (w + h) * 0.5f);
+            Vector3 middle = hitZoneBottom + Vector3.up * (h / 2f);
+            SphereCollider b = BallPart(zone, "Body", false);
+            SetIfDifferent(b.transform, middle, Vector3.one);
+            SetRadius(b, d / 2f);
+            SphereCollider t = BallPart(zone, "Touch", true);
+            SetIfDifferent(t.transform, middle, Vector3.one);
+            SetRadius(t, d / 2f + Mathf.Max(reach, 0.3f / Mathf.Max(0.01f, objectScale)));
+            body = b;
+            touch = t;
+        }
+        else
+        {
+            MeshCollider b = Part(zone, "Body", false);
+            SetIfDifferent(b.transform, hitZoneBottom + Vector3.up * (h / 2f), new Vector3(w / CylinderWidth, h / CylinderHeight, w / CylinderWidth));
 
-        MeshCollider touch = Part(zone, "Touch", true);
-        // Wider by 'reach' on every side, same bottom.
-        // Creatures: top level with the body's top (a tiny bit lower), so landing on their head never hurts.
-        // Bounce balls and pickups: it reaches above the top too, so landing on one launches you / picks it up.
-        bool topCounts = isBouncy || payloadType != PayloadType.Damage;
-        float above = Mathf.Max(reach, 0.3f / Mathf.Max(0.01f, objectScale));
-        float touchHeight = topCounts ? h + above : Mathf.Max(0.05f, h - 0.02f);
-        SetIfDifferent(touch.transform, hitZoneBottom + Vector3.up * (touchHeight / 2f), new Vector3((w + reach * 2f) / CylinderWidth, touchHeight / CylinderHeight, (w + reach * 2f) / CylinderWidth));
-        touch.enabled = isBouncy || payloadType != PayloadType.None;
+            MeshCollider t = Part(zone, "Touch", true);
+            // Wider by 'reach' on every side, same bottom.
+            // Creatures: top level with the body's top (a tiny bit lower), so landing on their head never hurts.
+            // Bounce balls and pickups: it reaches above the top too, so landing on one launches you / picks it up.
+            bool topCounts = isBouncy || payloadType != PayloadType.Damage;
+            float above = Mathf.Max(reach, 0.3f / Mathf.Max(0.01f, objectScale));
+            float touchHeight = topCounts ? h + above : Mathf.Max(0.05f, h - 0.02f);
+            SetIfDifferent(t.transform, hitZoneBottom + Vector3.up * (touchHeight / 2f), new Vector3((w + reach * 2f) / CylinderWidth, touchHeight / CylinderHeight, (w + reach * 2f) / CylinderWidth));
+            body = b;
+            touch = t;
+        }
+        // Only the shape in use is switched on
+        UseOnly(zone.Find("Body"), ball);
+        UseOnly(zone.Find("Touch"), ball);
+        if (!body.enabled) body.enabled = true;
+        bool touchOn = isBouncy || payloadType != PayloadType.None;
+        if (touch.enabled != touchOn) touch.enabled = touchOn;
 
         HitZoneBody = body;
         physicalMeshCollider = body;
@@ -88,12 +124,45 @@ public abstract partial class ObstacleBase
         Transform visual = transform.Find("⚠️ DO NOT TOUCH");
         if (visual != null)
         {
-            MeshCollider ball = visual.GetComponent<MeshCollider>();
-            if (ball != null && ball.enabled) ball.enabled = false;
+            MeshCollider oldBall = visual.GetComponent<MeshCollider>();
+            if (oldBall != null && oldBall.enabled) oldBall.enabled = false;
             Transform oldTrigger = visual.Find("TriggerCollider");
             MeshCollider oldTouch = oldTrigger != null ? oldTrigger.GetComponent<MeshCollider>() : null;
             if (oldTouch != null && oldTouch.enabled) oldTouch.enabled = false;
         }
+    }
+
+    /// <summary>A ball-shaped part of the hit zone (sphere collider).</summary>
+    private static SphereCollider BallPart(Transform zone, string name, bool trigger)
+    {
+        Transform t = zone.Find(name);
+        if (t == null)
+        {
+            t = new GameObject(name).transform;
+            t.SetParent(zone, false);
+        }
+        SphereCollider c = t.GetComponent<SphereCollider>();
+        if (c == null) c = t.gameObject.AddComponent<SphereCollider>();
+        if (c.center != Vector3.zero) c.center = Vector3.zero;
+        if (c.isTrigger != trigger) c.isTrigger = trigger;
+        return c;
+    }
+
+    private static void SetRadius(SphereCollider c, float radius)
+    {
+        if (Mathf.Abs(c.radius - radius) > 0.0001f) c.radius = radius;
+    }
+
+    /// <summary>Switches off the shape that isn't in use (the ball's sphere, or the cylinder's mesh).</summary>
+    private static void UseOnly(Transform part, bool ball)
+    {
+        if (part == null) return;
+        SphereCollider s = part.GetComponent<SphereCollider>();
+        MeshCollider m = part.GetComponent<MeshCollider>();
+        if (s != null && !ball && s.enabled) s.enabled = false;
+        if (m != null && ball && m.enabled) m.enabled = false;
+        if (s != null && ball && !s.enabled) s.enabled = true;
+        if (m != null && !ball && !m.enabled) m.enabled = true;
     }
 
     private static MeshCollider Part(Transform zone, string name, bool trigger)

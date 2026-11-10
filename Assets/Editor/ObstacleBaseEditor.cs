@@ -13,7 +13,7 @@ public class ObstacleBaseEditor : Editor
 {
     private static readonly HashSet<string> DrawnLater = new HashSet<string>
     {
-        "fitHitZoneToModel", "hitZoneWidth", "hitZoneHeight", "touchDistance",
+        "hitZoneShape", "fitHitZoneToModel", "hitZoneWidth", "hitZoneHeight", "touchDistance",
         "chasePlayer", "chaseStartDistance", "chaseGiveUpDistance", "chaseSpeed",
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
@@ -123,9 +123,9 @@ public class ObstacleBaseEditor : Editor
             EditorGUILayout.PropertyField(bouncy, new GUIContent("Is Bouncy", "Ticked: touching it launches you."));
             if (many || bouncy.boolValue)
             {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("launchForce"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("upwardBias"));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("momentumTransfer"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("launchForce"), new GUIContent("Launch force", "How hard it launches you."));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("upwardBias"), new GUIContent("Straight up (0-1)", "0 = you fly off at wild angles, depending on where you hit it. 1 = always straight up."));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("momentumTransfer"), new GUIContent("Keep your speed (0-1)", "How much of your running speed you keep when you bounce."));
             }
         }
         EndBox();
@@ -191,8 +191,14 @@ public class ObstacleBaseEditor : Editor
     {
         EditorGUILayout.Space(8);
         EditorGUILayout.LabelField(new GUIContent("🎯 Hit zone (shown in the Scene view when selected)",
-            "White cylinder: its solid body (land on its flat top to jump on it). " +
-            "Coloured cylinder: walking into this hurts you (or picks it up). It only reaches out to the sides, never above."), EditorStyles.boldLabel);
+            "White: its solid body. Coloured: touching this hurts you, picks it up, or bounces you.\n" +
+            "Cylinder: a flat top you can land on (creatures' tops never hurt).\n" +
+            "Ball: round, so you bounce off it at different angles depending on where you hit it."), EditorStyles.boldLabel);
+
+        SerializedProperty shape = serializedObject.FindProperty("hitZoneShape");
+        EditorGUILayout.PropertyField(shape, new GUIContent("Shape", shape.tooltip));
+        if (!many && shape.enumValueIndex == (int)ObstacleBase.HitZoneShape.Automatic)
+            EditorGUILayout.LabelField(o.HitZoneIsBall ? "Automatic: a Ball (it's a bounce ball or a pickup)." : "Automatic: a Cylinder (it's a creature).", EditorStyles.miniLabel);
 
         SerializedProperty fit = serializedObject.FindProperty("fitHitZoneToModel");
         EditorGUILayout.PropertyField(fit, new GUIContent("Fit to the model", fit.tooltip));

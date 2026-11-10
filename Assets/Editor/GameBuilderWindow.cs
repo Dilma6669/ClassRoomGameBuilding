@@ -979,6 +979,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (created == null) return;
 
         created.name = UniqueName(NiceName(created), created); // Wanderer, Wanderer 2, Wanderer 3...
+        if (bouncy) created.upwardBias = 0.25f; // a round bounce ball: you fly off at different angles depending on where you hit it
         if (onPlatform == null) MoveToSceneViewGround(created.transform, placeHit?.point);
         else if (placeHit.HasValue) MoveOnPlatform(created, placeHit.Value.point);
 

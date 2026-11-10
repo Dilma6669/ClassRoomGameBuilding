@@ -337,6 +337,7 @@ public static class ShowcaseLevelBuilder
 
         ObstacleBase ball = SpawnOnGround(At(11f, 148f), ObstacleBase.PayloadType.None, ObstacleSpawnType.Wander, 10, 5f, false, null, 1.4f, bouncy: true);
         SetWander(ball, 4f, 1f, 1.5f);
+        if (ball != null) ball.upwardBias = 0.2f; // round, so you fly off at wild angles depending on where you hit it
         Folder(ball, folder, "Wandering Bounce Ball");
     }
 

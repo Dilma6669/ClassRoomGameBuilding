@@ -340,6 +340,7 @@ public static class ScatterTools
 
             made.name = KindName(g.kind);
             if (IsCreature(g.kind)) made.jumpsToDefeat = g.jumpsToDefeat;
+            if (g.kind == CreatureScatter.Kind.BounceBall) made.upwardBias = 0.25f; // fly off at different angles
             if (g.glow) AddGlow(made.gameObject, Sparkles.ColourFor(made.payloadType));
             Tag(made.gameObject, CreatureGroupId(g));
             taken.Add(made.transform.position);

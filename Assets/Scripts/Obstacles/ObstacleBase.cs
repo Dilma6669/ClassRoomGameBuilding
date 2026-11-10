@@ -90,8 +90,8 @@ public abstract partial class ObstacleBase : MonoBehaviour
     private float lastStompTime = -10f;
 
     // Shared Components
-    protected MeshCollider physicalMeshCollider;
-    protected MeshCollider triggerMeshCollider;
+    protected Collider physicalMeshCollider; // the solid part (a cylinder or a ball)
+    protected Collider triggerMeshCollider;  // the touch part
     protected IObstacleMovement currentMovementStrategy;
 
     protected virtual void OnValidate()
@@ -261,7 +261,11 @@ public abstract partial class ObstacleBase : MonoBehaviour
 
             if (isBouncy)
             {
-                Vector3 surfaceNormal = (motor.TransientPosition - transform.position).normalized;
+                // Push away from where you hit it: from its middle to the middle of the player's body
+                // (hit a ball low on its side and you fly off sideways; land near the top and you go up)
+                Vector3 myMiddle = HitZoneBody != null ? HitZoneBody.bounds.center : transform.position;
+                Vector3 playerMiddle = motor.TransientPosition + motor.CharacterUp * (motor.Capsule != null ? motor.Capsule.height * 0.5f : 1f);
+                Vector3 surfaceNormal = (playerMiddle - myMiddle).normalized;
                 if (surfaceNormal == Vector3.zero) surfaceNormal = Vector3.up;
 
                 Vector3 launchDirection = Vector3.Lerp(surfaceNormal, Vector3.up, upwardBias).normalized;
