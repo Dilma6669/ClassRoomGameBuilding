@@ -55,16 +55,24 @@ public partial class GameBuilderWindow
             soundHeaderStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 13, fontStyle = FontStyle.Bold };
         }
 
-        using (new EditorGUILayout.HorizontalScope())
+        // Two buttons exactly the same size: one row split in half
+        Rect buttonRow = GUILayoutUtility.GetRect(0, 38, GUILayout.ExpandWidth(true));
+        buttonRow = new Rect(buttonRow.x + 4, buttonRow.y + 2, buttonRow.width - 8, buttonRow.height - 4);
+        Rect leftButton = new Rect(buttonRow.x, buttonRow.y, buttonRow.width / 2 - 2, buttonRow.height);
+        Rect rightButton = new Rect(buttonRow.x + buttonRow.width / 2 + 2, buttonRow.y, buttonRow.width / 2 - 2, buttonRow.height);
         {
-            if (BigButton("📁 Show the MySounds folder"))
+            if (GUI.Button(leftButton, "📁 Show the MySounds folder", bigButton))
             {
                 UnityEngine.Object folder = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(SoundTools.MySoundsFolder);
                 EditorUtility.FocusProjectWindow();
                 Selection.activeObject = folder;
                 EditorGUIUtility.PingObject(folder);
             }
-            if (BigButton("🎵 Fill empty slots with\nstarter sounds", new Color(0.6f, 0.85f, 1f)))
+            Color oldColour = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.6f, 0.85f, 1f);
+            bool fill = GUI.Button(rightButton, "🎵 Fill empty slots with starter sounds", bigButton);
+            GUI.backgroundColor = oldColour;
+            if (fill)
             {
                 int filled = SoundTools.FillEmptySlotsWithStarterSounds(sounds, true);
                 ShowNotification(new GUIContent(filled > 0 ? "Added " + filled + " starter sounds" : "No empty slots to fill"));
