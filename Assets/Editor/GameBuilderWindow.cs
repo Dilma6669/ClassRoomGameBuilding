@@ -171,9 +171,16 @@ public partial class GameBuilderWindow : EditorWindow
             {
                 // Right under 'Player Model': the chosen model's size, turn and animations
                 CustomModel model = body.GetComponent<CustomModel>();
-                if (model != null && model.model != null)
+                bool hasModel = model != null && model.model != null;
+                if (hasModel)
                 {
-                    if (BeginFoldout("playerModel", "🎨 Model size, turn & animations")) DrawInspector(model, false);
+                    if (BeginFoldout("playerModel", "🎨 Model size, turn & animations"))
+                    {
+                        // 'Player Model' above already picks the model, and the Library box is below
+                        CustomModelEditor.InPlayerTab = true;
+                        try { DrawInspector(model, false); }
+                        finally { CustomModelEditor.InPlayerTab = false; }
+                    }
                     EndFoldout();
                 }
 
@@ -181,6 +188,14 @@ public partial class GameBuilderWindow : EditorWindow
                 if (BigButton("🔍 Show me my player in the Scene"))
                 {
                     SelectAndFrame(body.gameObject);
+                }
+
+                // The player's Library entry: picture, add / new picture / delete picture
+                if (hasModel)
+                {
+                    EditorGUILayout.Space(4);
+                    CustomModelEditor.DrawLibrarySection(model);
+                    EditorGUILayout.Space(2);
                 }
             }
         }

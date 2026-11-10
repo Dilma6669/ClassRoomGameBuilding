@@ -12,21 +12,30 @@ public class CustomModelEditor : Editor
 {
     private bool showAnimations = true;
 
+    /// <summary>
+    /// Set by the Game Builder's Player tab: it already has a 'Player Model' box and draws the
+    /// Library box itself (below 'Show me my player'), so this panel leaves those out.
+    /// </summary>
+    public static bool InPlayerTab;
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
         CustomModel cm = (CustomModel)target;
 
-        EditorGUILayout.HelpBox(
-            "1. Put a model file (.fbx, .glb or .obj) in the Assets/MyModels folder.\n" +
-            "2. Drag it into the Model box below.\n" +
-            "Animations called idle, walk, run, jump or fall are found and played automatically.",
-            MessageType.Info);
-
-        EditorGUILayout.Space(4);
         GUIStyle bold = new GUIStyle(EditorStyles.boldLabel) { fontSize = 13 };
-        EditorGUILayout.LabelField("🎨 Model", bold);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("model"));
+        if (!InPlayerTab)
+        {
+            EditorGUILayout.HelpBox(
+                "1. Put a model file (.fbx, .glb or .obj) in the Assets/MyModels folder.\n" +
+                "2. Drag it into the Model box below.\n" +
+                "Animations called idle, walk, run, jump or fall are found and played automatically.",
+                MessageType.Info);
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("🎨 Model", bold);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("model"));
+        }
         EditorGUILayout.PropertyField(serializedObject.FindProperty("size"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("turn"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("raiseLower"), new GUIContent("Raise / Lower"));
@@ -72,19 +81,7 @@ public class CustomModelEditor : Editor
             foreach (Object t in targets) ((CustomModel)t).Refresh();
         }
 
-        EditorGUILayout.Space(12);
-        GUIStyle big = new GUIStyle(GUI.skin.button) { fontSize = 14, fontStyle = FontStyle.Bold, fixedHeight = 40 };
-
-        using (new EditorGUI.DisabledScope(cm.ModelInstance == null || targets.Length > 1))
-        {
-            GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
-            if (GUILayout.Button("📸 Add to Library (with picture)", big))
-            {
-                AddToLibrary(cm);
-            }
-            GUI.backgroundColor = Color.white;
-        }
-
+        EditorGUILayout.Space(8);
         if (cm.model != null && GUILayout.Button("❌ Remove Model (go back to the original shape)"))
         {
             foreach (Object t in targets)
@@ -94,7 +91,103 @@ public class CustomModelEditor : Editor
                 m.model = null;
                 m.Refresh();
             }
+            GUIUtility.ExitGUI();
         }
+
+        // The Library box (in the Player tab, the Game Builder draws it lower down itself)
+        if (!InPlayerTab && targets.Length == 1 && cm.model != null)
+        {
+            EditorGUILayout.Space(8);
+            DrawLibrarySection(cm);
+        }
+    }
+
+    // ------------------------------------------------------------------ Library box
+
+    private static GUIStyle libraryBigButton;
+
+    /// <summary>
+    /// The model's Library entry: what the Library is, its picture (if taken), and buttons to
+    /// add it / take a new picture / delete the picture.
+    /// </summary>
+    public static void DrawLibrarySection(CustomModel cm)
+    {
+        if (cm == null || cm.model == null) return;
+        if (libraryBigButton == null) libraryBigButton = new GUIStyle(GUI.skin.button) { fontSize = 14, fontStyle = FontStyle.Bold, fixedHeight = 40 };
+
+        string entryName = ObjectNames.NicifyVariableName(cm.model.name);
+        GameSettings settings = GameSettings.Load();
+        LibraryEntry entry = settings != null ? settings.libraryEntries.Find(e => e != null && e.name == entryName) : null;
+
+        using (new EditorGUILayout.VerticalScope(new GUIStyle(EditorStyles.helpBox) { margin = new RectOffset(8, 8, 4, 4), padding = new RectOffset(8, 8, 6, 8) }))
+        {
+            EditorGUILayout.LabelField("📖 Library", new GUIStyle(EditorStyles.boldLabel) { fontSize = 13 });
+            EditorGUILayout.LabelField("The Library is a book players can read in the game (Esc > Library). Each entry has a picture and a backstory you write in Signs & Story > Game Settings > Library Entries.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.Space(4);
+
+            if (entry == null)
+            {
+                EditorGUILayout.LabelField("'" + entryName + "' isn't in the Library yet.", EditorStyles.miniBoldLabel);
+                using (new EditorGUI.DisabledScope(cm.ModelInstance == null))
+                {
+                    GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
+                    if (GUILayout.Button("📸 Add to Library (takes a picture)", libraryBigButton)) { AddToLibrary(cm); GUIUtility.ExitGUI(); }
+                    GUI.backgroundColor = Color.white;
+                }
+                return;
+            }
+
+            // The picture (on a dark square, so a see-through background still shows the shape)
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                Rect pictureRect = GUILayoutUtility.GetRect(128, 128, GUILayout.Width(128), GUILayout.Height(128));
+                EditorGUI.DrawRect(pictureRect, new Color(0.12f, 0.13f, 0.16f));
+                if (entry.picture != null) GUI.DrawTexture(pictureRect, entry.picture.texture, ScaleMode.ScaleToFit);
+                else GUI.Label(pictureRect, "No picture", new GUIStyle(EditorStyles.centeredGreyMiniLabel) { alignment = TextAnchor.MiddleCenter });
+
+                using (new EditorGUILayout.VerticalScope())
+                {
+                    EditorGUILayout.LabelField("'" + entryName + "' is in the Library (" + entry.category + ").", EditorStyles.boldLabel);
+                    if (entry.picture != null)
+                        EditorGUILayout.LabelField("Picture saved in Assets/MyModels/Library Pictures.", EditorStyles.wordWrappedMiniLabel);
+                    else
+                        EditorGUILayout.LabelField("It has no picture. Take one with the button below.", EditorStyles.wordWrappedMiniLabel);
+                }
+            }
+
+            EditorGUILayout.Space(4);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(cm.ModelInstance == null))
+                {
+                    GUI.backgroundColor = new Color(0.4f, 0.75f, 1f);
+                    if (GUILayout.Button(entry.picture != null ? "📸 Take a new picture" : "📸 Take a picture", libraryBigButton)) { AddToLibrary(cm); GUIUtility.ExitGUI(); }
+                }
+                using (new EditorGUI.DisabledScope(entry.picture == null))
+                {
+                    GUI.backgroundColor = new Color(0.95f, 0.5f, 0.5f);
+                    if (GUILayout.Button("🗑 Delete picture", libraryBigButton)) { DeletePicture(settings, entry); GUIUtility.ExitGUI(); }
+                }
+                GUI.backgroundColor = Color.white;
+            }
+        }
+    }
+
+    /// <summary>Deletes the entry's picture file (the entry and its backstory stay in the Library).</summary>
+    private static void DeletePicture(GameSettings settings, LibraryEntry entry)
+    {
+        if (entry.picture == null) return;
+        if (!EditorUtility.DisplayDialog("Delete the Library picture?",
+                "This deletes the picture of '" + entry.name + "'.\nIts Library entry and backstory are kept, and you can take a new picture any time.",
+                "Delete picture", "Cancel")) return;
+
+        string path = AssetDatabase.GetAssetPath(entry.picture);
+        Undo.RecordObject(settings, "Delete Library picture");
+        entry.picture = null;
+        EditorUtility.SetDirty(settings);
+        AssetDatabase.SaveAssets();
+        // Only delete files this tool made, never a picture someone dragged in from elsewhere
+        if (!string.IsNullOrEmpty(path) && path.StartsWith("Assets/MyModels/Library Pictures/")) AssetDatabase.DeleteAsset(path);
     }
 
     // ------------------------------------------------------------------ Library picture
