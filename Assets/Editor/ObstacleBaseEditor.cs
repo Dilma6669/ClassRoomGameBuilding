@@ -21,7 +21,7 @@ public class ObstacleBaseEditor : Editor
         "heightOffset", // drawn in the 📐 Transform settings box
         "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
         "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
-        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "showPickupMessage", "pickupMessage", // ✋ When you touch it box
+        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "showPickupMessage", "pickupMessage", "speedBoostFreeSprint", "superJumpNoFallDamage", // ✋ When you touch it box
         "isBouncy", "launchForce", "upwardBias", "momentumTransfer", // 🏀 Bounce settings box
     };
 
@@ -114,6 +114,10 @@ public class ObstacleBaseEditor : Editor
                            || o.payloadType == ObstacleBase.PayloadType.SprintBuff;
             if (many || powerUp)
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("buffDuration"), new GUIContent("Power-up lasts (seconds)", "How long the power-up lasts."));
+            if (many || o.payloadType == ObstacleBase.PayloadType.SprintBuff)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("speedBoostFreeSprint"), new GUIContent("Free sprinting", "Sprinting doesn't use up stamina while the Speed Boost lasts."));
+            if (many || o.payloadType == ObstacleBase.PayloadType.JumpBuff)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("superJumpNoFallDamage"), new GUIContent("No fall damage", "Falling doesn't hurt while the Super Jump lasts (a fall that starts during it is safe too)."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("destroyOnTrigger"), Labels["destroyOnTrigger"]);
 
             // 💬 Pickups: a message on the screen saying what you picked up

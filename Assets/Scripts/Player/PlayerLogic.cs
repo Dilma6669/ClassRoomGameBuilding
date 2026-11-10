@@ -132,31 +132,48 @@ public class PlayerLogic : MonoBehaviour
         }
     }
 
-    public void ApplyJumpBuff(float multiplier, float duration)
+    /// <summary>While a Super Jump that protects you is on, falling doesn't hurt (FallDamage checks this).</summary>
+    public bool NoFallDamageNow { get; private set; }
+
+    /// <summary>While a Speed Boost that gives free sprinting is on, sprinting doesn't use stamina.</summary>
+    public bool FreeSprintNow { get; private set; }
+
+    public void ApplyJumpBuff(float multiplier, float duration) => ApplyJumpBuff(multiplier, duration, false);
+
+    /// <param name="noFallDamage">Falling doesn't hurt while it lasts.</param>
+    public void ApplyJumpBuff(float multiplier, float duration, bool noFallDamage)
     {
         if (jumpBuffCoroutine != null) StopCoroutine(jumpBuffCoroutine);
-        jumpBuffCoroutine = StartCoroutine(JumpBuffRoutine(multiplier, duration));
+        jumpBuffCoroutine = StartCoroutine(JumpBuffRoutine(multiplier, duration, noFallDamage));
     }
 
-    private IEnumerator JumpBuffRoutine(float multiplier, float duration)
+    private IEnumerator JumpBuffRoutine(float multiplier, float duration, bool noFallDamage)
     {
         activeJumpHeight = jumpHeight * multiplier;
+        NoFallDamageNow = noFallDamage;
         yield return new WaitForSeconds(duration);
         activeJumpHeight = jumpHeight;
+        NoFallDamageNow = false;
         jumpBuffCoroutine = null;
     }
 
-    public void ApplySprintBuff(float multiplier, float duration)
+    public void ApplySprintBuff(float multiplier, float duration) => ApplySprintBuff(multiplier, duration, false);
+
+    /// <param name="freeSprint">Sprinting doesn't use stamina while it lasts.</param>
+    public void ApplySprintBuff(float multiplier, float duration, bool freeSprint)
     {
         if (sprintBuffCoroutine != null) StopCoroutine(sprintBuffCoroutine);
-        sprintBuffCoroutine = StartCoroutine(SprintBuffRoutine(multiplier, duration));
+        sprintBuffCoroutine = StartCoroutine(SprintBuffRoutine(multiplier, duration, freeSprint));
     }
 
-    private IEnumerator SprintBuffRoutine(float multiplier, float duration)
+    private IEnumerator SprintBuffRoutine(float multiplier, float duration, bool freeSprint)
     {
         activeSprintMultiplier = multiplier;
+        FreeSprintNow = freeSprint;
+        if (freeSprint) isExhausted = false; // you can sprint straight away
         yield return new WaitForSeconds(duration);
         activeSprintMultiplier = sprintMultiplier;
+        FreeSprintNow = false;
         sprintBuffCoroutine = null;
     }
 
@@ -171,7 +188,11 @@ public class PlayerLogic : MonoBehaviour
             isExhausted = false;
         }
 
-        if (isTryingToSprint && !isExhausted)
+        if (isTryingToSprint && FreeSprintNow)
+        {
+            // Speed Boost with free sprinting: no stamina used (and none comes back either)
+        }
+        else if (isTryingToSprint && !isExhausted)
         {
             currentStamina -= staminaDrainRate * Time.deltaTime;
             regenTimer = regenDelay;

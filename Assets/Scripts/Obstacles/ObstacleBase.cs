@@ -326,11 +326,11 @@ public abstract partial class ObstacleBase : MonoBehaviour
                     break;
 
                 case PayloadType.JumpBuff:
-                    if (playerLogic != null) playerLogic.ApplyJumpBuff(payloadAmount, buffDuration);
+                    if (playerLogic != null) playerLogic.ApplyJumpBuff(payloadAmount, buffDuration, superJumpNoFallDamage);
                     break;
 
                 case PayloadType.SprintBuff:
-                    if (playerLogic != null) playerLogic.ApplySprintBuff(payloadAmount, buffDuration);
+                    if (playerLogic != null) playerLogic.ApplySprintBuff(payloadAmount, buffDuration, speedBoostFreeSprint);
                     break;
             }
 

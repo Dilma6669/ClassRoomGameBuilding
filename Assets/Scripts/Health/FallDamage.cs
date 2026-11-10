@@ -35,9 +35,15 @@ public class FallDamage : MonoBehaviour
     private float currentFallTimer = 0f;
     private bool wasGrounded = true;
 
+    // A Super Jump that protects you: a fall that happens (or starts) while it's on doesn't hurt
+    private PlayerLogic playerLogic;
+    private bool protectedFall;
+
     private void Awake()
     {
         playerHealth = GetComponent<Health>();
+        playerLogic = GetComponentInParent<PlayerLogic>();
+        if (playerLogic == null) playerLogic = FindAnyObjectByType<PlayerLogic>();
 
 #if HAS_KINEMATIC_CC
         motor = GetComponent<KinematicCharacterMotor>();
@@ -57,11 +63,13 @@ public class FallDamage : MonoBehaviour
             {
                 currentFallTimer += Time.deltaTime;
             }
+            if (playerLogic != null && playerLogic.NoFallDamageNow) protectedFall = true;
         }
         else if (!wasGrounded && isGrounded)
         {
-            ProcessLandingDamage(currentFallTimer);
+            if (!protectedFall) ProcessLandingDamage(currentFallTimer);
             currentFallTimer = 0f;
+            protectedFall = false;
         }
 
         wasGrounded = isGrounded;

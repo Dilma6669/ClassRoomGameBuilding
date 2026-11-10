@@ -11,6 +11,11 @@ public abstract partial class ObstacleBase
     [Tooltip("Your own message. Leave it empty for the automatic one (e.g. '+25 Health!').")]
     public string pickupMessage = "";
 
+    [Tooltip("Speed Boost: sprinting doesn't use up stamina while it lasts.")]
+    public bool speedBoostFreeSprint = true;
+    [Tooltip("Super Jump: falling doesn't hurt while it lasts (a fall that starts during it is safe too).")]
+    public bool superJumpNoFallDamage = true;
+
     /// <summary>The message shown when it's picked up: your own text, or the automatic one.</summary>
     public string PickupMessageText => string.IsNullOrWhiteSpace(pickupMessage) ? AutomaticPickupMessage() : pickupMessage;
 
