@@ -59,7 +59,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
     [Range(1f, 60f)] public float buffDuration = 5f;
     public bool destroyOnTrigger = false;
 
-    [Header("Bounce Settings")] public bool isBouncy = false;
+    [Header("🏀 Bounce Settings")] public bool isBouncy = false;
     [Range(0.5f, 5f)] public float triggerRadius = 0.5f;
     [Range(5f, 50f)] public float launchForce = 25f;
     [Range(0f, 1f)] public float upwardBias = 0.5f;
