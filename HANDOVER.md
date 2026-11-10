@@ -3,7 +3,7 @@
 _Last updated: 2026-11-10, late evening (end of session 5). Written so a fresh Claude session (or a person) can pick up where this one stopped._
 
 ## ▶ START HERE (state at the end of 2026-11-10)
-- **Session 6 (sounds) is committed**. See "Done 2026-11-10 (session 6): Sounds & Music" below. The class's Tutorial zip does NOT have sounds yet; offer a fresh Tutorial build.
+- **Session 6 (sounds) is committed**. See "Done 2026-11-10 (session 6): Sounds & Music" below. A fresh Tutorial build WITH sounds was made on 2026-11-10: `Build/Tutorial` + `Build/TutorialIsland.zip` (76 MB), ran with 0 errors.
 - **Everything is committed** on `feature/menus-models-checkpoints` (latest commits: sounds & music, tutorial build menu item, tutorial with 17 stations, platform effects, glow/sparkles). Not merged to main, not pushed. The only uncommitted change is `Assets/Tutorial/TutorialTerrain.asset` (it changes on every Tutorial rebuild; harmless).
 - **Nothing is in progress.** The teacher's last requests were all finished and verified in Play mode:
   - level order + New/Copy level
