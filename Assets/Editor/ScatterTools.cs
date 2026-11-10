@@ -462,9 +462,9 @@ public static class ScatterTools
     {
         switch (kind)
         {
-            case CreatureScatter.Kind.Wanderer: return "Wandering Creature";
-            case CreatureScatter.Kind.Patroller: return "Patrolling Creature";
-            case CreatureScatter.Kind.Guard: return "Guard Creature";
+            case CreatureScatter.Kind.Wanderer: return "Wanderer";
+            case CreatureScatter.Kind.Patroller: return "Patroller";
+            case CreatureScatter.Kind.Guard: return "Guard";
             case CreatureScatter.Kind.Health: return "Health Pickup";
             case CreatureScatter.Kind.Stamina: return "Stamina Pickup";
             case CreatureScatter.Kind.Shield: return "Shield Pickup";

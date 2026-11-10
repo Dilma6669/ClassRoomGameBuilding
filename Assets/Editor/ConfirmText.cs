@@ -215,6 +215,7 @@ public class TextConfirmEditor : Editor
             SerializedProperty p = props[i];
             if (p.name == "m_Script")
             {
+                if (GameBuilderWindow.DrawingInGameBuilder) continue; // kids never need the Script box
                 using (new EditorGUI.DisabledScope(true)) EditorGUILayout.PropertyField(p);
                 continue;
             }

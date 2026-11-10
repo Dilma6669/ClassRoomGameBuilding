@@ -259,6 +259,9 @@ public class PlatformPopulator : MonoBehaviour
                 patrolDriver.maxMoveSpeed = patrolSettings.maxMoveSpeed;
                 break;
         }
+
+        // 'Health Pickup' or 'Wanderer' instead of 'ObstacleLogic'
+        ObstacleBase.NameByKind(obstacleObj);
     }
 
     #region Platform Management

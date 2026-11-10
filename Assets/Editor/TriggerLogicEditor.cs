@@ -15,11 +15,12 @@ public class TriggerLogicEditor : Editor
         confirmClicked = false;
 
         // 1. Transform settings at the top
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("size"));
-        
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetX"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetY"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetZ"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("size"),
+            new GUIContent("Sign zone size", "How big the invisible zone is that the player walks into."), true);
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetX"), new GUIContent("Move zone left-right"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetY"), new GUIContent("Move zone up-down"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("offsetZ"), new GUIContent("Move zone forward-back"));
 
         EditorGUILayout.Space(10);
 
@@ -39,11 +40,15 @@ public class TriggerLogicEditor : Editor
         if (newChoice == 1)
         {
             EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("canvas"), new GUIContent("Dialog Canvas"));
+            // The canvas is set up automatically; kids never need to change it in the Game Builder
+            if (!GameBuilderWindow.DrawingInGameBuilder)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("canvas"), new GUIContent("Dialog Canvas"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("message"));
             confirmClicked = DrawConfirmButton();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("clearOnExit"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("fadeDuration"), new GUIContent("Fade Duration (s)"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("clearOnExit"),
+                new GUIContent("Hide when you walk away", "The message disappears when the player leaves the zone."));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("fadeDuration"),
+                new GUIContent("Fade time (seconds)", "How long the message takes to fade away."));
             EditorGUI.indentLevel--;
         }
         else if (newChoice == 2)
@@ -65,7 +70,7 @@ public class TriggerLogicEditor : Editor
 
         // 3. Scene Transition settings (conditional dropdown)
         SerializedProperty changeSceneProp = serializedObject.FindProperty("changeScene");
-        EditorGUILayout.PropertyField(changeSceneProp, new GUIContent("Change Scene"));
+        EditorGUILayout.PropertyField(changeSceneProp, new GUIContent("Go to another level when touched", "When the player walks in, the game loads the level you pick below."));
 
         if (changeSceneProp.boolValue)
         {
@@ -99,7 +104,7 @@ public class TriggerLogicEditor : Editor
 
         // Delete Button
         GUI.backgroundColor = new Color(1f, 0.3f, 0.3f);
-        if (GUILayout.Button("🗑️ Delete Trigger", GUILayout.Height(30)))
+        if (GUILayout.Button("🗑️ Delete this sign", GUILayout.Height(30)))
         {
             TriggerLogic trigger = (TriggerLogic)target;
             trigger.DeleteTrigger();

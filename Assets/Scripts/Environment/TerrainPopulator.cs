@@ -264,6 +264,9 @@ public class TerrainPopulator : MonoBehaviour
                 patrolDriver.maxMoveSpeed = patrolSettings.maxMoveSpeed;
                 break;
         }
+
+        // 'Health Pickup' or 'Wanderer' instead of 'ObstacleLogic'
+        ObstacleBase.NameByKind(obstacleObj);
     }
 
     #region Single Terrain Obstacle Spawning

@@ -6,7 +6,7 @@ public class GameControllerEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        KidInspector.DrawDefault(serializedObject);
 
         GameController controller = (GameController)target;
 

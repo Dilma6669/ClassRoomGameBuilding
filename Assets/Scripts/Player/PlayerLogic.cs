@@ -12,15 +12,16 @@ public class PlayerLogic : MonoBehaviour
     [Range(1f, 300f)] public float moveSpeed = 10f;
     public bool enableSprint = true;
     public KeyCode sprintKey = KeyCode.LeftShift;
-    public float sprintMultiplier = 1.8f;
+    [ShowAs("Sprint speed (× normal)"), Tooltip("How much faster you go while holding the sprint key. 2 = twice as fast.")]
+    [Range(1f, 4f)] public float sprintMultiplier = 1.8f;
 
     [Header("Stamina Settings")]
     [Range(10f, 200f)] public float maxStamina = 100f;
-    [Tooltip("How fast stamina depletes per second while sprinting.")]
+    [ShowAs("Stamina used per second"), Tooltip("How much stamina sprinting uses up each second.")]
     [Range(5f, 100f)] public float staminaDrainRate = 25f;
-    [Tooltip("How fast stamina regenerates per second while resting.")]
+    [ShowAs("Stamina refill speed"), Tooltip("How much stamina comes back each second after you stop sprinting.")]
     [Range(5f, 100f)] public float staminaRegenRate = 15f;
-    [Tooltip("Delay in seconds before stamina starts regenerating after sprinting.")]
+    [ShowAs("Wait before refilling"), Tooltip("Seconds to wait after sprinting before stamina starts coming back.")]
     [Range(0f, 5f)] public float regenDelay = 1f;
 
     [HideInInspector] public StaminaHUD staminaHUD;
@@ -28,10 +29,10 @@ public class PlayerLogic : MonoBehaviour
     [Header("Jump Controls")]
     [Range(1f, 300f)] public float jumpHeight = 10f;
 
-    [Tooltip("Extra forward boost applied on jump.")]
+    [ShowAs("Forward push when jumping"), Tooltip("An extra push forwards when you jump while moving.")]
     [Range(0f, 20f)] public float jumpForwardBoost = 2f;
 
-    [Tooltip("Controls how fast you can steer or gain horizontal speed while mid-air.")]
+    [ShowAs("Steering in the air"), Tooltip("How well you can change direction while you're in the air.")]
     [Range(0f, 50f)] public float airSteerSpeed = 15f;
 
 #if HAS_KINEMATIC_CC

@@ -6,7 +6,7 @@ public class PlayerControllerEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        KidInspector.DrawDefault(serializedObject);
 
         PlayerController controller = (PlayerController)target;
 
@@ -19,9 +19,14 @@ public class PlayerControllerEditor : Editor
 
         EditorGUILayout.Space(15);
 
-        // Big Green Create Character Button
-        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f); // Bright green
-        if (GUILayout.Button("🧙‍♂️ Create Character", buttonStyle))
+        // Big Green Create Character Button. Once there is a character, the same button repairs it
+        // (CreateCharacterMesh reuses the 'ExampleCharacter...' child instead of making a second one).
+        bool hasCharacter = HasCharacter(controller);
+        GUI.backgroundColor = hasCharacter ? new Color(0.75f, 0.75f, 0.75f) : new Color(0.2f, 0.8f, 0.3f); // grey = fix, green = create
+        GUIContent createLabel = hasCharacter
+            ? new GUIContent("🔧 Fix my character", "Puts back anything missing from your character (camera, health, sounds...). Your settings and model are kept.")
+            : new GUIContent("🧙‍♂️ Create Character", "Makes your player and its camera in this level.");
+        if (GUILayout.Button(createLabel, buttonStyle))
         {
             controller.CreateCharacterMesh();
         }
@@ -29,6 +34,16 @@ public class PlayerControllerEditor : Editor
         GUI.backgroundColor = Color.white;
 
         DrawPlayerModelSection(controller);
+    }
+
+    /// <summary>True when the level already has a character (a child named 'ExampleCharacter...').</summary>
+    private static bool HasCharacter(PlayerController controller)
+    {
+        foreach (Transform child in controller.transform)
+        {
+            if (child.name.StartsWith("ExampleCharacter")) return true;
+        }
+        return false;
     }
 
     /// <summary>A shortcut so students can change the player's look without digging into the hierarchy.</summary>

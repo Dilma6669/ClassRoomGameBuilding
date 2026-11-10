@@ -51,11 +51,11 @@ public class SceneryPopulator : MonoBehaviour
     [Header("Settings for all groups")]
     [Tooltip("Give each one a random turn so they don't all look the same.")]
     public bool randomTurn = true;
-    [Tooltip("Don't put scenery on slopes steeper than this (degrees).")]
+    [ShowAs("Steepest hill to grow on"), Tooltip("Don't put scenery on slopes steeper than this (degrees).")]
     [Range(0f, 90f)] public float maxSlope = 35f;
-    [Tooltip("Keep this far from the edge of the terrain.")]
+    [ShowAs("Keep away from the edge"), Tooltip("Keep this far from the edge of the ground (metres).")]
     [Range(0f, 100f)] public float edgePadding = 10f;
-    [Tooltip("Sink a little into the ground so nothing looks like it's floating on bumpy ground.")]
+    [ShowAs("Push into the ground"), Tooltip("Sink a little into the ground so nothing looks like it's floating on bumpy ground.")]
     [Range(0f, 2f)] public float sinkIntoGround = 0.1f;
 
     private void Reset()

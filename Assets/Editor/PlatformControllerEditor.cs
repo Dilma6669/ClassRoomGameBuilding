@@ -31,6 +31,9 @@ public class PlatformControllerEditor : Editor
             controller.ApplyModelToAllPlatforms();
         }
 
+        // The Game Builder's Platforms tab has its own Quick platform buttons, so these only show in Unity's Inspector
+        if (GameBuilderWindow.DrawingInGameBuilder) return;
+
         EditorGUILayout.Space(15);
 
         GUIStyle setupButtonStyle = new GUIStyle(GUI.skin.button)

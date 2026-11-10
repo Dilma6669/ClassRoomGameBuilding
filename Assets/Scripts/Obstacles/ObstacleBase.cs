@@ -19,6 +19,34 @@ public abstract class ObstacleBase : MonoBehaviour
         SprintBuff
     }
 
+    /// <summary>What kind of thing this is, in the same words as the Game Builder's buttons ('Wanderer', 'Health Pickup'...).</summary>
+    public string KindName()
+    {
+        if (isBouncy) return "Bounce Ball";
+        switch (payloadType)
+        {
+            case PayloadType.HealthBooster: return "Health Pickup";
+            case PayloadType.StaminaBooster: return "Stamina Pickup";
+            case PayloadType.InvincibilityBuff: return "Shield Pickup";
+            case PayloadType.JumpBuff: return "Super Jump Pickup";
+            case PayloadType.SprintBuff: return "Speed Boost Pickup";
+            case PayloadType.None: return "Harmless Thing";
+        }
+
+        IObstacleMovement movement = GetComponent<IObstacleMovement>();
+        string kind = movement == null ? "" : movement.GetType().Name;
+        if (kind.Contains("Wander")) return "Wanderer";
+        if (kind.Contains("Patrol")) return "Patroller";
+        return "Guard";
+    }
+
+    /// <summary>New creatures and pickups are called 'ObstacleLogic' (the prefab's name); this names them by their kind.</summary>
+    public static void NameByKind(GameObject obstacle)
+    {
+        ObstacleBase o = obstacle != null ? obstacle.GetComponent<ObstacleBase>() : null;
+        if (o != null && obstacle.name.StartsWith("ObstacleLogic")) obstacle.name = o.KindName();
+    }
+
     [Header("Transform Settings")] [Range(0.1f, 50f)]
     public float objectScale = 1f;
     [Tooltip("Automatically lift the shape so it sits ON the ground instead of half inside it.")]

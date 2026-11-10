@@ -6,7 +6,7 @@ public class EnvironmentControllerEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        KidInspector.DrawDefault(serializedObject);
 
         EnvironmentController controller = (EnvironmentController)target;
 

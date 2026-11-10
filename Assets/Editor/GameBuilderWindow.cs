@@ -79,6 +79,7 @@ public partial class GameBuilderWindow : EditorWindow
         obstacles = SortByName(FindAll<ObstacleBase>());
         triggers = SortByName(FindAll<TriggerLogic>());
         checkpoints = SortByName(FindAll<Checkpoint>());
+        NameUnnamedObstacles();
 
         // Forget inspectors for things that were deleted
         foreach (Object key in editors.Keys.ToList())
@@ -97,6 +98,8 @@ public partial class GameBuilderWindow : EditorWindow
         BeginTheme();
         try
         {
+            // Room for the plain-English labels ('Forward push when jumping')
+            EditorGUIUtility.labelWidth = Mathf.Clamp(position.width * 0.32f, 150f, 230f);
             DrawTopBar();
             DrawTabs();
 
@@ -118,6 +121,7 @@ public partial class GameBuilderWindow : EditorWindow
         }
         finally
         {
+            EditorGUIUtility.labelWidth = 0f; // back to Unity's default
             EndTheme();
         }
     }
@@ -127,6 +131,8 @@ public partial class GameBuilderWindow : EditorWindow
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             GUILayout.Label("Level: " + SceneManager.GetActiveScene().name, EditorStyles.toolbarButton);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(new GUIContent("↩ Made a mistake? Ctrl+Z undoes it", "Ctrl+Z undoes your last change. Ctrl+Y puts it back."), EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
             bool teacher = StudentMode.TeacherMode;
             string label = teacher ? "👩‍🏫 Teacher mode: showing everything" : "🎒 Student mode: tidy";
@@ -243,7 +249,7 @@ public partial class GameBuilderWindow : EditorWindow
             EditorGUILayout.HelpBox(
                 "Pick a brush, then click and drag on the ground in the Scene view.\n" +
                 "• Hold Shift to lower instead of raise.\n" +
-                "• Change Brush Size and Opacity (strength) in the Inspector.\n" +
+                "• Change the brush's size and strength with the sliders under the buttons.\n" +
                 "• Trees, rocks and plants are in the 🌲 Scenery tab.", MessageType.Info);
 
             DrawToolGrid(terrain, new[]
@@ -255,6 +261,8 @@ public partial class GameBuilderWindow : EditorWindow
                 ("🔨 Stamp", "StampTool"),
                 ("🌱 Paint Grass", "PaintDetailsTool"),
             });
+
+            DrawBrushSliders(terrain);
 
             if (BigButton("✋ Stop sculpting (back to moving things)"))
             {
@@ -398,7 +406,13 @@ public partial class GameBuilderWindow : EditorWindow
         if (RenderSettings.skybox != null && !choices.Contains(RenderSettings.skybox)) choices.Insert(0, RenderSettings.skybox);
         if (choices.Count > 0)
         {
-            string[] names = choices.Select(m => m.name).ToArray();
+            string[] names = choices.Select(FriendlySkyName).ToArray();
+            // Two skies with the same friendly name would merge in the menu, so number them
+            string[] plain = (string[])names.Clone();
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (plain.Count(n => n == plain[i]) > 1) names[i] += "  #" + (i + 1);
+            }
             int current = Mathf.Max(0, choices.IndexOf(RenderSettings.skybox));
             int picked = EditorGUILayout.Popup("Sky", current, names);
             if (picked != current)
@@ -471,7 +485,7 @@ public partial class GameBuilderWindow : EditorWindow
         }
         EndFoldout();
 
-        Section("Your platforms");
+        Section("📋 Your platforms");
         DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.", p => IconFor(p.platformType) + IconFor(ScatterTools.GetMovement(p)) + " " + p.name);
 
         PlatformLogic selected = SelectedOf<PlatformLogic>();
@@ -545,8 +559,13 @@ public partial class GameBuilderWindow : EditorWindow
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
 
-        Section("Your creatures & pickups");
-        DrawList("obstacles", obstacles, "None yet. Click a button above.", o => IconFor(o) + " " + o.name + "  (" + NiceName(o) + ")");
+        Section("📋 Your creatures & pickups");
+        // Show what kind it is only when the name doesn't already say so (e.g. 'Jump On Me  (Patroller)')
+        DrawList("obstacles", obstacles, "None yet. Click a button above.", o =>
+        {
+            string kind = NiceName(o);
+            return IconFor(o) + " " + o.name + (o.name.StartsWith(kind) ? "" : "  (" + kind + ")");
+        });
 
         ObstacleBase selected = SelectedOf<ObstacleBase>();
         if (selected != null)
@@ -738,24 +757,27 @@ public partial class GameBuilderWindow : EditorWindow
         obj.position = new Vector3(target.x, groundY + lift, target.z);
     }
 
+    /// <summary>
+    /// Creatures and pickups made by the older scatter buttons are called 'ObstacleLogic' (the prefab's name).
+    /// Give them a name that says what they are, e.g. 'Health Pickup' or 'Wanderer'.
+    /// Not recorded for Undo on purpose: an Undo step made while the Hierarchy changes would undo the rename,
+    /// which renames it again, so Ctrl+Z would get stuck. The scene is marked as changed instead.
+    /// </summary>
+    private void NameUnnamedObstacles()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        foreach (ObstacleBase o in obstacles)
+        {
+            if (o == null || !o.name.StartsWith("ObstacleLogic") || !o.gameObject.scene.IsValid()) continue;
+            if (PrefabUtility.IsPartOfPrefabAsset(o)) continue;
+            o.name = NiceName(o);
+            EditorSceneManager.MarkSceneDirty(o.gameObject.scene);
+        }
+    }
+
     private static string NiceName(ObstacleBase o)
     {
-        if (o.isBouncy) return "Bounce Ball";
-        switch (o.payloadType)
-        {
-            case ObstacleBase.PayloadType.HealthBooster: return "Health Pickup";
-            case ObstacleBase.PayloadType.StaminaBooster: return "Stamina Pickup";
-            case ObstacleBase.PayloadType.InvincibilityBuff: return "Shield Pickup";
-            case ObstacleBase.PayloadType.JumpBuff: return "Super Jump Pickup";
-            case ObstacleBase.PayloadType.SprintBuff: return "Speed Boost Pickup";
-            case ObstacleBase.PayloadType.None: return "Harmless Thing";
-        }
-
-        IObstacleMovement movement = o.GetComponent<IObstacleMovement>();
-        string kind = movement == null ? "" : movement.GetType().Name;
-        if (kind.Contains("Wander")) return "Wandering Creature";
-        if (kind.Contains("Patrol")) return "Patrolling Creature";
-        return "Guard Creature";
+        return o.KindName(); // the same names as the buttons above the list
     }
 
     private static string IconFor(ObstacleBase o)
@@ -1101,7 +1123,13 @@ public partial class GameBuilderWindow : EditorWindow
         {
             // Lets a panel hide things the Game Builder already shows another way
             DrawingInGameBuilder = true;
-            try { ed.OnInspectorGUI(); }
+            try
+            {
+                // Components without their own editor (PlayerLogic, Health, FallDamage...) use Unity's generic
+                // Inspector, which always shows the greyed 'Script' box. Draw those ourselves without it.
+                if (ed.GetType().Name == "GenericInspector") KidInspector.DrawDefault(ed.serializedObject);
+                else ed.OnInspectorGUI();
+            }
             finally { DrawingInGameBuilder = false; }
         }
     }

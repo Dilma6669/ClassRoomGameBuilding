@@ -10,19 +10,20 @@ using KinematicCharacterController;
 public class FallDamage : MonoBehaviour
 {
     [Header("Fall Time Settings")]
-    [Tooltip("How many seconds the player can fall before taking ANY damage.")]
+    [ShowAs("Safe fall time"), Tooltip("Seconds you can fall without getting hurt at all.")]
     [Range(0.2f, 5f)] public float minFallTime = 1.0f;
 
-    [Tooltip("How many seconds of falling deals MAXIMUM damage.")]
+    [ShowAs("Deadliest fall time"), Tooltip("Falling this many seconds (or longer) gives the Biggest hurt.")]
     [Range(0.5f, 50f)] public float maxFallTime = 10f;
 
     [Header("Damage Settings")]
-    [Tooltip("Damage dealt when falling duration reaches minFallTime.")]
+    [ShowAs("Smallest hurt"), Tooltip("Health lost by a fall just longer than the Safe fall time.")]
     [Range(1f, 100f)] public float minDamage = 1f;
 
-    [Tooltip("Damage dealt when falling duration reaches maxFallTime.")]
+    [ShowAs("Biggest hurt"), Tooltip("Health lost by a fall as long as the Deadliest fall time (or longer).")]
     [Range(1f, 1000f)] public float maxDamage = 200f;
 
+    [ShowAs("Hurt multiplier"), Tooltip("Multiplies all fall damage. 2 = falls hurt twice as much.")]
     public int damageMultiplier = 1;
 
     private Health playerHealth;

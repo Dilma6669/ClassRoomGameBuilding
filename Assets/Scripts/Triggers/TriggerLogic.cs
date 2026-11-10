@@ -47,14 +47,14 @@ public class TriggerLogic : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetWatchedVideos() => watchedVideos.Clear();
 
-    [Header("Scene Transition Settings")]
+    [Header("Going to another level")]
     public bool changeScene = false;
     [HideInInspector] public string sceneToLoad = "";
 
-    [Header("Trigger Scale & Rotation")]
+    [Header("Sign zone")]
     [Range(0.5f, 20f)] public float size = 3f;
 
-    [Header("Position Offset")]
+    [Header("Where the zone is")]
     [Range(-500f, 500f)] public float offsetX = 0f;
     [Range(-500f, 500f)] public float offsetY = 0f;
     [Range(-500f, 500f)] public float offsetZ = 0f;

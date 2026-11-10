@@ -125,7 +125,7 @@ public static class TutorialLevelBuilder
             "Welcome to Tutorial Island! Each yellow sign shows how this level was made with Game > Game Builder.\nWASD = move,  Space = jump,  Shift = sprint,  Esc = menu");
 
         Sign(signs, signMaterial, At(-4f, 8f), At(0f, 8f, 1.5f), "2. Pop-up signs",
-            "Pop-ups like this: Game Builder > Signs & Story > Create Trigger, then type your Message.\nTick 'Change Scene' to send players to another level.");
+            "Pop-ups like this: Game Builder > Signs & Story > Create Pop-up Sign, then type your Message.\nTick 'Go to another level when touched' to send players somewhere new.");
 
         // Videos: one sign explains, the next one plays a video
         Sign(signs, signMaterial, At(-4f, 15f), At(0f, 15f, 1.5f), "3. Videos",
@@ -564,7 +564,7 @@ public static class TutorialLevelBuilder
         TMP_FontAsset font = GameSettings.Load().titleFont;
         if (font != null) text.font = font;
 
-        // Pop-up trigger (same as TriggerController > Create Trigger)
+        // Pop-up sign (same as TriggerController > Create Pop-up Sign)
         TriggerController triggers = Object.FindAnyObjectByType<TriggerController>();
         triggers.CreateTrigger();
         GameObject triggerGO = Selection.activeGameObject;
