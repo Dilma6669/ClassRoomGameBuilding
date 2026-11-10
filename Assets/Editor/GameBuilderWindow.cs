@@ -161,23 +161,30 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
-        DrawInspector(player); // Create Character + Player Model
-
+        // One box: Create Character + Player Model, the model's settings, and 'Show me my player'
         Health body = player.GetComponentInChildren<Health>(true);
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            DrawInspector(player, false);
+
+            if (body != null)
+            {
+                // Right under 'Player Model': the chosen model's size, turn and animations
+                CustomModel model = body.GetComponent<CustomModel>();
+                if (model != null && model.model != null)
+                {
+                    if (BeginFoldout("playerModel", "🎨 Model size, turn & animations")) DrawInspector(model, false);
+                    EndFoldout();
+                }
+
+                EditorGUILayout.Space(4);
+                if (BigButton("🔍 Show me my player in the Scene"))
+                {
+                    SelectAndFrame(body.gameObject);
+                }
+            }
+        }
         if (body == null) return;
-
-        // Right under 'Player Model': the chosen model's size, turn and animations
-        CustomModel model = body.GetComponent<CustomModel>();
-        if (model != null && model.model != null)
-        {
-            if (BeginFoldout("playerModel", "🎨 Model size, turn & animations")) DrawInspector(model, false);
-            EndFoldout();
-        }
-
-        if (BigButton("🔍 Show me my player in the Scene"))
-        {
-            SelectAndFrame(body.gameObject);
-        }
 
         Section("🏃 Moving, sprinting & jumping");
         DrawInspector(player.GetComponent<PlayerLogic>());
