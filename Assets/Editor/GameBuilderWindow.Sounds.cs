@@ -82,11 +82,14 @@ public partial class GameBuilderWindow
             string[] groupTitles = { "🧙 Player", "🎯 Touching things (pickups, jumping on creatures, bouncing)", "👹 Creatures (enemies)" };
             foreach (SoundEntry.Group group in Enum.GetValues(typeof(SoundEntry.Group)))
             {
-                if (!Foldout("sounds." + group, groupTitles[(int)group], true)) continue;
-                foreach (SoundEvent e in TabOrder)
+                if (BeginFoldout("sounds." + group, groupTitles[(int)group], true))
                 {
-                    if (SoundEntry.GroupOf(e) == group) DrawSoundEvent(sounds, e);
+                    foreach (SoundEvent e in TabOrder)
+                    {
+                        if (SoundEntry.GroupOf(e) == group) DrawSoundEvent(sounds, e);
+                    }
                 }
+                EndFoldout();
             }
             EditorGUILayout.Space(4);
         }

@@ -20,12 +20,6 @@ public partial class GameBuilderWindow
     private static readonly SoundEvent[] ModelPlayerEvents = { SoundEvent.Jump, SoundEvent.Damage, SoundEvent.FallDamage, SoundEvent.PlayerDeath };
     private static readonly SoundEvent[] ModelPickupEvents = { SoundEvent.PickUp, SoundEvent.Bounce };
 
-    private bool Foldout(string key, string label, bool startOpen)
-    {
-        if (!foldouts.ContainsKey(key)) foldouts[key] = startOpen;
-        return Foldout(key, label);
-    }
-
     private void DrawModelSounds(GameSounds sounds)
     {
         EditorGUILayout.LabelField("Pick a model (from Assets/MyModels or the Library) to see its animations. Drag a sound onto an animation and it plays every time that animation plays, on the player or on a creature.\nA model's own sound beats the general sound. Anything left empty uses the general sound.", EditorStyles.wordWrappedMiniLabel);
@@ -111,7 +105,7 @@ public partial class GameBuilderWindow
             }
 
             List<AnimationClip> extras = cachedClips.Where(c => !cachedUsedFor.ContainsKey(c)).ToList();
-            if (extras.Count > 0 && Foldout("extraAnims", "🎭 Its extra animations (" + extras.Count + "): choose when each one plays", true))
+            if (extras.Count > 0 && BeginFoldout("extraAnims", "🎭 Its extra animations (" + extras.Count + "): choose when each one plays", true))
             {
                 EditorGUILayout.HelpBox("Pick when an extra animation plays (e.g. Bite = 'it attacks you', Death = 'it is beaten', Howl = 'now and then'), and drag in a sound for it. Its sound replaces the general sound for that moment.", MessageType.None);
                 // Some models have hundreds of animations: the ones already set up, then a search
@@ -126,23 +120,26 @@ public partial class GameBuilderWindow
                 foreach (AnimationClip clip in matches.Take(MaxShown)) DrawAnimationRow(sounds, ref ms, clip, null);
                 if (matches.Count > MaxShown) EditorGUILayout.LabelField("...and " + (matches.Count - MaxShown) + " more. Type in the search box to find one.", EditorStyles.miniBoldLabel);
             }
+            if (extras.Count > 0) EndFoldout();
 
             // ---- Its own versions of the general sounds
             const string JustThisModel = "  (replace the default sound for just this model)";
-            if (Foldout("modelCreature", "👹 When it's a creature" + JustThisModel, true))
+            if (BeginFoldout("modelCreature", "👹 When it's a creature" + JustThisModel, true))
             {
                 foreach (SoundEvent e in ModelCreatureEvents) DrawModelEvent(sounds, e);
             }
+            EndFoldout();
 
             // There's only one player, so its sounds are usually just the general sounds at the top.
             // Only show this group when this model really is (or might be) the player.
             bool showPlayer = IsPlayerModel(sounds, soundModel) || (foldouts.TryGetValue("modelPlayerAnyway", out bool anyway) && anyway);
             if (showPlayer)
             {
-                if (Foldout("modelPlayer", "🧙 When it's the player" + JustThisModel, true))
+                if (BeginFoldout("modelPlayer", "🧙 When it's the player" + JustThisModel, true))
                 {
                     foreach (SoundEvent e in ModelPlayerEvents) DrawModelEvent(sounds, e);
                 }
+                EndFoldout();
             }
             else
             {
@@ -157,10 +154,11 @@ public partial class GameBuilderWindow
                 }
             }
 
-            if (Foldout("modelPickup", "⭐ When it's a pickup or bounce ball" + JustThisModel, true))
+            if (BeginFoldout("modelPickup", "⭐ When it's a pickup or bounce ball" + JustThisModel, true))
             {
                 foreach (SoundEvent e in ModelPickupEvents) DrawModelEvent(sounds, e);
             }
+            EndFoldout();
         }
     }
 

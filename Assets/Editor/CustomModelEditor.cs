@@ -32,7 +32,7 @@ public class CustomModelEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("raiseLower"), new GUIContent("Raise / Lower"));
 
         EditorGUILayout.Space(8);
-        showAnimations = FoldoutBar.Draw(showAnimations, "🏃 Animations");
+        showAnimations = FoldoutBar.Begin(showAnimations, "🏃 Animations");
         if (showAnimations)
         {
             EditorGUI.indentLevel++;
@@ -64,6 +64,7 @@ public class CustomModelEditor : Editor
                 }
             }
         }
+        FoldoutBar.End();
 
         bool changed = serializedObject.ApplyModifiedProperties();
         if (changed)

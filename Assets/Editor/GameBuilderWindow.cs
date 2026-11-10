@@ -185,9 +185,10 @@ public partial class GameBuilderWindow : EditorWindow
         }
 
         CustomModel model = body.GetComponent<CustomModel>();
-        if (model != null && model.model != null && Foldout("playerModel", "🎨 Model size, turn & animations"))
+        if (model != null && model.model != null)
         {
-            DrawInspector(model);
+            if (BeginFoldout("playerModel", "🎨 Model size, turn & animations")) DrawInspector(model, false);
+            EndFoldout();
         }
     }
 
@@ -396,10 +397,8 @@ public partial class GameBuilderWindow : EditorWindow
             Undo.AddComponent<PlatformScatter>(controller.gameObject);
         }
 
-        if (Foldout("platformController", "⚙ Platform look for ALL new platforms (3D model, mesh, material)"))
-        {
-            DrawInspector(controller);
-        }
+        if (BeginFoldout("platformController", "⚙ Platform look for ALL new platforms (3D model, mesh, material)")) DrawInspector(controller, false);
+        EndFoldout();
 
         Section("Your platforms");
         DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.", p => IconFor(p.platformType) + IconFor(ScatterTools.GetMovement(p)) + " " + p.name);
@@ -440,9 +439,10 @@ public partial class GameBuilderWindow : EditorWindow
             DrawInspector(selected);
             DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
             PlatformPopulator populator = selected.GetComponent<PlatformPopulator>();
-            if (populator != null && Foldout("platformMore", "More: copy, delete, or scatter creatures on this platform"))
+            if (populator != null)
             {
-                DrawInspector(populator);
+                if (BeginFoldout("platformMore", "More: copy, delete, or scatter creatures on this platform")) DrawInspector(populator, false);
+                EndFoldout();
             }
         }
     }
@@ -791,9 +791,10 @@ public partial class GameBuilderWindow : EditorWindow
         {
             if (BigButton("⚙️ Make Game Settings", new Color(0.2f, 0.8f, 0.3f))) GameMenuItems.OpenSettings();
         }
-        else if (Foldout("settings", "Game title, main menu, death screen, default models and Library entries"))
+        else
         {
-            DrawInspector(settings);
+            if (BeginFoldout("settings", "Game title, main menu, death screen, default models and Library entries")) DrawInspector(settings, false);
+            EndFoldout();
         }
     }
 
@@ -973,18 +974,28 @@ public partial class GameBuilderWindow : EditorWindow
         }
     }
 
-    private bool Foldout(string key, string label)
+    /// <summary>
+    /// A fold-out in its own box (Editor/FoldoutBar.cs): the teal bar on top, the contents inside.
+    /// Always call EndFoldout() afterwards, open or not.
+    /// </summary>
+    private bool BeginFoldout(string key, string label, bool startOpen = false)
     {
-        foldouts.TryGetValue(key, out bool open);
+        if (!foldouts.ContainsKey(key)) foldouts[key] = startOpen;
+        bool open = foldouts[key];
         EditorGUILayout.Space(8);
-        // The shared teal open/close bar (Editor/FoldoutBar.cs), so every fold-out looks the same
-        open = FoldoutBar.Draw(open, label);
+        open = FoldoutBar.Begin(open, label);
         foldouts[key] = open;
         return open;
     }
 
+    private static void EndFoldout()
+    {
+        FoldoutBar.End();
+    }
+
     /// <summary>Draws a component's normal Inspector (with its green buttons) inside this window.</summary>
-    private void DrawInspector(Object target)
+    /// <param name="boxed">False when it's already inside a fold-out's box.</param>
+    private void DrawInspector(Object target, bool boxed = true)
     {
         if (target == null) return;
         if (!editors.TryGetValue(target, out Editor ed) || ed == null || ed.target == null)
@@ -993,7 +1004,7 @@ public partial class GameBuilderWindow : EditorWindow
             editors[target] = ed;
         }
 
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        using (new EditorGUILayout.VerticalScope(boxed ? EditorStyles.helpBox : GUIStyle.none))
         {
             ed.OnInspectorGUI();
         }

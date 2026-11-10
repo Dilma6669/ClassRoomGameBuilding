@@ -15,9 +15,32 @@ public static class FoldoutBar
 
     private static GUIStyle titleStyle;
 
+    /// <summary>Starts a plain box with the bar at the top. Draw the contents (if open), then call End().</summary>
+    public static bool Begin(bool open, string label)
+    {
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        return Draw(open, label);
+    }
+
+    public static void End()
+    {
+        EditorGUILayout.EndVertical();
+    }
+
+    /// <summary>Just the bar (for code that already draws its own box around it).</summary>
     public static bool Draw(bool open, string label)
     {
-        if (titleStyle == null) titleStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+        if (titleStyle == null)
+        {
+            titleStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+            // Same soft white as the other bold titles (Unity's fold-out text is a little brighter), in every state
+            Color text = EditorStyles.boldLabel.normal.textColor;
+            foreach (GUIStyleState s in new[] { titleStyle.normal, titleStyle.onNormal, titleStyle.hover, titleStyle.onHover,
+                                                titleStyle.active, titleStyle.onActive, titleStyle.focused, titleStyle.onFocused })
+            {
+                s.textColor = text;
+            }
+        }
 
         Rect rect = GUILayoutUtility.GetRect(0, 22, GUILayout.ExpandWidth(true));
         if (Event.current.type == EventType.Repaint)
