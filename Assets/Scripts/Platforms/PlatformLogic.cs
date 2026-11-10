@@ -266,6 +266,34 @@ public class PlatformLogic : MonoBehaviour
         }
     }
 
+    // What this script last put on the moving part (so a move made with the Move/Rotate tool can be spotted)
+    [System.NonSerialized] private Vector3? lastAppliedPosition;
+    [System.NonSerialized] private float lastAppliedTurn;
+
+    /// <summary>
+    /// Before Play, the platform is put at its Offset X/Y/Z every update. If someone dragged it (or turned it)
+    /// in the Scene view since last time, keep that: copy the new spot into the offsets instead of snapping back.
+    /// </summary>
+    private void KeepHandMadeMoves(Transform target)
+    {
+        if (!lastAppliedPosition.HasValue) return;
+        bool moved = (target.localPosition - lastAppliedPosition.Value).sqrMagnitude > 0.000001f;
+        float turn = target.localEulerAngles.y;
+        bool turned = Mathf.Abs(Mathf.DeltaAngle(turn, lastAppliedTurn)) > 0.01f;
+        if (!moved && !turned) return;
+
+        if (moved)
+        {
+            offsetX = target.localPosition.x;
+            offsetY = target.localPosition.y;
+            offsetZ = target.localPosition.z;
+        }
+        if (turned) rotationY = Mathf.Repeat(turn, 360f);
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(this);
+#endif
+    }
+
     private void Update()
     {
         EnsureParentScaleReset();
@@ -293,8 +321,11 @@ public class PlatformLogic : MonoBehaviour
         }
         else
         {
+            KeepHandMadeMoves(target);
             target.localPosition = new Vector3(offsetX, offsetY, offsetZ);
             target.localRotation = Quaternion.Euler(0f, rotationY, 0f);
+            lastAppliedPosition = target.localPosition;
+            lastAppliedTurn = rotationY;
 
             Vector3 targetScale = new Vector3(widthOffset, heightOffset, depthOffset);
             if (target.localScale != targetScale)

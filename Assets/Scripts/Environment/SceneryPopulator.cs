@@ -177,6 +177,30 @@ public class SceneryPopulator : MonoBehaviour
         return go;
     }
 
+    /// <summary>
+    /// Places one random model from the group exactly at a clicked spot on the ground.
+    /// Clicked on something else (a tree, a rock)? It goes on the ground underneath instead.
+    /// </summary>
+    public GameObject PlaceOneAt(SceneryGroup group, RaycastHit clicked)
+    {
+        List<GameObject> models = group.models.FindAll(m => m != null);
+        if (models.Count == 0) return null;
+
+        Vector3 point = clicked.point;
+        Vector3 normal = clicked.normal;
+        if (!(clicked.collider is TerrainCollider))
+        {
+            Terrain terrain = FindTerrain();
+            if (terrain != null)
+            {
+                point.y = terrain.SampleHeight(point) + terrain.GetPosition().y;
+                Vector3 local = point - terrain.GetPosition();
+                normal = terrain.terrainData.GetInterpolatedNormal(local.x / terrain.terrainData.size.x, local.z / terrain.terrainData.size.z);
+            }
+        }
+        return PlaceAt(group, models[Random.Range(0, models.Count)], point, normal, "Place Scenery");
+    }
+
     private GameObject PlaceAt(SceneryGroup group, GameObject model, Vector3 groundPoint, Vector3 groundNormal, string undoName)
     {
         Transform container = GetContainer(group);

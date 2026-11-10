@@ -86,7 +86,21 @@ public class SceneryPopulatorEditor : Editor
                     GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
                     if (GUILayout.Button("🌲 Scatter " + group.howMany)) Debug.Log($"🌲 Scattered {scenery.Scatter(group)} '{group.name}'.");
                     GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
-                    if (GUILayout.Button("📍 Place One")) scenery.PlaceOne(group, SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.pivot : scenery.transform.position);
+                    bool placingThis = ScenePlacer.IsPlacing && ScenePlacer.What == group.name;
+                    if (placingThis) GUI.backgroundColor = new Color(0.6f, 0.85f, 1f); // highlighted while placing
+                    if (GUILayout.Button(new GUIContent(placingThis ? "📍 Placing… (Esc)" : "📍 Place One",
+                            ScenePlacer.ClickToPlace ? "Then click in the Scene: one goes down with each click, until you press Esc." : "Puts one where the Scene view is looking.")))
+                    {
+                        if (placingThis) ScenePlacer.Cancel();
+                        else if (ScenePlacer.ClickToPlace)
+                        {
+                            // Keep placing (a random model from the group each click) until Esc
+                            SceneryPopulator target = scenery;
+                            SceneryPopulator.SceneryGroup chosen = group;
+                            ScenePlacer.Begin(group.name, hit => target.PlaceOneAt(chosen, hit), repeat: true);
+                        }
+                        else scenery.PlaceOne(group, SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.pivot : scenery.transform.position);
+                    }
                     GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
                     if (GUILayout.Button("🗑️ Clear")) Debug.Log($"🗑️ Removed {scenery.Clear(group)} '{group.name}'.");
                     GUI.backgroundColor = Color.white;

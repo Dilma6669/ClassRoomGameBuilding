@@ -78,12 +78,14 @@ public class FollowPlatform : MonoBehaviour
         }
         else
         {
+            ObstacleBase obstacle = GetComponent<ObstacleBase>();
+            KeepHandMadeMoves(obstacle);
+
             // Calculate position using local position offset
             Vector3 localOffset = new Vector3(offsetX, offsetY, offsetZ);
             transform.position = targetPlatform.position + (targetPlatform.rotation * localOffset);
 
             // Fetch initial Y-rotation slider value if present
-            ObstacleBase obstacle = GetComponent<ObstacleBase>();
             float yRot = obstacle != null ? obstacle.initialYRotation : 0f;
 
             // Apply target platform rotation PLUS the local Y-rotation offset
@@ -91,7 +93,45 @@ public class FollowPlatform : MonoBehaviour
 
             lastPlatformPosition = targetPlatform.position;
             lastPlatformRotation = targetPlatform.rotation;
+            lastSetPosition = transform.position;
+            lastSetRotation = transform.rotation;
+            lastSetTurn = yRot;
         }
+    }
+
+    // Where this script last put the obstacle before Play (so a hand-made move can be spotted)
+    [System.NonSerialized] private Vector3? lastSetPosition;
+    [System.NonSerialized] private Quaternion lastSetRotation;
+    [System.NonSerialized] private float lastSetTurn;
+
+    /// <summary>
+    /// Before Play, the obstacle is put at its offsets on the platform every update. If someone moved or
+    /// turned it in the Scene view (or with the Game Builder's Position buttons), keep that: copy it into the offsets.
+    /// </summary>
+    private void KeepHandMadeMoves(ObstacleBase obstacle)
+    {
+        if (!lastSetPosition.HasValue) return;
+        bool moved = (transform.position - lastSetPosition.Value).sqrMagnitude > 0.000001f;
+        // (A changed 'Initial Y Rotation' slider also turns it: that's not a hand-made turn)
+        bool sliderChanged = obstacle != null && !Mathf.Approximately(obstacle.initialYRotation, lastSetTurn);
+        bool turned = !sliderChanged && Quaternion.Angle(transform.rotation, lastSetRotation) > 0.01f;
+        if (!moved && !turned) return;
+
+        if (moved)
+        {
+            Vector3 local = Quaternion.Inverse(targetPlatform.rotation) * (transform.position - targetPlatform.position);
+            offsetX = local.x;
+            offsetY = local.y;
+            offsetZ = local.z;
+        }
+        if (turned && obstacle != null)
+        {
+            obstacle.initialYRotation = Mathf.Repeat((Quaternion.Inverse(targetPlatform.rotation) * transform.rotation).eulerAngles.y, 360f);
+        }
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(this);
+        if (obstacle != null) UnityEditor.EditorUtility.SetDirty(obstacle);
+#endif
     }
 
     [ContextMenu("Snap To Center")]

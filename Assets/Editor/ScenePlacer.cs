@@ -10,6 +10,7 @@ public static class ScenePlacer
 {
     private static System.Action<RaycastHit> onPlace;
     private static string what;
+    private static bool keepGoing;
 
     public static bool IsPlacing => onPlace != null;
     public static string What => what;
@@ -21,11 +22,13 @@ public static class ScenePlacer
         set => EditorPrefs.SetBool("GameBuilder.ClickToPlace", value);
     }
 
-    public static void Begin(string label, System.Action<RaycastHit> place)
+    /// <param name="repeat">Keep placing with every click until Esc (used for scenery).</param>
+    public static void Begin(string label, System.Action<RaycastHit> place, bool repeat = false)
     {
         Cancel();
         what = label;
         onPlace = place;
+        keepGoing = repeat;
         SceneView.duringSceneGui += OnScene;
         if (SceneView.lastActiveSceneView != null) SceneView.lastActiveSceneView.Focus();
         SceneView.RepaintAll();
@@ -69,7 +72,7 @@ public static class ScenePlacer
 
         // The hint next to the mouse
         Handles.BeginGUI();
-        string hint = "Click to place: " + what + (hasSpot && hit.collider.GetComponentInParent<PlatformLogic>() != null ? "  (on this platform)" : "") + "\nEsc to stop";
+        string hint = "Click to place: " + what + (hasSpot && hit.collider.GetComponentInParent<PlatformLogic>() != null ? "  (on this platform)" : "") + (keepGoing ? "\nClick again for more. Esc to stop" : "\nEsc to stop");
         GUIStyle style = new GUIStyle(EditorStyles.helpBox) { fontSize = 12, fontStyle = FontStyle.Bold };
         Vector2 size = style.CalcSize(new GUIContent(hint));
         GUI.Label(new Rect(e.mousePosition.x + 18f, e.mousePosition.y + 10f, size.x + 8f, size.y + 4f), hint, style);
@@ -82,9 +85,10 @@ public static class ScenePlacer
             e.Use();
             if (!hasSpot) return; // clicked the sky: keep waiting
             System.Action<RaycastHit> place = onPlace;
-            Cancel();
+            if (!keepGoing) Cancel();
             place(hit);
             RepaintBuilder();
+            view.Repaint();
         }
     }
 

@@ -52,12 +52,21 @@ public partial class GameBuilderWindow : EditorWindow
 
     private void OnEnable()
     {
+        EditorSceneManager.sceneOpened -= OnLevelOpened;
         tab = (Tab)EditorPrefs.GetInt(TabKey, 0);
         RefreshSceneLists();
+        EditorSceneManager.sceneOpened += OnLevelOpened;
+    }
+
+    private void OnLevelOpened(Scene scene, OpenSceneMode mode)
+    {
+        RefreshSceneLists();
+        Repaint();
     }
 
     private void OnDisable()
     {
+        EditorSceneManager.sceneOpened -= OnLevelOpened;
         foreach (Editor ed in editors.Values)
         {
             if (ed != null) DestroyImmediate(ed);
@@ -458,6 +467,10 @@ public partial class GameBuilderWindow : EditorWindow
 
         Section("⚡ Quick platforms");
         DrawPlacingOptions("New platforms appear where the Scene view is looking.");
+        float newHeight = EditorGUILayout.Slider(new GUIContent("New platforms float this high (m)",
+            "How far above the ground new platforms go. Change one afterwards with 'Height above the ground' when it's selected."),
+            ScatterTools.NewPlatformHeight, 0.5f, 30f);
+        if (!Mathf.Approximately(newHeight, ScatterTools.NewPlatformHeight)) ScatterTools.NewPlatformHeight = newHeight;
         PlaceRow(4,
             ("🪨 Floating\nstays still", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still)),
             ("↔ Moving\nside to side", () => QuickPlatform(controller, ScatterTools.PlatformMove.SideToSide)),
@@ -515,6 +528,7 @@ public partial class GameBuilderWindow : EditorWindow
                 ScatterTools.SetPlatformType(selected, types[typeClicked]);
                 GUIUtility.ExitGUI();
             }
+            DrawPosition(selected.TargetChild, selected.name, hit => MovePlatformTo(selected, hit), null, () => DrawPlatformHeight(selected));
             DrawInspector(selected);
             DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
             PlatformPopulator populator = selected.GetComponent<PlatformPopulator>();
@@ -571,6 +585,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (selected != null)
         {
             Section("✏️ " + selected.name);
+            DrawPosition(selected.transform, selected.name, hit => MoveObstacleTo(selected, hit), () => PutObstacleOnGround(selected));
             DrawInspector(selected);
 
             DrawMovement(selected);
@@ -818,6 +833,7 @@ public partial class GameBuilderWindow : EditorWindow
         follow.offsetZ = offset.z;
         // FollowPlatform only moves it on the next editor update; move it now, so it sits on the right bit of the platform
         created.transform.position = platform.position + platform.rotation * new Vector3(follow.offsetX, follow.offsetY, follow.offsetZ);
+        Physics.SyncTransforms(); // so the platform's collider is where the platform is now
         PlatformObstacle po = created as PlatformObstacle;
         if (po != null) po.SitOnPlatformInEditor();
         created.transform.position = platform.position + platform.rotation * new Vector3(follow.offsetX, follow.offsetY, follow.offsetZ);
@@ -906,6 +922,7 @@ public partial class GameBuilderWindow : EditorWindow
                 EditorGUILayout.HelpBox("Tip: click one tree or rock in the Scene to make just that one glow.", MessageType.None);
             }
 
+            DrawPlacingOptions("'📍 Place One' puts one where the Scene view is looking.");
             DrawInspector(scenery);
             return;
         }

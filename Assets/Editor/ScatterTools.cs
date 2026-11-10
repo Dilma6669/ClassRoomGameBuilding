@@ -20,12 +20,19 @@ public static class ScatterTools
     // ------------------------------------------------------------------ Quick platforms
 
     /// <summary>One platform in front of the Scene view camera, a few metres above the ground.</summary>
+    /// <summary>How high above the ground new quick platforms float (the Platforms tab's slider; 3 m to start with).</summary>
+    public static float NewPlatformHeight
+    {
+        get => EditorPrefs.GetFloat("GameBuilder.PlatformHeight", 3f);
+        set => EditorPrefs.SetFloat("GameBuilder.PlatformHeight", value);
+    }
+
     public static PlatformLogic QuickPlatform(PlatformController controller, PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
     {
         Vector3 ground = LookPoint();
         float width = move == PlatformMove.Spinning ? 6f : 4f;
         float depth = move == PlatformMove.Spinning ? 1.5f : 4f; // a spinning bar is more fun than a spinning disc
-        float lift = move == PlatformMove.UpAndDown ? 4.5f : 3f;  // an elevator's lowest point is just above the ground
+        float lift = NewPlatformHeight + (move == PlatformMove.UpAndDown ? 1.5f : 0f); // an elevator starts a bit higher (its lowest point is just above the ground)
 
         // Clicked twice without moving the view? Step sideways until there's room
         Vector3 right = SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.camera.transform.right : Vector3.right;

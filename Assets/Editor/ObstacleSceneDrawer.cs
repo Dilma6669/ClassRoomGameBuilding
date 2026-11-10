@@ -28,7 +28,8 @@ public static class ObstacleSceneDrawer
 
     private static void OnScene(SceneView view)
     {
-        if (Event.current.type != EventType.Repaint) return;
+        // Only with the Scene view's Gizmos button on (it's switched on by default)
+        if (Event.current.type != EventType.Repaint || !view.drawGizmos) return;
 
         HashSet<ObstacleBase> drawn = new HashSet<ObstacleBase>();
         foreach (GameObject go in Selection.gameObjects)
