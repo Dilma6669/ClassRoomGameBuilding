@@ -92,6 +92,7 @@ public partial class GameBuilderWindow
             if (clipsCachedFor != soundModel)
             {
                 clipsCachedFor = soundModel;
+                foldouts["modelPlayerAnyway"] = false;
                 cachedClips = CustomModel.ClipsForModel(soundModel, out cachedUsedFor);
             }
 
@@ -125,16 +126,60 @@ public partial class GameBuilderWindow
             }
 
             // ---- Its own versions of the general sounds
-            EditorGUILayout.Space(8);
-            GUILayout.Label("👹 When it's a creature", EditorStyles.boldLabel);
-            foreach (SoundEvent e in ModelCreatureEvents) DrawModelEvent(sounds, e);
-            EditorGUILayout.Space(4);
-            GUILayout.Label("🧙 When it's the player", EditorStyles.boldLabel);
-            foreach (SoundEvent e in ModelPlayerEvents) DrawModelEvent(sounds, e);
-            EditorGUILayout.Space(4);
-            GUILayout.Label("⭐ When it's a pickup or bounce ball", EditorStyles.boldLabel);
-            foreach (SoundEvent e in ModelPickupEvents) DrawModelEvent(sounds, e);
+            const string JustThisModel = "  (replace the default sound for just this model)";
+            if (Foldout("modelCreature", "👹 When it's a creature" + JustThisModel, true))
+            {
+                foreach (SoundEvent e in ModelCreatureEvents) DrawModelEvent(sounds, e);
+            }
+
+            // There's only one player, so its sounds are usually just the general sounds at the top.
+            // Only show this group when this model really is (or might be) the player.
+            bool showPlayer = IsPlayerModel(sounds, soundModel) || (foldouts.TryGetValue("modelPlayerAnyway", out bool anyway) && anyway);
+            if (showPlayer)
+            {
+                if (Foldout("modelPlayer", "🧙 When it's the player" + JustThisModel, true))
+                {
+                    foreach (SoundEvent e in ModelPlayerEvents) DrawModelEvent(sounds, e);
+                }
+            }
+            else
+            {
+                EditorGUILayout.Space(8);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("🧙 This model isn't the player in this level, so the player sounds are hidden.", EditorStyles.miniLabel);
+                    if (GUILayout.Button(new GUIContent("Show them", "Use this if the model is the player in a DIFFERENT level"), EditorStyles.miniButton, GUILayout.Width(80)))
+                    {
+                        foldouts["modelPlayerAnyway"] = true;
+                    }
+                }
+            }
+
+            if (Foldout("modelPickup", "⭐ When it's a pickup or bounce ball" + JustThisModel, true))
+            {
+                foreach (SoundEvent e in ModelPickupEvents) DrawModelEvent(sounds, e);
+            }
         }
+    }
+
+    /// <summary>
+    /// True when this model is the player in the open level, is the starting player for new levels,
+    /// or already has player sounds (so they never disappear from view).
+    /// </summary>
+    private static bool IsPlayerModel(GameSounds sounds, GameObject model)
+    {
+        if (model == null) return false;
+        if (GameSettings.Load().defaultPlayerModel == model) return true;
+        if (sounds.sounds.Any(s => s != null && s.onlyModel == model && s.clip != null && ModelPlayerEvents.Contains(s.when))) return true;
+
+        foreach (PlayerController player in UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None))
+        {
+            foreach (CustomModel custom in player.GetComponentsInChildren<CustomModel>(true))
+            {
+                if (custom.model == model) return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
