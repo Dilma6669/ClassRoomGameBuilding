@@ -24,6 +24,7 @@ MonoBehaviour:
   skyLimitHeight: 60
   fallKillDepth: 30
   defaultPlayerModel: {fileID: -7981514964708312862, guid: 8e7f98ee05003cf409ec4e8ce68dc74a, type: 3}
+  defaultPlatformModel: {fileID: 0}
   defaultWanderEnemy: {fileID: -7981514964708312862, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   defaultPatrolEnemy: {fileID: -7981514964708312862, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   defaultStaticEnemy: {fileID: -7981514964708312862, guid: 652b943745eff5041a0d1003a0e1f395, type: 3}
@@ -111,3 +112,11 @@ MonoBehaviour:
     picture: {fileID: 0}
     backstory: Some rocks here are strangely rubbery. Run into one and you'll be
       launched into the air. Great for reaching high places, terrible for your dignity.
+  - name: Oldman-model
+    category: 0
+    picture: {fileID: 21300000, guid: 929435404c3a80f498ab366c459b6254, type: 3}
+    backstory: 'Who is Oldman-model? Where did they come from, and why are they here?
+
+
+      Write
+      the backstory here!'
