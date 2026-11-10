@@ -205,7 +205,7 @@ public static class TutorialLevelBuilder
         // Bounce ball on the ground
         AddBouncePad(terrain, At(0f, 196f));
         Sign(signs, signMaterial, At(-5f, 190f), At(0f, 190f, 1.5f), "13. Bounce!",
-            "Jump onto the ball to get launched sky-high! Creatures & Pickups > Bounce Ball.\nAny creature can bounce too: When you touch it > tick 'Is Bouncy', and raise Launch Force to go higher.");
+            "Jump onto the ball to get launched sky-high! Creatures & Pickups > Bounce Ball.\nAny creature can bounce too: When you touch it > tick 'Is Bouncy'. Raise Launch force to go higher,\nor lower 'Straight up' so a round ball sends you flying off at wild angles!");
 
         // Checkpoint
         GameMenuItems.CreateCheckpoint();

@@ -139,7 +139,8 @@ public static class ShowcaseLevelBuilder
         const string folder = "Power-ups";
         StationSign(10f, "2. Power-ups",
             "POWER-UPS! Health heals you, Stamina refills your sprint, Shield stops damage, Super Jump and Speed Boost last 8 seconds.\n" +
-            "Game Builder > Creatures & Pickups: click one, then click where it goes. Each one glows in its own colour.");
+            "Game Builder > Creatures & Pickups: click one, then click where it goes. Each one glows in its own colour,\n" +
+            "and shows a message when you grab it: write your own in When you touch it > Message.");
 
         (ObstacleBase.PayloadType payload, int amount, float duration)[] row =
         {
@@ -329,7 +330,8 @@ public static class ShowcaseLevelBuilder
         const string folder = "Runaway things";
         StationSign(142f, "9. Runaway things",
             "Pickups can move too! This Health pickup WANDERS around (catch it!) and so does the bounce ball.\n" +
-            "Click a pickup > Movement settings > Wanders around, or Floats back & forth.");
+            "Click a pickup > Movement settings > Wanders around, or Floats back & forth.\n" +
+            "The ball is ROUND: hit it on its side and it sends you flying sideways!");
 
         ObstacleBase health = SpawnOnGround(At(-11f, 146f), ObstacleBase.PayloadType.HealthBooster, ObstacleSpawnType.Wander, 25, 5f, true);
         SetWander(health, 5f, 1.5f, 2f);
