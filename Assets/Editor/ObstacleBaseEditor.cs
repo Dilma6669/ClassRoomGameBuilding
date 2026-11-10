@@ -18,6 +18,7 @@ public class ObstacleBaseEditor : Editor
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
         "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime", "deathSparkleWhen",
+        "heightOffset", // drawn before Jump On Top
     };
 
     private static readonly HashSet<string> SparkleProps = new HashSet<string> { "sparkles", "sparkleStyle", "customSparkleColour", "sparkleColour", "sparkleAmount", "sparkleSize" };
@@ -43,6 +44,13 @@ public class ObstacleBaseEditor : Editor
         {
             enterChildren = false;
             if (prop.name == "m_Script" || DrawnLater.Contains(prop.name)) continue;
+
+            // Height Alignment (ground creatures only) goes before Jump On Top
+            if (prop.name == "jumpsToDefeat")
+            {
+                SerializedProperty height = serializedObject.FindProperty("heightOffset");
+                if (height != null) EditorGUILayout.PropertyField(height, true);
+            }
 
             if (!many)
             {
