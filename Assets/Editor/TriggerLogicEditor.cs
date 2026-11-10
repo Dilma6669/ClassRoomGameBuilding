@@ -6,9 +6,13 @@ using System.IO;
 [CustomEditor(typeof(TriggerLogic))]
 public class TriggerLogicEditor : Editor
 {
+    private bool confirmClicked;
+    private double savedAt = -10;
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
+        confirmClicked = false;
 
         // 1. Transform settings at the top
         EditorGUILayout.PropertyField(serializedObject.FindProperty("size"));
@@ -37,6 +41,7 @@ public class TriggerLogicEditor : Editor
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(serializedObject.FindProperty("canvas"), new GUIContent("Dialog Canvas"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("message"));
+            confirmClicked = DrawConfirmButton();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("clearOnExit"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fadeDuration"), new GUIContent("Fade Duration (s)"));
             EditorGUI.indentLevel--;
@@ -88,6 +93,7 @@ public class TriggerLogicEditor : Editor
         }
 
         serializedObject.ApplyModifiedProperties();
+        if (confirmClicked) SaveMessage();
 
         GUILayout.Space(15);
 
@@ -99,6 +105,46 @@ public class TriggerLogicEditor : Editor
             trigger.DeleteTrigger();
         }
         GUI.backgroundColor = Color.white;
+    }
+
+    /// <summary>A button under the message box that finishes typing and saves the level.</summary>
+    private bool DrawConfirmButton()
+    {
+        bool clicked;
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.Space(EditorGUI.indentLevel * 15);
+            GUI.backgroundColor = new Color(0.4f, 0.9f, 0.4f);
+            clicked = GUILayout.Button(new GUIContent("✔ Confirm message", "Finish typing and save the level"), GUILayout.Height(26));
+            GUI.backgroundColor = Color.white;
+        }
+        if (EditorApplication.timeSinceStartup - savedAt < 2.5)
+        {
+            EditorGUILayout.LabelField(Application.isPlaying ? "✔ Done (changes made while playing are lost when you stop)" : "✔ Saved!", EditorStyles.miniBoldLabel);
+            Repaint();
+        }
+        if (clicked)
+        {
+            // Stop typing in the box, so the text is final
+            GUI.FocusControl(null);
+            GUIUtility.keyboardControl = 0;
+            EditorGUIUtility.editingTextField = false;
+        }
+        return clicked;
+    }
+
+    private void SaveMessage()
+    {
+        savedAt = EditorApplication.timeSinceStartup;
+        if (Application.isPlaying) return;
+        TriggerLogic trigger = (TriggerLogic)target;
+        EditorUtility.SetDirty(trigger);
+        UnityEngine.SceneManagement.Scene scene = trigger.gameObject.scene;
+        if (scene.IsValid())
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+        }
     }
 
     private static void ShowVideosFolder()

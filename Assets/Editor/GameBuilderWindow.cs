@@ -736,6 +736,8 @@ public partial class GameBuilderWindow : EditorWindow
 
     // ------------------------------------------------------------------ 💬 Signs & Story
 
+    [System.NonSerialized] private TriggerLogic lastTrigger;
+
     private void DrawSignsTab()
     {
         Title("💬 Signs & Story", "Pop-up messages, checkpoint flags, and the story and Library your players can read.");
@@ -746,6 +748,13 @@ public partial class GameBuilderWindow : EditorWindow
         DrawList("triggers", triggers, "No pop-ups yet.", t => "💬 " + t.name);
 
         TriggerLogic trigger = SelectedOf<TriggerLogic>();
+        if (trigger != lastTrigger)
+        {
+            // Picked a different sign: stop typing, so the old text can't end up in the new sign
+            lastTrigger = trigger;
+            GUIUtility.keyboardControl = 0;
+            EditorGUIUtility.editingTextField = false;
+        }
         if (trigger != null)
         {
             Section("✏️ " + trigger.name);
