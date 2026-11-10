@@ -38,7 +38,7 @@ public partial class GameBuilderWindow : EditorWindow
     private List<Checkpoint> checkpoints = new List<Checkpoint>();
     private List<Material> skyMaterials;
 
-    [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle;
+    [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle, foldoutTitleStyle;
 
     [MenuItem("Game/🎮 Game Builder", priority = -100)]
     public static void Open()
@@ -977,7 +977,15 @@ public partial class GameBuilderWindow : EditorWindow
     {
         foldouts.TryGetValue(key, out bool open);
         EditorGUILayout.Space(8);
-        open = EditorGUILayout.Foldout(open, label, true, EditorStyles.foldoutHeader);
+        // A dark bar across the whole width (Unity's own header bar only fits short titles), then the arrow + title on top
+        if (foldoutTitleStyle == null) foldoutTitleStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+        Rect rect = GUILayoutUtility.GetRect(0, 22, GUILayout.ExpandWidth(true));
+        if (Event.current.type == EventType.Repaint)
+        {
+            EditorGUI.DrawRect(rect, EditorGUIUtility.isProSkin ? new Color(0.16f, 0.165f, 0.18f) : new Color(0.78f, 0.78f, 0.78f));
+        }
+        Rect inside = new Rect(rect.x + 4, rect.y + 2, rect.width - 4, rect.height - 4);
+        open = EditorGUI.Foldout(inside, open, label, true, foldoutTitleStyle);
         foldouts[key] = open;
         return open;
     }

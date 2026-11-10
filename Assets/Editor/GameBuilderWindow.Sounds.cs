@@ -92,27 +92,33 @@ public partial class GameBuilderWindow
         DrawModelSounds(sounds);
 
         // ---------------- Music
-        Section("🎵 Music (soundtrack)");
-        DrawMusic(sounds);
+        Section("📀 Music (soundtrack)");
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            DrawMusic(sounds);
+        }
 
         Section("🔉 Starting volumes");
-        EditorGUILayout.HelpBox("How loud things are the first time someone plays. Players can change it in the game (Esc > Sound & Music).", MessageType.None);
-        EditorGUI.BeginChangeCheck();
-        float musicVol = EditorGUILayout.Slider("Music", sounds.startMusicVolume, 0f, 1f);
-        float fxVol = EditorGUILayout.Slider("Sound effects", sounds.startEffectsVolume, 0f, 1f);
-        if (EditorGUI.EndChangeCheck())
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            Undo.RecordObject(sounds, "Change volume");
-            sounds.startMusicVolume = musicVol;
-            sounds.startEffectsVolume = fxVol;
-            SoundsChanged(sounds);
-        }
-        if (GUILayout.Button("Forget the volumes I picked while testing (use the starting volumes)"))
-        {
-            PlayerPrefs.DeleteKey("Sound.MusicVolume");
-            PlayerPrefs.DeleteKey("Sound.EffectsVolume");
-            PlayerPrefs.DeleteKey("Sound.MusicOrder");
-            ShowNotification(new GUIContent("Done"));
+            EditorGUILayout.LabelField("How loud things are the first time someone plays. Players can change it in the game (Esc > Sound & Music).", EditorStyles.wordWrappedMiniLabel);
+            EditorGUI.BeginChangeCheck();
+            float musicVol = EditorGUILayout.Slider("Music", sounds.startMusicVolume, 0f, 1f);
+            float fxVol = EditorGUILayout.Slider("Sound effects", sounds.startEffectsVolume, 0f, 1f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(sounds, "Change volume");
+                sounds.startMusicVolume = musicVol;
+                sounds.startEffectsVolume = fxVol;
+                SoundsChanged(sounds);
+            }
+            if (GUILayout.Button("Forget the volumes I picked while testing (use the starting volumes)"))
+            {
+                PlayerPrefs.DeleteKey("Sound.MusicVolume");
+                PlayerPrefs.DeleteKey("Sound.EffectsVolume");
+                PlayerPrefs.DeleteKey("Sound.MusicOrder");
+                ShowNotification(new GUIContent("Done"));
+            }
         }
     }
 
