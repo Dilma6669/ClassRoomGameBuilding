@@ -104,7 +104,7 @@ public class ObstacleBaseEditor : Editor
         EndBox();
 
         // ✋ What it does when the player touches it
-        if (BeginBox("✋ When you touch it", "What it does to you (hurts, heals, gives a power-up), and how much."))
+        if (BeginBox("✋ When you touch it", "What it does to you (hurts, heals, gives a power-up), how much, and whether it bounces you."))
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("payloadType"), new GUIContent("What it does",
                 "Damage hurts you. Health / Stamina boosters fill your bars. Invincibility, Jump and Sprint buffs are power-ups for a while. None does nothing (e.g. a bounce ball)."));
@@ -115,12 +115,10 @@ public class ObstacleBaseEditor : Editor
             if (many || powerUp)
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("buffDuration"), new GUIContent("Power-up lasts (seconds)", "How long the power-up lasts."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("destroyOnTrigger"), Labels["destroyOnTrigger"]);
-        }
-        EndBox();
 
-        // 🏀 Launches you into the air
-        if (BeginBox("🏀 Bounce settings", "Whether it launches you into the air when you touch it."))
-        {
+            // 🏀 Launches you into the air
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("🏀 Bounce", EditorStyles.boldLabel);
             SerializedProperty bouncy = serializedObject.FindProperty("isBouncy");
             EditorGUILayout.PropertyField(bouncy, new GUIContent("Is Bouncy", "Ticked: touching it launches you."));
             if (many || bouncy.boolValue)
