@@ -32,6 +32,9 @@ public class CustomModelEditor : Editor
     /// </summary>
     public static bool InPlayerTab;
 
+    /// <summary>Set while drawn inside a '🎨 Model' box that already has the title (Game Builder creature panel).</summary>
+    public static bool InModelBox;
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
@@ -47,7 +50,7 @@ public class CustomModelEditor : Editor
                 MessageType.Info);
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("🎨 Model", bold);
+            if (!InModelBox) EditorGUILayout.LabelField("🎨 Model", bold);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("model"));
         }
         EditorGUILayout.PropertyField(serializedObject.FindProperty("size"));

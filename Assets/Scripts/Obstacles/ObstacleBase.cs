@@ -47,7 +47,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
         if (o != null && obstacle.name.StartsWith("ObstacleLogic")) obstacle.name = o.KindName();
     }
 
-    [Header("Transform Settings")] [Range(0.1f, 50f)]
+    [Range(0.1f, 50f)] // shown in the 📐 Transform settings box
     public float objectScale = 1f;
     [Tooltip("Automatically lift the shape so it sits ON the ground instead of half inside it.")]
     public bool sitOnGround = true;

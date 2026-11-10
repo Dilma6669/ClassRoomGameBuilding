@@ -18,8 +18,9 @@ public class ObstacleBaseEditor : Editor
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
         "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime", "deathSparkleWhen",
-        "heightOffset", // drawn after Chase
+        "heightOffset", // drawn in the 📐 Transform settings box
         "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
+        "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
     };
 
     [System.NonSerialized] private static GUIStyle boxTitle;
@@ -27,8 +28,11 @@ public class ObstacleBaseEditor : Editor
     /// <summary>Set by the Game Builder while it draws a creature: draws its 'How it moves' buttons inside the Movement box.</summary>
     public static System.Action<ObstacleBase> HowItMoves;
 
+    /// <summary>Set by the Game Builder while it draws a creature: draws its '📍 Move it…' button at the top of the Transform box.</summary>
+    public static System.Action<ObstacleBase> MoveIt;
+
     /// <summary>Starts a bordered box whose title sits in its own coloured bar. End it with EndBox().</summary>
-    private static void BeginBox(string title, string subtitle)
+    public static void BeginBox(string title, string subtitle)
     {
         EditorGUILayout.Space(10);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -43,7 +47,7 @@ public class ObstacleBaseEditor : Editor
         if (!string.IsNullOrEmpty(subtitle)) EditorGUILayout.LabelField(subtitle, EditorStyles.miniLabel);
     }
 
-    private static void EndBox()
+    public static void EndBox()
     {
         EditorGUILayout.Space(2);
         EditorGUILayout.EndVertical();
@@ -66,13 +70,24 @@ public class ObstacleBaseEditor : Editor
         ObstacleBase o = (ObstacleBase)target;
         bool many = targets.Length > 1; // with several selected, show everything
 
+        // 📐 Where it is, how big, which way it faces
+        BeginBox("📐 Transform settings", "Where it is, how big it is, and which way it faces.");
+        if (MoveIt != null && !many) MoveIt(o);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("objectScale"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sitOnGround"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("initialYRotation"));
+        SerializedProperty heightOffset = serializedObject.FindProperty("heightOffset"); // ground creatures only
+        if (heightOffset != null) EditorGUILayout.PropertyField(heightOffset, true);
+        EndBox();
+        EditorGUILayout.Space(4);
+
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))
         {
             enterChildren = false;
 
-            // After the Bounce settings: the 🚶 Movement settings box (How it moves + Chase), then Height Alignment (ground creatures only)
+            // After the Bounce settings: the 🚶 Movement settings box (How it moves + Chase)
             if (prop.name == "jumpsToDefeat")
             {
                 bool creature = many || o.payloadType == ObstacleBase.PayloadType.Damage;
@@ -85,8 +100,6 @@ public class ObstacleBaseEditor : Editor
                     EndBox();
                     EditorGUILayout.Space(4);
                 }
-                SerializedProperty height = serializedObject.FindProperty("heightOffset");
-                if (height != null) EditorGUILayout.PropertyField(height, true);
             }
             if (prop.name == "m_Script" || DrawnLater.Contains(prop.name)) continue;
 
