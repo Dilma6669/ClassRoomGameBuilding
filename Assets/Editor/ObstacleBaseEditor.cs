@@ -16,6 +16,7 @@ public class ObstacleBaseEditor : Editor
         "fitHitZoneToModel", "hitZoneWidth", "hitZoneHeight", "touchDistance",
         "chasePlayer", "chaseStartDistance", "chaseGiveUpDistance", "chaseSpeed",
         "triggerRadius", // not used: the hit zone is what touches the player
+        "faceYouWhenAttacking",
     };
 
     private static readonly Dictionary<string, GUIContent> Labels = new Dictionary<string, GUIContent>
@@ -52,6 +53,7 @@ public class ObstacleBaseEditor : Editor
 
         DrawHitZone(o, many);
         if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawChase(o, many);
+        if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawAttack(o, many);
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -103,6 +105,39 @@ public class ObstacleBaseEditor : Editor
                 EditorUtility.SetDirty(ob);
             }
             serializedObject.Update();
+        }
+    }
+
+    /// <summary>⚔ When it hurts you: which animation it plays (any of its model's animations) and whether it turns to face you.</summary>
+    private void DrawAttack(ObstacleBase o, bool many)
+    {
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("⚔ When it hurts you", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("faceYouWhenAttacking"), new GUIContent("Turns to face you",
+            "While its attack animation plays it quickly turns to face you (and stops walking), then turns back and carries on."));
+        if (many) return;
+
+        CustomModel cm = o.GetComponentInChildren<CustomModel>();
+        if (cm == null || cm.model == null)
+        {
+            EditorGUILayout.LabelField("Give it a 3D model to choose an attack animation.", EditorStyles.wordWrappedMiniLabel);
+            return;
+        }
+
+        CustomModelEditor.AnimationDropdown(cm, new GUIContent("Attack animation",
+            "Plays when it hurts you. Any of its animations works, e.g. a Jump if it has no attack animation."), cm.attack, c => cm.attack = c);
+        if (cm.attack == null)
+            EditorGUILayout.LabelField("No attack animation: pick any of its animations above (a Jump works well).", EditorStyles.wordWrappedMiniLabel);
+
+        // An 'it attacks you' animation chosen in the Sounds tab for this model plays instead
+        foreach (ModelSounds ms in GameSounds.Load().modelSounds)
+        {
+            if (ms == null || ms.model != cm.model) continue;
+            if (ms.animations.Exists(a => a != null && a.animation != null && a.playWhen == AnimationMoment.AttacksYou))
+            {
+                EditorGUILayout.LabelField("Game Builder > Sounds has an 'it attacks you' animation for this model, so that one plays instead.", EditorStyles.wordWrappedMiniLabel);
+                break;
+            }
         }
     }
 

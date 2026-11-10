@@ -14,6 +14,26 @@ public class Health : MonoBehaviour, IDamagable
 
     [FormerlySerializedAs("healthUI")] [SerializeField, HideInInspector] private HealthHUD healthHUD;
 
+    public enum FlashStyle { Colour, Blink }
+
+    [Header("When you get hurt")]
+    [ShowAs("Flash when hurt"), Tooltip("The player flashes for a moment when something hurts them.")]
+    public bool flashWhenHurt = true;
+    [ShowAs("Flash style"), Tooltip("Colour: turns the flash colour on and off. Blink: disappears and reappears.")]
+    public FlashStyle flashStyle = FlashStyle.Colour;
+    [ShowAs("Flash colour"), Tooltip("The colour it flashes (Colour style).")]
+    public Color flashColour = new Color(1f, 0.25f, 0.25f);
+    [ShowAs("Flash for (seconds)"), Tooltip("How long the flashing lasts.")]
+    [Range(0.1f, 3f)] public float flashTime = 0.6f;
+    [ShowAs("Flashes per second"), Tooltip("How fast it flashes.")]
+    [Range(1f, 20f)] public float flashesPerSecond = 8f;
+
+    private Coroutine flashCoroutine;
+    private System.Collections.Generic.List<Renderer> flashRenderers;
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int GltfColorId = Shader.PropertyToID("baseColorFactor");
+
     private void Start()
     {
         currentHealth = maxHealth;
@@ -46,7 +66,16 @@ public class Health : MonoBehaviour, IDamagable
         if (currentHealth > 0 && ownModel != null)
         {
             float length = ownModel.PlayMoment(fromFall ? AnimationMoment.LandsTooHard : AnimationMoment.GetsHurt, out ownSound);
-            if (length <= 0f && fromFall) ownModel.PlayMoment(AnimationMoment.GetsHurt, out ownSound); // no fall animation: use the hurt one
+            if (length <= 0f && fromFall) length = ownModel.PlayMoment(AnimationMoment.GetsHurt, out ownSound); // no fall animation: use the hurt one
+            if (length <= 0f) ownModel.PlayHurt(); // none picked in Game Builder > Sounds: the model's own hurt animation
+        }
+
+        if (currentHealth > 0 && flashWhenHurt && amount > 0)
+        {
+            // Hit again mid-flash: keep flashing the same parts (some may be 'off' right now)
+            if (flashCoroutine != null) StopCoroutine(flashCoroutine);
+            else flashRenderers = null;
+            flashCoroutine = StartCoroutine(FlashRoutine());
         }
 
         if (currentHealth > 0 && !ownSound)
@@ -91,6 +120,48 @@ public class Health : MonoBehaviour, IDamagable
         yield return new WaitForSeconds(duration);
         isInvincible = false;
         invincibilityCoroutine = null;
+    }
+
+    /// <summary>Flashes the player's model (colour or blink) for flashTime seconds, then puts it back as it was.</summary>
+    private IEnumerator FlashRoutine()
+    {
+        // Only the renderers showing now (a model hides the original capsule; that stays hidden)
+        if (flashRenderers == null)
+        {
+            flashRenderers = new System.Collections.Generic.List<Renderer>();
+            foreach (Renderer r in GetComponentsInChildren<Renderer>())
+            {
+                if (r.enabled && !(r is ParticleSystemRenderer)) flashRenderers.Add(r);
+            }
+        }
+        System.Collections.Generic.List<Renderer> shown = flashRenderers;
+        MaterialPropertyBlock block = new MaterialPropertyBlock();
+        block.SetColor(ColorId, flashColour);
+        block.SetColor(BaseColorId, flashColour);
+        block.SetColor(GltfColorId, flashColour);
+
+        float t = 0f;
+        while (t < flashTime)
+        {
+            bool on = Mathf.Repeat(t * flashesPerSecond, 1f) < 0.5f;
+            foreach (Renderer r in shown)
+            {
+                if (r == null) continue;
+                if (flashStyle == FlashStyle.Blink) r.enabled = !on;
+                else r.SetPropertyBlock(on ? block : null);
+            }
+            yield return null;
+            t += Time.deltaTime;
+        }
+
+        foreach (Renderer r in shown)
+        {
+            if (r == null) continue;
+            r.enabled = true;
+            r.SetPropertyBlock(null);
+        }
+        flashCoroutine = null;
+        flashRenderers = null;
     }
 
     /// <summary>Instantly kills the player, even if invincible (e.g. falling out of the world).</summary>

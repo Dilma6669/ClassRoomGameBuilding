@@ -148,7 +148,11 @@ public abstract partial class ObstacleBase : MonoBehaviour
         }
 #endif
 
-        if (Application.isPlaying && UpdateChase())
+        if (Application.isPlaying && UpdateAttack())
+        {
+            // attacking: it turns to face the player and doesn't walk
+        }
+        else if (Application.isPlaying && UpdateChase())
         {
             PlayMoveSound(); // chasing or walking home: the normal movement waits
         }
@@ -298,7 +302,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
                     var damagable = other.GetComponentInParent<IDamagable>();
                     if (damagable != null)
                     {
-                        if (!PlayOwnMoment(AnimationMoment.AttacksYou, out _)) SoundManager.Play(SoundEvent.EnemyAttack, transform.position, gameObject);
+                        if (!StartAttack(other.transform)) SoundManager.Play(SoundEvent.EnemyAttack, transform.position, gameObject);
                         damagable.TakeDamage(payloadAmount);
                     }
                     break;

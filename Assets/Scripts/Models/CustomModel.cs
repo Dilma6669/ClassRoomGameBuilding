@@ -51,6 +51,10 @@ public class CustomModel : MonoBehaviour
     [Tooltip("Plays when moving fast (sprinting).")] public AnimationClip run;
     [Tooltip("Plays when going up in the air.")] public AnimationClip jump;
     [Tooltip("Plays when falling.")] public AnimationClip fall;
+    [Tooltip("Creatures: plays when it hurts the player (found by name: Scratch, Bite, Attack, Punch, Kick...). An animation picked in Game Builder > Sounds for 'it attacks you' is used instead.")]
+    public AnimationClip attack;
+    [Tooltip("The player: plays when something hurts you (found by name: Hit, Hurt, Damage...). An animation picked in Game Builder > Sounds for 'gets hurt' is used instead.")]
+    public AnimationClip hurt;
 
     [Tooltip("Speed up or slow down all animations.")]
     [Range(0.1f, 3f)] public float animationSpeed = 1f;
@@ -58,6 +62,8 @@ public class CustomModel : MonoBehaviour
     // Saved results of fitting the model (so we don't re-measure every frame)
     [SerializeField, HideInInspector] private GameObject builtFrom;
     [SerializeField, HideInInspector] private GameObject clipsFoundFrom;
+    [SerializeField, HideInInspector] private bool attackLookedFor; // models set up before 'attack' existed look for one once
+    [SerializeField, HideInInspector] private bool hurtLookedFor;
     [SerializeField, HideInInspector] private Transform modelInstance;
     [SerializeField, HideInInspector] private float fitScale = 1f;
     [SerializeField, HideInInspector] private Vector3 modelAnchor;   // bottom-centre of the model, in model space
@@ -83,6 +89,14 @@ public class CustomModel : MonoBehaviour
 
     private void OnEnable()
     {
+#if UNITY_EDITOR
+        // Opened in the Editor and set up before the attack/hurt animations existed: look for them now
+        if (!Application.isPlaying && (!attackLookedFor || !hurtLookedFor) && model != null && model == builtFrom)
+        {
+            EditorApplication.delayCall -= DelayedRefresh;
+            EditorApplication.delayCall += DelayedRefresh;
+        }
+#endif
         if (!Application.isPlaying) return;
 
         if (model != null && modelInstance == null) Rebuild();
@@ -114,6 +128,14 @@ public class CustomModel : MonoBehaviour
         {
             ClearClips();
             AutoFindClips();
+            MarkDirty();
+        }
+        // Set up before the 'attack' animation existed: look for one now (the other animations stay as they are)
+        else if (!Application.isPlaying && model != null && model == builtFrom && (!attackLookedFor || !hurtLookedFor))
+        {
+            AnimationClip i = idle, w = walk, r = run, j = jump, f = fall;
+            AutoFindClips();
+            idle = i; walk = w; run = r; jump = j; fall = f;
             MarkDirty();
         }
 #endif
@@ -591,6 +613,24 @@ public class CustomModel : MonoBehaviour
         return PlayAction(pick.animation);
     }
 
+    /// <summary>
+    /// A creature hurts the player: plays the 'it attacks you' animation picked in Game Builder > Sounds,
+    /// or else its own attack animation (found by name). Returns how long it lasts (0 = none).
+    /// </summary>
+    public float PlayAttack(out bool playedSound)
+    {
+        float length = PlayMoment(AnimationMoment.AttacksYou, out playedSound);
+        if (length > 0f || !Application.isPlaying) return length;
+        return PlayAction(attack);
+    }
+
+    /// <summary>The player got hurt and nothing was picked in Game Builder > Sounds: plays the model's own hurt animation.</summary>
+    public float PlayHurt()
+    {
+        if (!Application.isPlaying) return 0f;
+        return PlayAction(hurt);
+    }
+
     private float PlayAction(AnimationClip clip)
     {
         if (!graph.IsValid() || actionInput < 0 || clip == null || clip.length <= 0f) return 0f;
@@ -663,7 +703,8 @@ public class CustomModel : MonoBehaviour
 
     public void ClearClips()
     {
-        idle = walk = run = jump = fall = null;
+        idle = walk = run = jump = fall = attack = hurt = null;
+        attackLookedFor = hurtLookedFor = false;
     }
 
     /// <summary>
@@ -706,6 +747,9 @@ public class CustomModel : MonoBehaviour
         if (run == null) run = BestClip(clips, source.name, "run", "sprint", "jog", "gallop");
         if (jump == null) jump = BestClip(clips, source.name, "jump", "flap", "takeoff");
         if (fall == null) fall = BestClip(clips, source.name, "fall", "inair", "in_air", "air", "glide");
+        if (attack == null) attack = BestClip(clips, source.name, "scratch", "bite", "attack", "punch", "kick", "claw", "strike", "sting", "peck", "swipe", "slash");
+        if (hurt == null) hurt = BestClip(clips, source.name, "hit", "hurt", "damage", "flinch", "react");
+        attackLookedFor = hurtLookedFor = true;
 
         // A model with just one animation (e.g. a flapping bird) plays it all the time
         if (idle == null && walk == null && run == null && clips.Count > 0) idle = clips[0];
