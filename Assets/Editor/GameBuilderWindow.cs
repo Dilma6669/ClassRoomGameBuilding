@@ -506,6 +506,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (selected != null)
         {
             Section("✏️ " + selected.name);
+            DrawNameAndFolder(selected, "platforms", platforms);
             EditorGUILayout.LabelField("Make it:", EditorStyles.miniBoldLabel);
             ScatterTools.PlatformMove now = ScatterTools.GetMovement(selected);
             Color chosen = new Color(0.6f, 0.85f, 1f);
@@ -585,6 +586,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (selected != null)
         {
             Section("✏️ " + selected.name);
+            DrawNameAndFolder(selected, "obstacles", obstacles);
             DrawPosition(selected.transform, selected.name, hit => MoveObstacleTo(selected, hit), () => PutObstacleOnGround(selected));
             DrawInspector(selected);
 
@@ -625,6 +627,7 @@ public partial class GameBuilderWindow : EditorWindow
     private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
     {
         PlatformLogic p = ScatterTools.QuickPlatform(controller, move, type);
+        if (p != null) p.name = UniqueName(p.name, p); // Floating Platform, Floating Platform 2...
         RefreshSceneLists();
         if (p == null) return;
         // Placed by clicking: the student is already looking there, so don't move the camera
@@ -807,7 +810,7 @@ public partial class GameBuilderWindow : EditorWindow
         ObstacleBase created = FindAll<ObstacleBase>().FirstOrDefault(o => !before.Contains(o));
         if (created == null) return;
 
-        created.name = NiceName(created);
+        created.name = UniqueName(NiceName(created), created); // Wanderer, Wanderer 2, Wanderer 3...
         if (onPlatform == null) MoveToSceneViewGround(created.transform, placeHit?.point);
         else if (placeHit.HasValue) MoveOnPlatform(created, placeHit.Value.point);
 
@@ -964,6 +967,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (trigger != null)
         {
             Section("✏️ " + trigger.name);
+            DrawNameAndFolder(trigger, "triggers", triggers);
             DrawInspector(trigger);
         }
 
@@ -981,6 +985,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (flag != null)
         {
             Section("✏️ " + flag.name);
+            DrawNameAndFolder(flag, "checkpoints", checkpoints);
             DrawInspector(flag);
         }
 
@@ -1251,24 +1256,52 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
-        T selected = SelectedOf<T>();
+        HashSet<T> selected = SelectedAll<T>();
+
+        // Things without a folder first, then each folder (📁) with its things inside, A to Z
+        List<T> loose = items.Where(i => FolderOf(i) == "").ToList();
+        List<IGrouping<string, T>> folders = items.Where(i => FolderOf(i) != "").GroupBy(FolderOf)
+            .OrderBy(g => g.Key, System.StringComparer.OrdinalIgnoreCase).ToList();
+
+        int rows = loose.Count + folders.Sum(g => 1 + (FolderOpen(key, g.Key) ? g.Count() : 0));
         listScrolls.TryGetValue(key, out Vector2 listScroll);
-        bool scrolls = items.Count > 8;
-        if (scrolls) listScroll = EditorGUILayout.BeginScrollView(listScroll, EditorStyles.helpBox, GUILayout.Height(190));
+        bool scrolls = rows > 9;
+        if (scrolls) listScroll = EditorGUILayout.BeginScrollView(listScroll, EditorStyles.helpBox, GUILayout.Height(230));
         else EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-        foreach (T item in items)
+        foreach (T item in loose) DrawListRow(item, selected.Contains(item), label(item), 0);
+
+        foreach (IGrouping<string, T> folder in folders)
         {
-            bool isSelected = item == selected;
-            if (GUILayout.Button((isSelected ? "▶ " : "") + label(item), isSelected ? rowSelectedStyle : rowStyle))
+            if (DrawFolderRow(key, folder.Key, folder.Count(), folder.Cast<Component>().ToList()))
             {
-                SelectAndFrame(item.gameObject);
+                foreach (T item in folder) DrawListRow(item, selected.Contains(item), label(item), 18);
             }
         }
 
         if (scrolls) EditorGUILayout.EndScrollView();
         else EditorGUILayout.EndVertical();
         listScrolls[key] = listScroll;
+    }
+
+    private void DrawListRow(Component item, bool isSelected, string text, float indent)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (indent > 0f) GUILayout.Space(indent);
+            if (GUILayout.Button((isSelected ? "▶ " : "") + text, isSelected ? rowSelectedStyle : rowStyle))
+            {
+                // Ctrl/Shift-click adds it to the selection (to put several into a folder at once)
+                Event e = Event.current;
+                if (e != null && (e.control || e.shift || e.command))
+                {
+                    List<Object> now = Selection.objects.ToList();
+                    if (now.Contains(item.gameObject)) now.Remove(item.gameObject); else now.Add(item.gameObject);
+                    Selection.objects = now.ToArray();
+                }
+                else SelectAndFrame(item.gameObject);
+            }
+        }
     }
 
     private void NotSetUp()

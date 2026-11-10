@@ -4,6 +4,13 @@ _Last updated: 2026-11-10 (session 7: Game Builder made easier). Written so a fr
 
 ## ▶ START HERE (state at the end of 2026-11-10)
 
+### ✅ DONE (session 7, very last): names + folders in the lists
+- **Unique names:** new creatures/pickups (`Spawn`) and quick platforms get numbered names via `GameBuilderWindow.UniqueName` ("Wanderer", "Wanderer 2"...). New pop-up signs are "Pop-up Sign", "Pop-up Sign 2"... (`TriggerController.CreateTrigger`, was "UITrigger"; nothing looked that name up).
+- **Name + 📁 Folder box** at the top of the selected platform / creature / sign / checkpoint panel (`GameBuilderWindow.Folders.cs`, `DrawNameAndFolder`): a DelayedTextField renames it (with Undo); the Folder dropdown offers (no folder) / the existing folders / "➕ New folder…" (an inline name box and a "Make it" button). With several selected, it applies to all of them (Ctrl/Shift-click rows in the list to multi-select).
+- **Folders are labels, not Hierarchy folders:** a hidden `ListFolder` component (`Scripts/Game/ListFolder.cs`, `folder` string, HideInInspector) on the object. Parenting is untouched, so platform creatures and populators keep working.
+- `DrawList` shows the loose things first, then each folder as "▼ 📁 Name (count)" (click to fold; open by default; the state is in `foldouts["folder/<list>/<name>"]`), with ✏️ rename (inline) and ✕ remove (the things go back to no folder). It scrolls above 9 rows.
+- Tested: numbered names, sign names, two folders + undo (in the Tutorial, then discarded). Not tested by a person clicking: the rename box and the dropdown.
+
 ### ✅ DONE (session 7, last): Move panel, hand-made moves stick, scenery click-placing, platform height
 - **Gizmos:** on by default (once per session). The hit zone / chase drawings (`ObstacleSceneDrawer`) now follow the Gizmos button (teacher: on by default, but hidden when Gizmos is off).
 - **📍 Move it… → one Move panel** (`Editor/MovePanel.cs`; teacher's idea: one shared panel instead of position controls in every tab). A `GUILayout.Window` in the Scene view's bottom-left (it can be dragged by its title). It has left-right / up-down / forward-back with − / + (0.5 m) and typed numbers, "Click a new spot" (ScenePlacer), "⬇ Back on the ground (automatic height)" for creatures and pickups, "⬆ Height (m)" above the ground for platforms, and ✔ OK. Opening it switches to the Move tool so the arrows show. It closes itself when something else is selected (compared by owner: ObstacleBase / PlatformLogic, so clicking the model counts as the same thing). The button in the tab is `GameBuilderWindow.DrawPosition` (it highlights while the panel is open).

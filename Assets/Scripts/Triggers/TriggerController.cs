@@ -45,7 +45,11 @@ public class TriggerController : MonoBehaviour
         newTrigger = Instantiate(uiTriggerPrefab, transform);
 #endif
 
-        newTrigger.name = "UITrigger";
+        // 'Pop-up Sign', 'Pop-up Sign 2'... (easy to tell apart in the Game Builder's list)
+        TriggerLogic[] signs = FindObjectsByType<TriggerLogic>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        int number = 1;
+        while (System.Array.Exists(signs, t => t.gameObject != newTrigger && t.name == "Pop-up Sign" + (number == 1 ? "" : " " + number))) number++;
+        newTrigger.name = "Pop-up Sign" + (number == 1 ? "" : " " + number);
         
         newTrigger.transform.localPosition = Vector3.zero;
         newTrigger.transform.localRotation = Quaternion.identity;
