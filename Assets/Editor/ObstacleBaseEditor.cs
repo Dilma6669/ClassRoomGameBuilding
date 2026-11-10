@@ -18,8 +18,11 @@ public class ObstacleBaseEditor : Editor
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
         "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime", "deathSparkleWhen",
-        "heightOffset", // drawn before Jump On Top
+        "heightOffset", // drawn after Chase
+        "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
     };
+
+    [System.NonSerialized] private static GUIStyle boxTitle;
 
     private static readonly HashSet<string> SparkleProps = new HashSet<string> { "sparkles", "sparkleStyle", "customSparkleColour", "sparkleColour", "sparkleAmount", "sparkleSize" };
 
@@ -43,9 +46,8 @@ public class ObstacleBaseEditor : Editor
         while (prop.NextVisible(enterChildren))
         {
             enterChildren = false;
-            if (prop.name == "m_Script" || DrawnLater.Contains(prop.name)) continue;
 
-            // After the Bounce settings: Chase the player, then Height Alignment (ground creatures only), then Jump On Top
+            // After the Bounce settings: Chase the player, then Height Alignment (ground creatures only)
             if (prop.name == "jumpsToDefeat")
             {
                 if (many || o.payloadType == ObstacleBase.PayloadType.Damage)
@@ -56,6 +58,7 @@ public class ObstacleBaseEditor : Editor
                 SerializedProperty height = serializedObject.FindProperty("heightOffset");
                 if (height != null) EditorGUILayout.PropertyField(height, true);
             }
+            if (prop.name == "m_Script" || DrawnLater.Contains(prop.name)) continue;
 
             if (!many)
             {
@@ -72,9 +75,27 @@ public class ObstacleBaseEditor : Editor
             else EditorGUILayout.PropertyField(prop, true);
         }
 
-        DrawHitZone(o, many);
-        if (many || o.payloadType == ObstacleBase.PayloadType.Damage) DrawAttack(o, many);
-        if (many || (o.payloadType == ObstacleBase.PayloadType.Damage && o.jumpsToDefeat > 0)) DrawBeaten(o, many);
+        if (many || o.payloadType == ObstacleBase.PayloadType.Damage)
+        {
+            // Everything about hurting and being beaten, in one box
+            EditorGUILayout.Space(10);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            if (boxTitle == null) boxTitle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 15 };
+            EditorGUILayout.LabelField("⚔️ Battle settings", boxTitle, GUILayout.Height(22));
+            EditorGUILayout.LabelField("How it hurts you, and how you beat it.", EditorStyles.miniLabel);
+
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("jumpsToDefeat"), Labels["jumpsToDefeat"]); // with its 🦶 Jump On Top title
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("stompBounce"));
+            DrawHitZone(o, many);
+            DrawAttack(o, many);
+            if (many || o.jumpsToDefeat > 0) DrawBeaten(o, many);
+            EditorGUILayout.Space(2);
+            EditorGUILayout.EndVertical();
+        }
+        else
+        {
+            DrawHitZone(o, many); // pickups: just how close you have to be
+        }
 
         serializedObject.ApplyModifiedProperties();
     }
