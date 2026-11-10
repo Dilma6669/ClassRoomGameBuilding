@@ -18,7 +18,7 @@ public abstract partial class ObstacleBase
     [Min(0.05f)] public float hitZoneWidth = 1f;
     [Tooltip("How tall the hit zone is (at Object Scale 1).")]
     [Min(0.05f)] public float hitZoneHeight = 1f;
-    [Tooltip("How far past its sides the player gets hurt (or picks it up), in metres. The top never hurts, so you can land on it.")]
+    [Tooltip("How far past its sides the player gets hurt (or picks it up), in metres. A creature's top never hurts, so you can land on it. Bounce balls and pickups also reach this far above their top, so landing on one launches you or picks it up.")]
     [Range(0f, 1.5f)] public float touchDistance = 0.3f;
 
     // Where the zone sits (bottom centre, at Object Scale 1). Set by the automatic fit.
@@ -71,8 +71,12 @@ public abstract partial class ObstacleBase
         SetIfDifferent(body.transform, hitZoneBottom + Vector3.up * (h / 2f), new Vector3(w / CylinderWidth, h / CylinderHeight, w / CylinderWidth));
 
         MeshCollider touch = Part(zone, "Touch", true);
-        // Wider by 'reach' on every side, same bottom, top level with the body's top (a tiny bit lower)
-        float touchHeight = Mathf.Max(0.05f, h - 0.02f);
+        // Wider by 'reach' on every side, same bottom.
+        // Creatures: top level with the body's top (a tiny bit lower), so landing on their head never hurts.
+        // Bounce balls and pickups: it reaches above the top too, so landing on one launches you / picks it up.
+        bool topCounts = isBouncy || payloadType != PayloadType.Damage;
+        float above = Mathf.Max(reach, 0.3f / Mathf.Max(0.01f, objectScale));
+        float touchHeight = topCounts ? h + above : Mathf.Max(0.05f, h - 0.02f);
         SetIfDifferent(touch.transform, hitZoneBottom + Vector3.up * (touchHeight / 2f), new Vector3((w + reach * 2f) / CylinderWidth, touchHeight / CylinderHeight, (w + reach * 2f) / CylinderWidth));
         touch.enabled = isBouncy || payloadType != PayloadType.None;
 
