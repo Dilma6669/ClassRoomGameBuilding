@@ -347,3 +347,10 @@ Teacher asked: a Sounds tab to drag in sounds (attack, enemy attack, run, jump, 
 - [ ] Teacher to try the Game Builder with a student and report what's confusing.
 - [ ] Open requests above (Mixamo test, more platform ideas).
 - Git: commit only when the teacher says so (they approved committing on 2026-11-10). `Assets/Fonts/SueEllenFrancisco-Regular SDF.asset` and `Assets/Tutorial/TutorialTerrain.asset` change by themselves; leave them out of commits.
+
+### Follow-up 2026-11-10: Game Builder look
+- **Colour rule for buttons:** green = add something new, blue = big action on what's there (Play, Copy, Fill sounds, sculpt tools), red = delete/clear/Stop playing, grey = small helpers and changes to the selected thing (incl. ✔ Confirm message). The chosen option is highlighted light blue (0.6, 0.85, 1).
+- **Theme:** `Editor/GameBuilderWindow.Theme.cs` paints a faint dark blue background, lighter blue `helpBox` boxes and toolbar (dark skin only). Unity's shared styles are swapped only inside `OnGUI` and restored in `finally`. Don't restyle `foldoutHeader`: its ▶ arrow is part of the background picture.
+- **Gotcha:** an EditorWindow's private `GUIStyle` fields survive recompiles, so cached styles need `[System.NonSerialized]` or style changes don't show.
+- **Signs:** ✔ Confirm message (under the pop-up text) saves the level; `Editor/TriggerLogicEditor.cs`.
+- **Sounds tab model groups** fold open/closed; the player group only shows for player models (open level's player, the default player, or a model that already has player sounds).
