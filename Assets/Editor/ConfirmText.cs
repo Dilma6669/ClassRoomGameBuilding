@@ -38,15 +38,33 @@ public static class ConfirmText
         return savedAt.TryGetValue(key, out double t) && EditorApplication.timeSinceStartup - t < 2.5;
     }
 
+    public const float Width = 170f, Height = 24f;
+
+    /// <summary>
+    /// The small Confirm button, centred under the text box (so it doesn't look like the big action buttons),
+    /// with '✔ Saved!' under it for a moment. Returns true when clicked.
+    /// </summary>
+    public static bool CentredButton(string key)
+    {
+        bool clicked;
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.FlexibleSpace();
+            clicked = GUILayout.Button(Label, GUILayout.Width(Width), GUILayout.Height(Height));
+            GUILayout.FlexibleSpace();
+        }
+        if (JustSaved(key))
+        {
+            EditorGUILayout.LabelField("✔ Saved!", new GUIStyle(EditorStyles.miniBoldLabel) { alignment = TextAnchor.MiddleCenter });
+            if (EditorWindow.focusedWindow != null) EditorWindow.focusedWindow.Repaint();
+        }
+        return clicked;
+    }
+
     /// <summary>The button, for Editors that lay things out automatically.</summary>
     public static void Button(SerializedObject so, string key)
     {
-        if (GUILayout.Button(Label, GUILayout.Height(24))) Save(so, key);
-        if (JustSaved(key))
-        {
-            EditorGUILayout.LabelField("✔ Saved!", EditorStyles.miniBoldLabel);
-            if (EditorWindow.focusedWindow != null) EditorWindow.focusedWindow.Repaint();
-        }
+        if (CentredButton(key)) Save(so, key);
     }
 }
 
@@ -122,11 +140,11 @@ public class LibraryEntryDrawer : PropertyDrawer
         r.y += storyHeight + Gap;
         EditorGUI.indentLevel--;
 
-        Rect button = new Rect(position.x + 15, r.y, position.width - 15, 24);
+        Rect button = new Rect(position.x + (position.width - ConfirmText.Width) / 2f, r.y, ConfirmText.Width, ConfirmText.Height); // small, centred
         if (GUI.Button(button, ConfirmText.Label)) ConfirmText.Save(property.serializedObject, property.serializedObject.targetObject.GetInstanceID() + property.propertyPath);
         if (ConfirmText.JustSaved(property.serializedObject.targetObject.GetInstanceID() + property.propertyPath))
         {
-            EditorGUI.LabelField(new Rect(button.x, button.yMax + Gap, button.width, Line), "✔ Saved!", EditorStyles.miniBoldLabel);
+            EditorGUI.LabelField(new Rect(position.x, button.yMax + Gap, position.width, Line), "✔ Saved!", new GUIStyle(EditorStyles.miniBoldLabel) { alignment = TextAnchor.MiddleCenter });
             if (EditorWindow.focusedWindow != null) EditorWindow.focusedWindow.Repaint();
         }
         EditorGUI.EndProperty();

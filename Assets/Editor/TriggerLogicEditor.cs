@@ -110,16 +110,18 @@ public class TriggerLogicEditor : Editor
     /// <summary>A button under the message box that finishes typing and saves the level.</summary>
     private bool DrawConfirmButton()
     {
+        // The same small, centred '✔ Confirm text' button as everywhere else in Signs & Story
         bool clicked;
         using (new EditorGUILayout.HorizontalScope())
         {
-            GUILayout.Space(EditorGUI.indentLevel * 15);
-            clicked = GUILayout.Button(new GUIContent("✔ Confirm message", "Finish typing and save the level"), GUILayout.Height(26));
-            GUI.backgroundColor = Color.white;
+            GUILayout.FlexibleSpace();
+            clicked = GUILayout.Button(new GUIContent(ConfirmText.Label, "Finish typing and save the level"), GUILayout.Width(ConfirmText.Width), GUILayout.Height(ConfirmText.Height));
+            GUILayout.FlexibleSpace();
         }
         if (EditorApplication.timeSinceStartup - savedAt < 2.5)
         {
-            EditorGUILayout.LabelField(Application.isPlaying ? "✔ Done (changes made while playing are lost when you stop)" : "✔ Saved!", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField(Application.isPlaying ? "✔ Done (changes made while playing are lost when you stop)" : "✔ Saved!",
+                new GUIStyle(EditorStyles.miniBoldLabel) { alignment = TextAnchor.MiddleCenter });
             Repaint();
         }
         if (clicked)
