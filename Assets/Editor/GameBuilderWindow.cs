@@ -253,20 +253,9 @@ public partial class GameBuilderWindow : EditorWindow
 
     private void DrawToolGrid(Terrain terrain, (string label, string tool)[] tools)
     {
-        int perRow = position.width > 600 ? 3 : 2;
-        for (int i = 0; i < tools.Length; i += perRow)
-        {
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                for (int j = i; j < Mathf.Min(i + perRow, tools.Length); j++)
-                {
-                    if (BigButton(tools[j].label, new Color(0.4f, 0.75f, 1f)))
-                    {
-                        UseTerrainTool(terrain, tools[j].tool);
-                    }
-                }
-            }
-        }
+        Color? blue = new Color(0.4f, 0.75f, 1f);
+        int clicked = ButtonGrid(Columns(3), tools.Select(t => t.label).ToList(), tools.Select(t => blue).ToList());
+        if (clicked >= 0) UseTerrainTool(terrain, tools[clicked].tool);
     }
 
     /// <summary>Selects the ground and switches the Scene view to one of Unity's terrain brushes.</summary>
@@ -377,15 +366,13 @@ public partial class GameBuilderWindow : EditorWindow
         }
 
         Section("⚡ Quick platforms (they appear where the Scene view is looking)");
-        ButtonRow(
+        ButtonRow(4,
             ("🪨 Floating\nstays still", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still)),
             ("↔ Moving\nside to side", () => QuickPlatform(controller, ScatterTools.PlatformMove.SideToSide)),
-            ("🛗 Elevator\nup and down", () => QuickPlatform(controller, ScatterTools.PlatformMove.UpAndDown)));
-        ButtonRow(
+            ("🛗 Elevator\nup and down", () => QuickPlatform(controller, ScatterTools.PlatformMove.UpAndDown)),
             ("🔄 Spinning\nturns round", () => QuickPlatform(controller, ScatterTools.PlatformMove.Spinning)),
             ("🫧 Growing\ngets big & small", () => QuickPlatform(controller, ScatterTools.PlatformMove.Growing)),
-            ("👣 Stepping stones\n6 in a row, going up", () => { ScatterTools.SteppingStones(controller); RefreshSceneLists(); }));
-        ButtonRow(
+            ("👣 Stepping stones\n6 in a row, going up", () => { ScatterTools.SteppingStones(controller); RefreshSceneLists(); }),
             ("💥 Crumbling\nfalls when you stand on it", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still, PlatformLogic.PlatformType.Crumbling)),
             ("🟢 Bouncy\nlaunches you up high", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still, PlatformLogic.PlatformType.Bouncy)));
 
@@ -409,32 +396,25 @@ public partial class GameBuilderWindow : EditorWindow
             Section("✏️ " + selected.name);
             EditorGUILayout.LabelField("Make it:", EditorStyles.miniBoldLabel);
             ScatterTools.PlatformMove now = ScatterTools.GetMovement(selected);
-            using (new EditorGUILayout.HorizontalScope())
+            Color chosen = new Color(0.6f, 0.85f, 1f);
+            ScatterTools.PlatformMove[] moves = (ScatterTools.PlatformMove[])System.Enum.GetValues(typeof(ScatterTools.PlatformMove));
+            int moveClicked = ButtonGrid(Columns(moves.Length), moves.Select(m => IconFor(m) + " " + ScatterTools.MoveName(m)).ToList(),
+                moves.Select(m => m == now ? chosen : (Color?)null).ToList());
+            if (moveClicked >= 0 && moves[moveClicked] != now)
             {
-                foreach (ScatterTools.PlatformMove move in System.Enum.GetValues(typeof(ScatterTools.PlatformMove)))
-                {
-                    Color? colour = move == now ? new Color(0.6f, 0.85f, 1f) : (Color?)null;
-                    if (BigButton(IconFor(move) + " " + ScatterTools.MoveName(move), colour) && move != now)
-                    {
-                        float distance = selected.moveDistance > 0f ? selected.moveDistance : (move == ScatterTools.PlatformMove.UpAndDown ? 8f : 6f);
-                        ScatterTools.SetMovement(selected, move, distance, Mathf.Max(1f, selected.moveSpeed));
-                        GUIUtility.ExitGUI();
-                    }
-                }
+                ScatterTools.PlatformMove move = moves[moveClicked];
+                float distance = selected.moveDistance > 0f ? selected.moveDistance : (move == ScatterTools.PlatformMove.UpAndDown ? 8f : 6f);
+                ScatterTools.SetMovement(selected, move, distance, Mathf.Max(1f, selected.moveSpeed));
+                GUIUtility.ExitGUI();
             }
             EditorGUILayout.LabelField("Special:", EditorStyles.miniBoldLabel);
-            using (new EditorGUILayout.HorizontalScope())
+            PlatformLogic.PlatformType[] types = (PlatformLogic.PlatformType[])System.Enum.GetValues(typeof(PlatformLogic.PlatformType));
+            int typeClicked = ButtonGrid(Columns(types.Length), types.Select(t => t == PlatformLogic.PlatformType.Normal ? "Normal" : IconFor(t) + " " + t).ToList(),
+                types.Select(t => t == selected.platformType ? chosen : (Color?)null).ToList());
+            if (typeClicked >= 0 && types[typeClicked] != selected.platformType)
             {
-                foreach (PlatformLogic.PlatformType type in System.Enum.GetValues(typeof(PlatformLogic.PlatformType)))
-                {
-                    Color? colour = type == selected.platformType ? new Color(0.6f, 0.85f, 1f) : (Color?)null;
-                    string label = type == PlatformLogic.PlatformType.Normal ? "Normal" : IconFor(type) + " " + type;
-                    if (BigButton(label, colour) && type != selected.platformType)
-                    {
-                        ScatterTools.SetPlatformType(selected, type);
-                        GUIUtility.ExitGUI();
-                    }
-                }
+                ScatterTools.SetPlatformType(selected, types[typeClicked]);
+                GUIUtility.ExitGUI();
             }
             DrawInspector(selected);
             DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
@@ -467,17 +447,16 @@ public partial class GameBuilderWindow : EditorWindow
             MessageType.None);
 
         Section("🕷 Creatures (they hurt!)");
-        ButtonRow(
+        ButtonRow(3,
             ("🕷 Wanderer\nwalks around", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, false)),
             ("🧟 Patroller\nwalks back & forth", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, false)),
             ("🐍 Guard\nstays still", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Static, 10, 5f, false, false)));
 
         Section("🎁 Pickups (they help!)");
-        ButtonRow(
+        ButtonRow(3,
             ("❤️ Health\nheals you", () => Spawn(ObstacleBase.PayloadType.HealthBooster, ObstacleSpawnType.Static, 25, 5f, true, false)),
             ("⚡ Stamina\nrefills sprint", () => Spawn(ObstacleBase.PayloadType.StaminaBooster, ObstacleSpawnType.Static, 50, 5f, true, false)),
-            ("🛡 Shield\ncan't be hurt", () => Spawn(ObstacleBase.PayloadType.InvincibilityBuff, ObstacleSpawnType.Static, 1, 8f, true, false)));
-        ButtonRow(
+            ("🛡 Shield\ncan't be hurt", () => Spawn(ObstacleBase.PayloadType.InvincibilityBuff, ObstacleSpawnType.Static, 1, 8f, true, false)),
             ("🦘 Super Jump\njump higher", () => Spawn(ObstacleBase.PayloadType.JumpBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
@@ -534,15 +513,16 @@ public partial class GameBuilderWindow : EditorWindow
 
         if (glow == null || sparkles == null)
         {
-            using (new EditorGUILayout.HorizontalScope())
+            List<string> labels = new List<string>();
+            if (glow == null) labels.Add("💡 Make it glow");
+            if (sparkles == null) labels.Add("✨ Add sparkles around it");
+            int clicked = ButtonGrid(labels.Count, labels);
+            if (clicked >= 0 && labels[clicked].StartsWith("💡")) { ScatterTools.AddGlow(go, defaultColour); GUIUtility.ExitGUI(); }
+            else if (clicked >= 0)
             {
-                if (glow == null && BigButton("💡 Make it glow")) { ScatterTools.AddGlow(go, defaultColour); GUIUtility.ExitGUI(); }
-                if (sparkles == null && BigButton("✨ Add sparkles around it"))
-                {
-                    AmbientSparkles s = Undo.AddComponent<AmbientSparkles>(go);
-                    s.colour = defaultColour;
-                    GUIUtility.ExitGUI();
-                }
+                AmbientSparkles s = Undo.AddComponent<AmbientSparkles>(go);
+                s.colour = defaultColour;
+                GUIUtility.ExitGUI();
             }
         }
 
@@ -884,17 +864,10 @@ public partial class GameBuilderWindow : EditorWindow
         string nameProblem = LevelMaker.CheckName(newLevelName);
         if (nameProblem != null) EditorGUILayout.HelpBox(nameProblem, MessageType.Warning);
         GUI.enabled = !EditorApplication.isPlaying && nameProblem == null;
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (BigButton("➕ New empty level", new Color(0.2f, 0.8f, 0.3f)) && LevelMaker.CreateNewLevel(newLevelName))
-            {
-                AfterNewLevel();
-            }
-            if (BigButton("📄 Copy this level", new Color(0.55f, 0.75f, 1f)) && LevelMaker.CopyCurrentLevel(newLevelName))
-            {
-                AfterNewLevel();
-            }
-        }
+        int levelButton = ButtonGrid(2, new[] { "➕ New empty level", "📄 Copy this level" },
+            new Color?[] { new Color(0.2f, 0.8f, 0.3f), new Color(0.55f, 0.75f, 1f) });
+        if (levelButton == 0 && LevelMaker.CreateNewLevel(newLevelName)) AfterNewLevel();
+        if (levelButton == 1 && LevelMaker.CopyCurrentLevel(newLevelName)) AfterNewLevel();
         GUI.enabled = true;
         EditorGUILayout.HelpBox("New empty level: a blank level to build from scratch.\nCopy this level: a copy of the level you're in now, to change into something new.", MessageType.None);
 
@@ -928,7 +901,7 @@ public partial class GameBuilderWindow : EditorWindow
     private void InitStyles()
     {
         if (bigButton != null) return;
-        bigButton = new GUIStyle(GUI.skin.button) { fontSize = 13, fontStyle = FontStyle.Bold, wordWrap = true, fixedHeight = 0, padding = new RectOffset(8, 8, 8, 8) };
+        bigButton = new GUIStyle(GUI.skin.button) { fontSize = 14, fontStyle = FontStyle.Bold, wordWrap = true, fixedHeight = 0, padding = new RectOffset(8, 8, 8, 8) };
         titleStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 20 };
         tabStyle = new GUIStyle(GUI.skin.button) { fontSize = 13, fontStyle = FontStyle.Bold, fixedHeight = 32 };
         rowStyle = new GUIStyle(EditorStyles.label) { fontSize = 12, padding = new RectOffset(8, 4, 4, 4) };
@@ -952,24 +925,51 @@ public partial class GameBuilderWindow : EditorWindow
     {
         Color old = GUI.backgroundColor;
         if (colour.HasValue) GUI.backgroundColor = colour.Value;
-        bool pressed = GUILayout.Button(label, bigButton, GUILayout.MinHeight(label.Contains('\n') ? 54 : 38));
+        bool pressed = GUILayout.Button(label, bigButton, GUILayout.MinHeight(ButtonHeight(label)));
         GUI.backgroundColor = old;
         return pressed;
     }
 
-    private void ButtonRow(params (string label, System.Action action)[] buttons)
+    private static float ButtonHeight(string label) => label.Contains('\n') ? 60 : 46;
+
+    /// <summary>
+    /// Big buttons in equal columns, so every row lines up with the one above it and with the
+    /// full-width buttons. Returns the index of the button clicked, or -1.
+    /// </summary>
+    private int ButtonGrid(int columns, IList<string> labels, IList<Color?> colours = null)
     {
-        System.Action clicked = null;
-        using (new EditorGUILayout.HorizontalScope())
+        int clicked = -1;
+        if (labels.Count == 0) return clicked;
+        columns = Mathf.Max(1, columns);
+        float height = labels.Any(l => l.Contains('\n')) ? ButtonHeight("\n") : ButtonHeight("");
+        const float Gap = 4f;
+        for (int start = 0; start < labels.Count; start += columns)
         {
-            foreach ((string label, System.Action action) in buttons)
+            Rect row = GUILayoutUtility.GetRect(0, height + Gap, GUILayout.ExpandWidth(true));
+            // Same edges as a normal full-width button (its margins), and the same gap between rows
+            row = new Rect(row.x + bigButton.margin.left, row.y + Gap / 2, row.width - bigButton.margin.horizontal, height);
+            float cell = (row.width - Gap * (columns - 1)) / columns;
+            for (int i = start; i < Mathf.Min(start + columns, labels.Count); i++)
             {
-                if (BigButton(label)) clicked = action;
+                Rect r = new Rect(row.x + (i - start) * (cell + Gap), row.y, cell, row.height);
+                Color old = GUI.backgroundColor;
+                if (colours != null && i < colours.Count && colours[i].HasValue) GUI.backgroundColor = colours[i].Value;
+                if (GUI.Button(r, labels[i], bigButton)) clicked = i;
+                GUI.backgroundColor = old;
             }
         }
-        if (clicked != null)
+        return clicked;
+    }
+
+    /// <summary>Columns for a grid: fewer when the window is narrow.</summary>
+    private int Columns(int wanted) => position.width > 700 ? wanted : Mathf.Min(wanted, 2);
+
+    private void ButtonRow(int columns, params (string label, System.Action action)[] buttons)
+    {
+        int clicked = ButtonGrid(Columns(columns), buttons.Select(b => b.label).ToList());
+        if (clicked >= 0)
         {
-            clicked();
+            buttons[clicked].action();
             GUIUtility.ExitGUI();
         }
     }
