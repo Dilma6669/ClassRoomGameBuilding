@@ -156,7 +156,34 @@ public class LibraryEntryDrawer : PropertyDrawer
 /// (game title + subtitle, death title + message). Library entries get theirs from LibraryEntryDrawer.
 /// </summary>
 [CustomEditor(typeof(GameSettings))]
-public class GameSettingsEditor : TextConfirmEditor { }
+public class GameSettingsEditor : TextConfirmEditor
+{
+    private static readonly string[] FontsFirst = { "titleFont", "bodyFont" };
+
+    /// <summary>
+    /// Shown in other Game Builder tabs instead (Level: world border, Checkpoints: on/off,
+    /// Player / Platforms / Creatures: default models), so Signs & Story only has the story things.
+    /// </summary>
+    private static readonly HashSet<string> ShownInOtherTabs = new HashSet<string>
+    {
+        "useCheckpoints", "useWorldBorder", "borderPadding", "skyLimitHeight", "fallKillDepth",
+        "defaultPlayerModel", "defaultPlatformModel", "defaultWanderEnemy", "defaultPatrolEnemy", "defaultStaticEnemy"
+    };
+
+    protected override List<SerializedProperty> Properties()
+    {
+        List<SerializedProperty> all = base.Properties();
+        // The fonts go first, just under the script (they change every title and text in the game)
+        List<SerializedProperty> fonts = all.FindAll(p => System.Array.IndexOf(FontsFirst, p.name) >= 0);
+        List<SerializedProperty> rest = all.FindAll(p => System.Array.IndexOf(FontsFirst, p.name) < 0 && p.name != "m_Script");
+        if (GameBuilderWindow.DrawingInGameBuilder) rest.RemoveAll(p => ShownInOtherTabs.Contains(p.name));
+
+        List<SerializedProperty> ordered = all.FindAll(p => p.name == "m_Script");
+        ordered.AddRange(fonts);
+        ordered.AddRange(rest);
+        return ordered;
+    }
+}
 
 /// <summary>Checkpoint flags: their message gets a '✔ Confirm text' button (it saves the level).</summary>
 [CustomEditor(typeof(Checkpoint))]
@@ -165,27 +192,39 @@ public class CheckpointEditor : TextConfirmEditor { }
 /// <summary>Unity's normal layout, with a '✔ Confirm text' button after each group of text boxes.</summary>
 public class TextConfirmEditor : Editor
 {
-    public override void OnInspectorGUI()
+    /// <summary>The properties to draw, in order (override to hide or move some).</summary>
+    protected virtual List<SerializedProperty> Properties()
     {
-        serializedObject.Update();
+        List<SerializedProperty> list = new List<SerializedProperty>();
         SerializedProperty it = serializedObject.GetIterator();
         bool enterChildren = true;
         while (it.NextVisible(enterChildren))
         {
             enterChildren = false;
-            if (it.name == "m_Script")
+            list.Add(it.Copy());
+        }
+        return list;
+    }
+
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+        List<SerializedProperty> props = Properties();
+        for (int i = 0; i < props.Count; i++)
+        {
+            SerializedProperty p = props[i];
+            if (p.name == "m_Script")
             {
-                using (new EditorGUI.DisabledScope(true)) EditorGUILayout.PropertyField(it);
+                using (new EditorGUI.DisabledScope(true)) EditorGUILayout.PropertyField(p);
                 continue;
             }
-            EditorGUILayout.PropertyField(it, true);
+            EditorGUILayout.PropertyField(p, true);
 
             // After the last text box in a group, a Confirm button
-            if (it.propertyType == SerializedPropertyType.String)
+            if (p.propertyType == SerializedPropertyType.String)
             {
-                SerializedProperty next = it.Copy();
-                bool nextIsText = next.NextVisible(false) && next.propertyType == SerializedPropertyType.String;
-                if (!nextIsText) ConfirmText.Button(serializedObject, target.GetInstanceID() + it.propertyPath);
+                bool nextIsText = i + 1 < props.Count && props[i + 1].propertyType == SerializedPropertyType.String;
+                if (!nextIsText) ConfirmText.Button(serializedObject, target.GetInstanceID() + p.propertyPath);
             }
         }
         serializedObject.ApplyModifiedProperties();

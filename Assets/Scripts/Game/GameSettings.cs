@@ -61,7 +61,7 @@ public class GameSettings : ScriptableObject
         }
     }
 
-    [Header("Fonts (optional - leave empty to use the default font)")]
+    [Header("🔤 Fonts (the look of all the writing in your game - leave empty for the normal font)")]
     public TMP_FontAsset titleFont;
     public TMP_FontAsset bodyFont;
 

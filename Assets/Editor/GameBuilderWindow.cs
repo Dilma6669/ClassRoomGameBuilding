@@ -213,6 +213,11 @@ public partial class GameBuilderWindow : EditorWindow
             Section("🪂 Fall damage");
             DrawInspector(fall);
         }
+
+        DefaultModelsFoldout("defaultPlayer", "🧩 Default player model (for Create Character)",
+            "The 3D model a NEW character gets when you click Create Character (e.g. in a new level). " +
+            "To change THIS player's look, use 'Player Model' at the top of this tab instead.",
+            ("defaultPlayerModel", "🧙 Default player model"));
     }
 
     // ------------------------------------------------------------------ 🏔 Level
@@ -271,7 +276,56 @@ public partial class GameBuilderWindow : EditorWindow
                 settings.useWorldBorder = border;
                 EditorUtility.SetDirty(settings);
             }
+            if (settings.useWorldBorder)
+            {
+                EditorGUI.indentLevel++;
+                SettingsField("borderPadding", "Gap from the edge");
+                SettingsField("skyLimitHeight", "Ceiling height");
+                EditorGUI.indentLevel--;
+            }
+            SettingsField("fallKillDepth", "Fall depth (you die)");
         }
+    }
+
+    /// <summary>One Game Settings value (shared by every level), shown in whichever tab it belongs to.</summary>
+    private static void SettingsField(string property, string label, string tooltip = null)
+    {
+        GameSettings settings = GameSettings.Load();
+        if (settings == null) return;
+        System.Reflection.FieldInfo field = typeof(GameSettings).GetField(property);
+        if (field == null) return;
+        TooltipAttribute tip = (TooltipAttribute)System.Attribute.GetCustomAttribute(field, typeof(TooltipAttribute));
+        GUIContent content = new GUIContent(label, tooltip ?? tip?.tooltip);
+        object value = field.GetValue(settings), changed = value;
+
+        // Drawn by hand (not PropertyField) so the field's [Header] from Game Settings doesn't come with it
+        EditorGUI.BeginChangeCheck();
+        if (field.FieldType == typeof(bool)) changed = EditorGUILayout.ToggleLeft(content, (bool)value);
+        else if (field.FieldType == typeof(float))
+        {
+            RangeAttribute range = (RangeAttribute)System.Attribute.GetCustomAttribute(field, typeof(RangeAttribute));
+            changed = range != null ? EditorGUILayout.Slider(content, (float)value, range.min, range.max) : EditorGUILayout.FloatField(content, (float)value);
+        }
+        else if (typeof(Object).IsAssignableFrom(field.FieldType)) changed = EditorGUILayout.ObjectField(content, (Object)value, field.FieldType, false);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(settings, "Change " + label);
+            field.SetValue(settings, changed);
+            EditorUtility.SetDirty(settings);
+        }
+    }
+
+    /// <summary>A closed-by-default fold-out at the bottom of a tab for the 'default model' settings.</summary>
+    private void DefaultModelsFoldout(string key, string title, string help, params (string property, string label)[] fields)
+    {
+        EditorGUILayout.Space(8);
+        if (BeginFoldout(key, title))
+        {
+            EditorGUILayout.LabelField(help, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.Space(2);
+            foreach ((string property, string label) in fields) SettingsField(property, label);
+        }
+        EndFoldout();
     }
 
     private void DrawToolGrid(Terrain terrain, (string label, string tool)[] tools)
@@ -407,7 +461,14 @@ public partial class GameBuilderWindow : EditorWindow
             Undo.AddComponent<PlatformScatter>(controller.gameObject);
         }
 
-        if (BeginFoldout("platformController", "⚙ Platform look for ALL new platforms (3D model, mesh, material)")) DrawInspector(controller, false);
+        if (BeginFoldout("platformController", "⚙ Platform look for ALL new platforms (3D model, mesh, material)"))
+        {
+            DrawInspector(controller, false);
+            // The model every level falls back on when this level's 3D model box is empty
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("For every level (used when 'Platform Model' above is empty):", EditorStyles.miniBoldLabel);
+            SettingsField("defaultPlatformModel", "Default platform model");
+        }
         EndFoldout();
 
         Section("Your platforms");
@@ -518,6 +579,11 @@ public partial class GameBuilderWindow : EditorWindow
         {
             Undo.AddComponent<CreatureScatter>(terrain.gameObject);
         }
+
+        DefaultModelsFoldout("defaultCreatures", "🧩 Default models for new creatures",
+            "The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard above (in every level). " +
+            "To change one creature that's already made, click it in 'Your creatures & pickups' instead.",
+            ("defaultWanderEnemy", "🕷 Wanderer"), ("defaultPatrolEnemy", "🧟 Patroller"), ("defaultStaticEnemy", "🐍 Guard"));
     }
 
     private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
@@ -774,6 +840,7 @@ public partial class GameBuilderWindow : EditorWindow
 
         Section("🚩 Checkpoints");
         EditorGUILayout.HelpBox("If the player dies after touching a flag, they start again from that flag.", MessageType.None);
+        SettingsField("useCheckpoints", "Use checkpoints (all levels)");
         if (BigButton("🚩 Create Checkpoint", new Color(0.2f, 0.8f, 0.3f)))
         {
             GameMenuItems.CreateCheckpoint();
@@ -796,7 +863,7 @@ public partial class GameBuilderWindow : EditorWindow
         }
         else
         {
-            if (BeginFoldout("settings", "Game title, main menu, death screen, default models and Library entries")) DrawInspector(settings, false);
+            if (BeginFoldout("settings", "Fonts, game title, death screen and Library entries")) DrawInspector(settings, false);
             EndFoldout();
         }
     }
