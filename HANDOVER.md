@@ -1,8 +1,16 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-10, end of session 8 (Tutorial 2 "Adventure Park" built, Tutorial 1 leads into it). Written so a fresh Claude session (or a person) can pick up where this one stopped._
+_Last updated: 2026-11-10, end of session 8 (Adventure Park, creature animations, Game Builder restyle, bounce balls, pickup messages, Mac builds). Read START HERE first._
 
 ## ▶ START HERE (state at the end of 2026-11-10)
+### 📍 STATE AT THE END OF SESSION 8 (2026-11-10, late)
+- **Everything is committed** on `feature/menus-models-checkpoints` (not merged, not pushed). Only the usual noise is uncommitted (TMP font atlas, TutorialTerrain.asset, the teacher's GameSettings.asset and Spider Library picture: leave those out).
+- **Class builds are current** (both tutorials, all of session 8): `Build/TutorialIsland.zip` (Windows, 78 MB, 0 errors, ran 25 s clean) and `Build/TutorialIsland (Mac).zip` (86 MB, universal, exec bit checked). **The Mac zip has NOT been tried on a real Mac yet**: ask how it went.
+- Done this session (details in the sections below): Tutorial 2 "Adventure Park" + Tutorial 1 → 2 link; bigger creatures + New creatures size slider; Adventure Park's own mountains (TerrainShaper); creature attack (turn to face) / death (hold pose, shrink away, sparkles when) / player hurt flash + hurt animation, all with drag-in animation slots; 'Hurts from' 0.3; round bounce balls with real angles; pickup messages; Speed Boost free sprint + Super Jump no fall damage; the whole Game Builder restyled (folding title-bar boxes, emerald/blue); Mac builds.
+- **Teacher likes:** small visual tweaks done live while they watch (gaps, widths, colours, titles); options instead of hard changes; measuring things from screenshots before saying "done".
+- **Next ideas / open:** web (WebGL) build for Chromebooks (see the Mac/power-up notes for what it needs); maybe a player death animation before the death screen; "Straight up"/pickup texts in more tutorial signs if wanted; the per-platform "More > Scatter" still places things off round platforms.
+- **Rules that bit this session:** check `isDirty` and STOP before any tutorial rebuild (it once wiped the teacher's live tweak); Unity must restart after installing a build module; capture timing lags evals by ~1 s; pass emoji in EditorPrefs keys escaped from bash.
+
 ### ✅ DONE (session 8, 2026-11-10): Tutorial 2 "Adventure Park" + Tutorial 1 refreshed
 Teacher asked for a second tutorial level showing all the features, reached from Tutorial 1's Finish sign. Teacher approved wiping their experiments in Tutorial 1 for the rebuild.
 - **Builder:** `Editor/ShowcaseLevelBuilder.cs`, scene `Assets/Scenes/Tutorial2.unity` (`SceneName` "Tutorial2"), own ground `Assets/Tutorial/Tutorial2Terrain.asset` (flat park 100 x 250 m from (0,-80)), menus **Game > Tutorial > Open Tutorial 2 (Adventure Park)** / **Build Tutorial 2 (Adventure Park)** (the Build menu shows a confirm dialog; from scripts call `ShowcaseLevelBuilder.Build()`). Added to Build Settings right after Tutorial. Seeded random (2026), so rebuilds are the same.
