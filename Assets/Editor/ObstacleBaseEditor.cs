@@ -21,7 +21,7 @@ public class ObstacleBaseEditor : Editor
         "heightOffset", // drawn in the 📐 Transform settings box
         "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
         "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
-        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", // ✋ When you touch it box
+        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "showPickupMessage", "pickupMessage", // ✋ When you touch it box
         "isBouncy", "launchForce", "upwardBias", "momentumTransfer", // 🏀 Bounce settings box
     };
 
@@ -115,6 +115,23 @@ public class ObstacleBaseEditor : Editor
             if (many || powerUp)
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("buffDuration"), new GUIContent("Power-up lasts (seconds)", "How long the power-up lasts."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("destroyOnTrigger"), Labels["destroyOnTrigger"]);
+
+            // 💬 Pickups: a message on the screen saying what you picked up
+            bool isPickup = o.payloadType != ObstacleBase.PayloadType.Damage && o.payloadType != ObstacleBase.PayloadType.None;
+            if (many || isPickup)
+            {
+                EditorGUILayout.Space(6);
+                EditorGUILayout.LabelField("💬 Message when picked up", EditorStyles.boldLabel);
+                SerializedProperty show = serializedObject.FindProperty("showPickupMessage");
+                EditorGUILayout.PropertyField(show, new GUIContent("Show a message", show.tooltip));
+                if (many || show.boolValue)
+                {
+                    SerializedProperty text = serializedObject.FindProperty("pickupMessage");
+                    EditorGUILayout.PropertyField(text, new GUIContent("Message", text.tooltip));
+                    if (!many && string.IsNullOrWhiteSpace(o.pickupMessage))
+                        EditorGUILayout.LabelField("Empty, so it says: \"" + o.AutomaticPickupMessage() + "\"", EditorStyles.miniLabel);
+                }
+            }
 
             // 🏀 Launches you into the air
             EditorGUILayout.Space(6);

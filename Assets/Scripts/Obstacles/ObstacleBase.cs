@@ -337,6 +337,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
             bool isPickup = payloadType != PayloadType.None && payloadType != PayloadType.Damage;
             if (sparkles && isPickup) BurstSparkles(Sparkles.Style.Pickup);
             if (isPickup) SoundManager.Play(SoundEvent.PickUp, transform.position, gameObject);
+            if (isPickup && showPickupMessage) PickupMessage.Show(PickupMessageText, Sparkles.ColourFor(payloadType));
 
             if (destroyOnTrigger && payloadType != PayloadType.None)
             {
