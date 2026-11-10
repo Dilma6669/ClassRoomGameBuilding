@@ -573,6 +573,8 @@ public partial class GameBuilderWindow : EditorWindow
             Section("✏️ " + selected.name);
             DrawInspector(selected);
 
+            DrawMovement(selected);
+
             DrawGlow(selected.gameObject, Sparkles.ColourFor(selected.payloadType));
 
             CustomModel model = selected.GetComponent<CustomModel>();

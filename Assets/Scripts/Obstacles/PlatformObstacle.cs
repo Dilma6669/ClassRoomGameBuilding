@@ -29,7 +29,25 @@ public class PlatformObstacle : ObstacleBase
     public bool IsFalling => isFalling;
 
     /// <summary>Wanderers and patrollers move (and can fall); static obstacles never leave their platform.</summary>
-    private bool IsMovingObstacle => currentMovementStrategy != null && !(currentMovementStrategy is PlatformStaticDriver);
+    private bool IsMovingObstacle => (currentMovementStrategy != null && !(currentMovementStrategy is PlatformStaticDriver)) || ChasesPlayer;
+
+    private bool ChasesPlayer => chasePlayer && payloadType == PayloadType.Damage;
+
+    /// <summary>A chaser's home spot moves with the platform it rides.</summary>
+    protected override Transform HomeSurface => GetPlatformTransform();
+
+    /// <summary>Chase step on a platform: stop at the edge instead of running off it.</summary>
+    protected override void StepTowards(Vector3 target, float speed)
+    {
+        Vector3 up = transform.up;
+        Vector3 dir = Vector3.ProjectOnPlane(target - transform.position, up);
+        if (dir.sqrMagnitude < 0.0001f) return;
+        FaceTowards(target);
+        float step = Mathf.Min(speed * Time.deltaTime, dir.magnitude);
+        Vector3 ahead = transform.position + dir.normalized * (step + EdgeLookAhead);
+        if (!HasGroundAt(ahead)) return; // the player is off the edge: wait here
+        transform.position += dir.normalized * step;
+    }
 
     /// <summary>How far ahead movers look for an edge.</summary>
     public float EdgeLookAhead => Mathf.Max(0.3f, GroundLift);

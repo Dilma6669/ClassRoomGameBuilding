@@ -6,7 +6,7 @@ using KinematicCharacterController;
 #endif
 
 [ExecuteAlways]
-public abstract class ObstacleBase : MonoBehaviour
+public abstract partial class ObstacleBase : MonoBehaviour
 {
     public enum PayloadType
     {
@@ -106,16 +106,32 @@ public abstract class ObstacleBase : MonoBehaviour
         transform.localRotation = Quaternion.Euler(0f, initialYRotation, 0f);
 
         ApplyScale();
+        RefitSoon(); // re-fit the hit zone (size, model or height may have changed)
     }
 
     protected virtual void Awake()
     {
         InitializeCollidersAndPhysics();
+        UpdateHitZone(false); // older creatures get their hit zone here
         currentMovementStrategy = GetComponent<IObstacleMovement>();
     }
 
+    private bool fittedInPlay;
+
     protected virtual void Update()
     {
+        if (!Application.isPlaying)
+        {
+            EditorKeepHitZoneFitted();
+            return;
+        }
+        if (!fittedInPlay)
+        {
+            // Once, after models have been set up
+            fittedInPlay = true;
+            UpdateHitZone(fitHitZoneToModel);
+        }
+
 #if HAS_KINEMATIC_CC
         // Landing on a creature usually means standing on its solid body (the touch zone isn't entered)
         if (Application.isPlaying && payloadType == PayloadType.Damage && jumpsToDefeat > 0 && !defeated)
@@ -132,7 +148,11 @@ public abstract class ObstacleBase : MonoBehaviour
         }
 #endif
 
-        if (Application.isPlaying && currentMovementStrategy != null)
+        if (Application.isPlaying && UpdateChase())
+        {
+            PlayMoveSound(); // chasing or walking home: the normal movement waits
+        }
+        else if (Application.isPlaying && currentMovementStrategy != null)
         {
             currentMovementStrategy.ProcessMovement(this);
             PlayMoveSound();
@@ -474,10 +494,8 @@ public abstract class ObstacleBase : MonoBehaviour
 
     protected virtual void OnDrawGizmosSelected()
     {
-        if (isBouncy)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(transform.position, triggerRadius * objectScale);
-        }
+        // (The old green 'trigger radius' ball isn't drawn: the hit zone below is what really touches the player)
+        DrawHitZoneGizmo();
+        DrawChaseGizmo();
     }
 }

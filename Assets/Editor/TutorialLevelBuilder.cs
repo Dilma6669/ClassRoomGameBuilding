@@ -197,7 +197,8 @@ public static class TutorialLevelBuilder
         // Stomp practice: one creature standing still on the ground
         AddStompCreature(At(0f, 180f));
         Sign(signs, signMaterial, At(-5f, 174f), At(0f, 174f, 1.5f), "12. Jump on it!",
-            "JUMP ON ITS HEAD to beat it! This one needs 2 jumps. Click a creature and set 'Jumps On Head To Beat'\n(0 = it can't be beaten). 'Sparkle Burst' picks the effect when it's beaten or picked up.");
+            "JUMP ON ITS HEAD to beat it! This one needs 2 jumps. Click a creature and set 'Jumps On Head To Beat'\n(0 = it can't be beaten). 'Sparkle Burst' picks the effect when it's beaten or picked up.\n" +
+            "Its Hit zone hurts from the sides only, so land on top! 'How it moves' and 'Chase the player' make creatures walk, patrol or chase you.");
 
         // Bounce ball on the ground
         AddBouncePad(terrain, At(0f, 196f));

@@ -4,9 +4,12 @@ using UnityEngine;
 public class PlatformWanderDriver : MonoBehaviour, IObstacleMovement, IObstacleAnchor
 {
     [Header("Wander Settings")]
-    [Range(0.1f, 1000f)] public float wanderRadius = 6f;
-    [Range(0.1f, 1000f)] public float minMoveSpeed = 2f;
-    [Range(0.1f, 1000f)] public float maxMoveSpeed = 5f;
+    [ShowAs("How far it wanders"), Tooltip("It walks around inside a circle this big (in metres) round its starting spot.")]
+    [Range(0.1f, 100f)] public float wanderRadius = 6f;
+    [ShowAs("Slowest speed"), Tooltip("Each walk picks a speed between Slowest and Fastest.")]
+    [Range(0.1f, 20f)] public float minMoveSpeed = 2f;
+    [ShowAs("Fastest speed"), Tooltip("Each walk picks a speed between Slowest and Fastest.")]
+    [Range(0.1f, 20f)] public float maxMoveSpeed = 5f;
 
     [Header("Steering & Fluidity")]
     [Tooltip("Multiplier for turn speed. Higher values allow sharper turns without stopping.")]
