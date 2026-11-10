@@ -719,7 +719,7 @@ public partial class GameBuilderWindow : EditorWindow
                 Undo.DestroyObjectImmediate(selected.gameObject);
                 GUIUtility.ExitGUI();
             }
-            EditorGUILayout.Space(2);
+            EditorGUILayout.Space(10); // the same gap as above the Name box at the top
             EditorGUILayout.EndVertical();
             GUILayout.Space(8);
             EditorGUILayout.EndHorizontal();

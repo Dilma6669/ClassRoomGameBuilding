@@ -202,8 +202,8 @@ public static class ShowcaseLevelBuilder
     {
         const string folder = "Sky garden";
         StationSign(70f, "5. Sky garden",
-            "This SKY GARDEN took 2 clicks: Platforms > Scatter platforms (12, some crumbling or bouncy),\n" +
-            "then Creatures & Pickups > Scatter lots at once, with 'Can go on: still / moving platforms' ticked.", -5f);
+            "This SKY GARDEN took 2 clicks: Platforms > Scatter tools (12 platforms, some crumbling or bouncy),\n" +
+            "then Creatures & Pickups > Scatter tools, with 'Can go on: still / moving platforms' ticked.", -5f);
 
         Vector3 middle = At(-28f, 86f);
         HashSet<PlatformLogic> before = new HashSet<PlatformLogic>(Object.FindObjectsByType<PlatformLogic>(FindObjectsSortMode.None));
@@ -307,7 +307,7 @@ public static class ShowcaseLevelBuilder
     {
         const string folder = "Chaser";
         StationSign(128f, "8. Chaser",
-            "Look out: that zombie CHASES you if you go near it! Click a creature and tick 'Chase the player'.\n" +
+            "Look out: that zombie CHASES you if you go near it! Click a creature > Movement settings > tick 'Chase the player'.\n" +
             "'Starts chasing within' and 'Gives up past' are its orange and red circles in the Scene. Run away to escape!", 5f);
 
         ObstacleBase zombie = SpawnOnGround(At(11f, 134f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, Model("Zombie"), 2f);
@@ -329,7 +329,7 @@ public static class ShowcaseLevelBuilder
         const string folder = "Runaway things";
         StationSign(142f, "9. Runaway things",
             "Pickups can move too! This Health pickup WANDERS around (catch it!) and so does the bounce ball.\n" +
-            "Click a pickup > 'How it moves' > Wanders around, or Floats back & forth.");
+            "Click a pickup > Movement settings > Wanders around, or Floats back & forth.");
 
         ObstacleBase health = SpawnOnGround(At(-11f, 146f), ObstacleBase.PayloadType.HealthBooster, ObstacleSpawnType.Wander, 25, 5f, true);
         SetWander(health, 5f, 1.5f, 2f);
@@ -377,7 +377,7 @@ public static class ShowcaseLevelBuilder
     private static void MakeItYours()
     {
         StationSign(184f, "11. Make it yours",
-            "MAKE IT YOURS: with 'Click in the Scene' ticked, the buttons wait for you to click where things go. 'Move it...' moves things later.\n" +
+            "MAKE IT YOURS: with 'Click in the Scene' ticked (in Default options), buttons wait for you to click where things go. 'Move it...' moves things later.\n" +
             "Give things a Name and put them in a Folder, then drag them in the lists to sort them. Made a mistake? Ctrl+Z!");
     }
 

@@ -141,7 +141,7 @@ public static class TutorialLevelBuilder
         video.playOnlyOnce = true;
 
         Sign(signs, signMaterial, At(-4f, 30f), At(0f, 30f, 1.5f), "4. This is you",
-            "You are the Old Man. To change your look: Game Builder > Player, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), yellow = stamina.");
+            "You are the Old Man. To change your look: Game Builder > Player > Your character, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), blue bar = stamina (for sprinting).");
 
         // Scenery grove around station 5
         SceneryPopulator scenery = BuildScenery(terrain, At);
@@ -156,7 +156,7 @@ public static class TutorialLevelBuilder
         // Platforms: plain, moving, rock
         PlatformController platforms = Object.FindAnyObjectByType<PlatformController>();
         Sign(signs, signMaterial, At(-6f, 72f), At(0f, 72f, 1.5f), "7. Platforms",
-            "Game Builder > Platforms: click a Quick platform (Floating, Moving, Elevator...), then click in the Scene where it goes.\n'New platforms float this high' sets how high. 'Move it...' moves one later. 'Scatter' makes lots at once.");
+            "Game Builder > Platforms: click a Quick platform (Floating, Moving, Elevator...), then click in the Scene where it goes.\n'Default options' sets how high. 'Move it...' moves one later. 'Scatter tools' makes lots at once.");
         GameObject p1 = MakePlatform(platforms, At(0f, 82f), 1.2f, 6f);
         GameObject p2 = MakePlatform(platforms, At(0f, 91f), 2.4f, 5f);
         PlatformLogic moving = p2.GetComponent<PlatformLogic>();
@@ -194,18 +194,18 @@ public static class TutorialLevelBuilder
         float arenaTop = TopOf(arena);
         AddCreatures(arena);
         Sign(signs, signMaterial, At(-9f, 158f), new Vector3(Start.x, arenaTop + 1.5f, Start.z + 155f), "11. Creatures",
-            "Careful, creatures hurt if you run into them! Game Builder > Creatures & Pickups: click a creature, then click where it goes.\n'Scatter lots at once' puts many on the ground or on platforms. The glowing ball is Health.");
+            "Careful, creatures hurt if you run into them! Game Builder > Creatures & Pickups: click a creature, then click where it goes.\n'Scatter tools' puts many on the ground or on platforms. The glowing ball is Health.");
 
         // Stomp practice: one creature standing still on the ground
         AddStompCreature(At(0f, 180f));
         Sign(signs, signMaterial, At(-5f, 174f), At(0f, 174f, 1.5f), "12. Jump on it!",
-            "JUMP ON ITS HEAD to beat it! This one needs 2 jumps. Click a creature and set 'Jumps On Head To Beat'\n(0 = it can't be beaten). 'Sparkle Burst' picks the effect when it's beaten or picked up.\n" +
-            "Its Hit zone hurts from the sides only, so land on top! 'How it moves' and 'Chase the player' make creatures walk, patrol or chase you.");
+            "JUMP ON ITS HEAD to beat it! This one needs 2 jumps. Click a creature > Battle settings > 'Jumps On Head To Beat'\n(0 = it can't be beaten). Pick its attack and death animations and sparkles there too.\n" +
+            "Its Hit zone hurts from the sides only, so land on top! Movement settings make creatures walk, patrol or chase you.");
 
         // Bounce ball on the ground
         AddBouncePad(terrain, At(0f, 196f));
         Sign(signs, signMaterial, At(-5f, 190f), At(0f, 190f, 1.5f), "13. Bounce!",
-            "Jump onto the ball to get launched sky-high! Creatures & Pickups > Bounce Ball.\nAny creature can bounce too: tick 'Is Bouncy', and raise Launch Force to go higher.");
+            "Jump onto the ball to get launched sky-high! Creatures & Pickups > Bounce Ball.\nAny creature can bounce too: When you touch it > tick 'Is Bouncy', and raise Launch Force to go higher.");
 
         // Checkpoint
         GameMenuItems.CreateCheckpoint();
