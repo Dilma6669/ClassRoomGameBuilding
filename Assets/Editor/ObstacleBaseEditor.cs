@@ -31,8 +31,11 @@ public class ObstacleBaseEditor : Editor
     /// <summary>Set by the Game Builder while it draws a creature: draws its '📍 Move it…' button at the top of the Transform box.</summary>
     public static System.Action<ObstacleBase> MoveIt;
 
-    /// <summary>Starts a bordered box whose title sits in its own coloured bar. End it with EndBox().</summary>
-    public static void BeginBox(string title, string subtitle)
+    /// <summary>
+    /// Starts a bordered box whose title sits in its own coloured bar. Clicking the bar folds the box shut or open
+    /// (remembered per title). Returns true if it's open: only draw the contents then. Always end it with EndBox().
+    /// </summary>
+    public static bool BeginBox(string title, string subtitle)
     {
         EditorGUILayout.Space(10);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -41,10 +44,24 @@ public class ObstacleBaseEditor : Editor
             boxTitle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 15, alignment = TextAnchor.MiddleLeft };
             boxTitle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : new Color(0.1f, 0.15f, 0.25f);
         }
+
+        string key = "GameBuilder.BoxOpen." + title;
+        bool open = EditorPrefs.GetBool(key, true);
+
         Rect bar = GUILayoutUtility.GetRect(0f, 28f, GUILayout.ExpandWidth(true));
         EditorGUI.DrawRect(bar, EditorGUIUtility.isProSkin ? new Color(0.2f, 0.34f, 0.55f) : new Color(0.62f, 0.76f, 0.93f));
-        GUI.Label(new Rect(bar.x + 8f, bar.y, bar.width - 16f, bar.height), title, boxTitle);
-        if (!string.IsNullOrEmpty(subtitle)) EditorGUILayout.LabelField(subtitle, EditorStyles.miniLabel);
+        GUI.Label(new Rect(bar.x + 8f, bar.y, bar.width - 16f, bar.height), (open ? "▼  " : "▶  ") + title, boxTitle);
+        EditorGUIUtility.AddCursorRect(bar, MouseCursor.Link);
+        if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && bar.Contains(Event.current.mousePosition))
+        {
+            // Takes effect on the next redraw (changing what's drawn mid-event upsets Unity's layout)
+            EditorPrefs.SetBool(key, !open);
+            Event.current.Use();
+            GUI.changed = true;
+        }
+
+        if (open && !string.IsNullOrEmpty(subtitle)) EditorGUILayout.LabelField(subtitle, EditorStyles.miniLabel);
+        return open;
     }
 
     public static void EndBox()
@@ -71,13 +88,15 @@ public class ObstacleBaseEditor : Editor
         bool many = targets.Length > 1; // with several selected, show everything
 
         // 📐 Where it is, how big, which way it faces
-        BeginBox("📐 Transform settings", "Where it is, how big it is, and which way it faces.");
-        if (MoveIt != null && !many) MoveIt(o);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("objectScale"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("sitOnGround"));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("initialYRotation"));
-        SerializedProperty heightOffset = serializedObject.FindProperty("heightOffset"); // ground creatures only
-        if (heightOffset != null) EditorGUILayout.PropertyField(heightOffset, true);
+        if (BeginBox("📐 Transform settings", "Where it is, how big it is, and which way it faces."))
+        {
+            if (MoveIt != null && !many) MoveIt(o);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("objectScale"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("sitOnGround"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("initialYRotation"));
+            SerializedProperty heightOffset = serializedObject.FindProperty("heightOffset"); // ground creatures only
+            if (heightOffset != null) EditorGUILayout.PropertyField(heightOffset, true);
+        }
         EndBox();
         EditorGUILayout.Space(4);
 
@@ -94,9 +113,11 @@ public class ObstacleBaseEditor : Editor
                 bool howItMoves = HowItMoves != null && !many;
                 if (creature || howItMoves)
                 {
-                    BeginBox("🚶 Movement settings", creature ? "How it moves around, and whether it chases you." : "How it moves around.");
-                    if (howItMoves) HowItMoves(o);
-                    if (creature) DrawChase(o, many);
+                    if (BeginBox("🚶 Movement settings", creature ? "How it moves around, and whether it chases you." : "How it moves around."))
+                    {
+                        if (howItMoves) HowItMoves(o);
+                        if (creature) DrawChase(o, many);
+                    }
                     EndBox();
                     EditorGUILayout.Space(4);
                 }
@@ -121,13 +142,14 @@ public class ObstacleBaseEditor : Editor
         if (many || o.payloadType == ObstacleBase.PayloadType.Damage)
         {
             // Everything about hurting and being beaten, in one box
-            BeginBox("⚔️ Battle settings", "How it hurts you, and how you beat it.");
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("jumpsToDefeat"), Labels["jumpsToDefeat"]); // with its 🦶 Jump On Top title
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("stompBounce"));
-            DrawHitZone(o, many);
-            DrawAttack(o, many);
-            if (many || o.jumpsToDefeat > 0) DrawBeaten(o, many);
+            if (BeginBox("⚔️ Battle settings", "How it hurts you, and how you beat it."))
+            {
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("jumpsToDefeat"), Labels["jumpsToDefeat"]); // with its 🦶 Jump On Top title
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("stompBounce"));
+                DrawHitZone(o, many);
+                DrawAttack(o, many);
+                if (many || o.jumpsToDefeat > 0) DrawBeaten(o, many);
+            }
             EndBox();
         }
         else

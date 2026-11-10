@@ -595,21 +595,22 @@ public partial class GameBuilderWindow : EditorWindow
             DrawNameAndFolder(selected, "obstacles", obstacles, "✏️ Name");
 
             // 🎨 What it looks like
-            ObstacleBaseEditor.BeginBox("🎨 Model", "What it looks like, and its animations.");
-            CustomModel model = selected.GetComponent<CustomModel>();
-            if (model != null)
+            if (ObstacleBaseEditor.BeginBox("🎨 Model", "What it looks like, and its animations."))
             {
-                CustomModelEditor.InModelBox = true;
-                try { DrawInspector(model, false); }
-                finally { CustomModelEditor.InModelBox = false; }
-            }
-            else if (BigButton("🎨 Give it a 3D model"))
-            {
-                Undo.AddComponent<CustomModel>(selected.gameObject);
+                CustomModel model = selected.GetComponent<CustomModel>();
+                if (model != null)
+                {
+                    CustomModelEditor.InModelBox = true;
+                    try { DrawInspector(model, false); }
+                    finally { CustomModelEditor.InModelBox = false; }
+                }
+                else if (BigButton("🎨 Give it a 3D model"))
+                {
+                    Undo.AddComponent<CustomModel>(selected.gameObject);
+                }
+                DrawGlow(selected.gameObject, Sparkles.ColourFor(selected.payloadType));
             }
             ObstacleBaseEditor.EndBox();
-
-            DrawGlow(selected.gameObject, Sparkles.ColourFor(selected.payloadType));
 
             // Its settings: 📍 Move it… sits at the top of the 📐 Transform box, How it moves in the 🚶 Movement box
             ObstacleBaseEditor.MoveIt = o => DrawPosition(o.transform, o.name, hit => MoveObstacleTo(o, hit), () => PutObstacleOnGround(o));

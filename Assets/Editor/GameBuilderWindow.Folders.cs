@@ -123,7 +123,8 @@ public partial class GameBuilderWindow
         List<T> chosen = SelectedAll<T>().ToList();
         if (!chosen.Contains(item)) chosen.Add(item);
 
-        if (boxTitle != null) ObstacleBaseEditor.BeginBox(boxTitle, "Its name, and which folder it's in (in the list above).");
+        bool open = boxTitle == null || ObstacleBaseEditor.BeginBox(boxTitle, "Its name, and which folder it's in (in the list above).");
+        if (open)
         using (new EditorGUILayout.VerticalScope(boxTitle != null ? GUIStyle.none : EditorStyles.helpBox))
         {
             if (chosen.Count == 1)
