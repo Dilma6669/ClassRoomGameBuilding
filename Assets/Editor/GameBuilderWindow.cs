@@ -406,7 +406,7 @@ public partial class GameBuilderWindow : EditorWindow
             {
                 foreach (ScatterTools.PlatformMove move in System.Enum.GetValues(typeof(ScatterTools.PlatformMove)))
                 {
-                    Color? colour = move == now ? new Color(0.55f, 0.85f, 0.55f) : (Color?)null;
+                    Color? colour = move == now ? new Color(0.6f, 0.85f, 1f) : (Color?)null;
                     if (BigButton(IconFor(move) + " " + ScatterTools.MoveName(move), colour) && move != now)
                     {
                         float distance = selected.moveDistance > 0f ? selected.moveDistance : (move == ScatterTools.PlatformMove.UpAndDown ? 8f : 6f);
@@ -420,7 +420,7 @@ public partial class GameBuilderWindow : EditorWindow
             {
                 foreach (PlatformLogic.PlatformType type in System.Enum.GetValues(typeof(PlatformLogic.PlatformType)))
                 {
-                    Color? colour = type == selected.platformType ? new Color(0.55f, 0.85f, 0.55f) : (Color?)null;
+                    Color? colour = type == selected.platformType ? new Color(0.6f, 0.85f, 1f) : (Color?)null;
                     string label = type == PlatformLogic.PlatformType.Normal ? "Normal" : IconFor(type) + " " + type;
                     if (BigButton(label, colour) && type != selected.platformType)
                     {
@@ -781,7 +781,7 @@ public partial class GameBuilderWindow : EditorWindow
         GameSettings settings = GameSettings.Load();
         if (settings == null)
         {
-            if (BigButton("⚙️ Make Game Settings")) GameMenuItems.OpenSettings();
+            if (BigButton("⚙️ Make Game Settings", new Color(0.2f, 0.8f, 0.3f))) GameMenuItems.OpenSettings();
         }
         else if (Foldout("settings", "Game title, main menu, death screen, default models and Library entries"))
         {
