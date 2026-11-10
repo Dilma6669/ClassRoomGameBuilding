@@ -60,7 +60,8 @@ public class PlayerControllerEditor : Editor
             EditorUtility.SetDirty(cm);
         }
 
-        if (cm != null && cm.model != null && GUILayout.Button("⚙️ Size, animations & Library picture..."))
+        // Not needed in the Game Builder: its Player tab has a 'Model size, turn & animations' fold-out for this
+        if (cm != null && cm.model != null && !GameBuilderWindow.DrawingInGameBuilder && GUILayout.Button("⚙️ Size, animations & Library picture..."))
         {
             Selection.activeGameObject = cm.gameObject;
         }

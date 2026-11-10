@@ -993,6 +993,9 @@ public partial class GameBuilderWindow : EditorWindow
         FoldoutBar.End();
     }
 
+    /// <summary>True while a component's Inspector is being drawn inside the Game Builder (not in Unity's Inspector).</summary>
+    public static bool DrawingInGameBuilder { get; private set; }
+
     /// <summary>Draws a component's normal Inspector (with its green buttons) inside this window.</summary>
     /// <param name="boxed">False when it's already inside a fold-out's box.</param>
     private void DrawInspector(Object target, bool boxed = true)
@@ -1006,7 +1009,10 @@ public partial class GameBuilderWindow : EditorWindow
 
         using (new EditorGUILayout.VerticalScope(boxed ? EditorStyles.helpBox : GUIStyle.none))
         {
-            ed.OnInspectorGUI();
+            // Lets a panel hide things the Game Builder already shows another way
+            DrawingInGameBuilder = true;
+            try { ed.OnInspectorGUI(); }
+            finally { DrawingInGameBuilder = false; }
         }
     }
 
