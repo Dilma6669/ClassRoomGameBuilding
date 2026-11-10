@@ -570,7 +570,7 @@ public partial class GameBuilderWindow : EditorWindow
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("🧩 Default models for new creatures", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard (in every level). " +
-                "To change one creature that's already made, click it in 'Your creatures & pickups' instead.", EditorStyles.wordWrappedMiniLabel);
+                "To change one creature that's already made, click it in the 'Creature and Pickup List' instead.", EditorStyles.wordWrappedMiniLabel);
             SettingsField("defaultWanderEnemy", "🕷 Wanderer");
             SettingsField("defaultPatrolEnemy", "🧟 Patroller");
             SettingsField("defaultStaticEnemy", "🐍 Guard");
@@ -597,7 +597,7 @@ public partial class GameBuilderWindow : EditorWindow
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
 
-        if (ObstacleBaseEditor.BeginBox("📋 Your creatures & pickups", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
+        if (ObstacleBaseEditor.BeginBox("📋 Creature and Pickup List", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
         {
             // A little narrower than the box, so it sits nicely inside it
             EditorGUILayout.BeginHorizontal();
