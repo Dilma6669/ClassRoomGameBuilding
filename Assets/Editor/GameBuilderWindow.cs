@@ -556,7 +556,7 @@ public partial class GameBuilderWindow : EditorWindow
         }
 
         // ⚙️ Settings for the buttons below
-        if (ObstacleBaseEditor.BeginBox("⚙️ Default options for new creatures", "Where new things go, how big new creatures are, and which models they get."))
+        if (ObstacleBaseEditor.BeginBox("⚙️ Default options for new creatures", "Where new things go, how big new creatures are, and which models they get.", green: true))
         {
             DrawClickToPlaceToggle();
             EditorGUILayout.Space(4);
@@ -597,7 +597,7 @@ public partial class GameBuilderWindow : EditorWindow
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
 
-        if (ObstacleBaseEditor.BeginBox("📋 Your creatures & pickups", "Click one to change it. Drag them into folders to keep things tidy."))
+        if (ObstacleBaseEditor.BeginBox("📋 Your creatures & pickups", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
         {
             // A little narrower than the box, so it sits nicely inside it
             EditorGUILayout.BeginHorizontal();

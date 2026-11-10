@@ -37,7 +37,7 @@ public class ObstacleBaseEditor : Editor
     /// Starts a bordered box whose title sits in its own coloured bar. Clicking the bar folds the box shut or open
     /// (remembered per title). Returns true if it's open: only draw the contents then. Always end it with EndBox().
     /// </summary>
-    public static bool BeginBox(string title, string subtitle)
+    public static bool BeginBox(string title, string subtitle, bool green = false)
     {
         EditorGUILayout.Space(10);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -51,7 +51,9 @@ public class ObstacleBaseEditor : Editor
         bool open = EditorPrefs.GetBool(key, false); // closed until clicked open
 
         Rect bar = GUILayoutUtility.GetRect(0f, 28f, GUILayout.ExpandWidth(true));
-        EditorGUI.DrawRect(bar, EditorGUIUtility.isProSkin ? new Color(0.2f, 0.34f, 0.55f) : new Color(0.62f, 0.76f, 0.93f));
+        Color blue = EditorGUIUtility.isProSkin ? new Color(0.2f, 0.34f, 0.55f) : new Color(0.62f, 0.76f, 0.93f);
+        Color greenBar = EditorGUIUtility.isProSkin ? new Color(0.02f, 0.42f, 0.32f) : new Color(0.38f, 0.78f, 0.63f); // emerald
+        EditorGUI.DrawRect(bar, green ? greenBar : blue);
         GUI.Label(new Rect(bar.x + 8f, bar.y, bar.width - 16f, bar.height), (open ? "▼  " : "▶  ") + title, boxTitle);
         EditorGUIUtility.AddCursorRect(bar, MouseCursor.Link);
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && bar.Contains(Event.current.mousePosition))
