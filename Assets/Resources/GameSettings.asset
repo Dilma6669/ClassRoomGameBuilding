@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d493f40f4ff1c1549b87cd6cf33de07d, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
-  gameTitle: Our Class Game
+  gameTitle: Room 9 Class Game
   subtitle: Made by our class
   showMenuOnStart: 1
   deathTitle: You Died!
