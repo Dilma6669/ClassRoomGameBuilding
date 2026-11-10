@@ -555,17 +555,34 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
-        DrawPlacingOptions(platform != null
+        // ⚙️ Settings for the buttons below
+        if (ObstacleBaseEditor.BeginBox("⚙️ Options for new creatures", "Where new things go, how big new creatures are, and which models they get."))
+        {
+            DrawClickToPlaceToggle();
+            EditorGUILayout.Space(4);
+            float newSize = EditorGUILayout.Slider(new GUIContent("New creatures are this big",
+                "Size of new creatures (and scattered ones). 2 = a zombie about as tall as the player. " +
+                "Change one afterwards with its Object Scale. Pickups aren't changed."),
+                ScatterTools.NewCreatureSize, 0.5f, 6f);
+            if (!Mathf.Approximately(newSize, ScatterTools.NewCreatureSize)) ScatterTools.NewCreatureSize = newSize;
+            EditorGUILayout.LabelField("Tip: the player jumps about 1.7 m, so very tall creatures can only be jumped on from something higher.", EditorStyles.wordWrappedMiniLabel);
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("🧩 Default models for new creatures", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard (in every level). " +
+                "To change one creature that's already made, click it in 'Your creatures & pickups' instead.", EditorStyles.wordWrappedMiniLabel);
+            SettingsField("defaultWanderEnemy", "🕷 Wanderer");
+            SettingsField("defaultPatrolEnemy", "🧟 Patroller");
+            SettingsField("defaultStaticEnemy", "🐍 Guard");
+        }
+        ObstacleBaseEditor.EndBox();
+
+        // Always shown (even with the box folded): 'Now click in the Scene view...' + Stop, or where new things go
+        DrawPlacingStatus(platform != null
             ? "New things will go on the platform: " + platform.name
             : "New things will go on the ground where the Scene view is looking. Select a platform to put them on it instead.");
 
         Section("🕷 Creatures (they hurt!)");
-        float newSize = EditorGUILayout.Slider(new GUIContent("New creatures are this big",
-            "Size of new creatures (and scattered ones). 2 = a zombie about as tall as the player. " +
-            "Change one afterwards with its Object Scale. Pickups aren't changed."),
-            ScatterTools.NewCreatureSize, 0.5f, 6f);
-        if (!Mathf.Approximately(newSize, ScatterTools.NewCreatureSize)) ScatterTools.NewCreatureSize = newSize;
-        EditorGUILayout.LabelField("Tip: the player jumps about 1.7 m, so very tall creatures can only be jumped on from something higher.", EditorStyles.wordWrappedMiniLabel);
         PlaceRow(3,
             ("🕷 Wanderer\nwalks around", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, false)),
             ("🧟 Patroller\nwalks back & forth", () => Spawn(ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Patrol, 10, 5f, false, false)),
@@ -634,11 +651,6 @@ public partial class GameBuilderWindow : EditorWindow
         }
         ObstacleBaseEditor.EndBox();
 
-        DefaultModelsFoldout("defaultCreatures", "🧩 Default models for new creatures",
-            "The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard above (in every level). " +
-            "To change one creature that's already made, click it in 'Your creatures & pickups' instead.",
-            ("defaultWanderEnemy", "🕷 Wanderer"), ("defaultPatrolEnemy", "🧟 Patroller"), ("defaultStaticEnemy", "🐍 Guard"));
-
         // Delete the selected one: at the very bottom, away from everything else
         if (selected != null)
         {
@@ -668,6 +680,13 @@ public partial class GameBuilderWindow : EditorWindow
     /// <summary>The 'click in the Scene to place' tick box, and a Stop button while placing.</summary>
     private void DrawPlacingOptions(string whenOff)
     {
+        DrawClickToPlaceToggle();
+        DrawPlacingStatus(whenOff);
+    }
+
+    /// <summary>The '📍 Click in the Scene to choose where it goes' tick box.</summary>
+    private static void DrawClickToPlaceToggle()
+    {
         bool click = EditorGUILayout.ToggleLeft(new GUIContent("📍 Click in the Scene to choose where it goes",
             "Ticked: click a button, then click the spot in the Scene view. Unticked: it appears straight away."), ScenePlacer.ClickToPlace);
         if (click != ScenePlacer.ClickToPlace)
@@ -675,7 +694,12 @@ public partial class GameBuilderWindow : EditorWindow
             ScenePlacer.ClickToPlace = click;
             if (!click) ScenePlacer.Cancel();
         }
+    }
 
+    /// <summary>'Now click in the Scene view...' with a Stop button while placing; otherwise (click to place off) where new things go.</summary>
+    private void DrawPlacingStatus(string whenOff)
+    {
+        bool click = ScenePlacer.ClickToPlace;
         if (ScenePlacer.IsPlacing)
         {
             using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))

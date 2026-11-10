@@ -46,7 +46,7 @@ public class ObstacleBaseEditor : Editor
         }
 
         string key = "GameBuilder.BoxOpen." + title;
-        bool open = EditorPrefs.GetBool(key, true);
+        bool open = EditorPrefs.GetBool(key, false); // closed until clicked open
 
         Rect bar = GUILayoutUtility.GetRect(0f, 28f, GUILayout.ExpandWidth(true));
         EditorGUI.DrawRect(bar, EditorGUIUtility.isProSkin ? new Color(0.2f, 0.34f, 0.55f) : new Color(0.62f, 0.76f, 0.93f));
