@@ -75,16 +75,20 @@ public partial class GameBuilderWindow
 
         // ---------------- General sound effects (the defaults)
         Section("🔊 General sounds (used by everything, unless a model has its own)");
-        EditorGUILayout.HelpBox("Each moment can have more than one sound. Click '➕ Another sound' to:\n• pick a different sound for some creatures or pickups (untick 'For every...'), or\n• add variety: when several sounds fit, one is picked at random.\nTo give ONE model its own sounds (a dragon's roar, a horse's hooves), use 🎭 Sounds for one model further down.", MessageType.None);
-
-        string[] groupTitles = { "🧙 Player", "🎯 Touching things (pickups, jumping on creatures, bouncing)", "👹 Creatures (enemies)" };
-        foreach (SoundEntry.Group group in Enum.GetValues(typeof(SoundEntry.Group)))
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            if (!Foldout("sounds." + group, groupTitles[(int)group], true)) continue;
-            foreach (SoundEvent e in TabOrder)
+            EditorGUILayout.LabelField("Each moment can have more than one sound. Click '➕ Another sound' to:\n• pick a different sound for some creatures or pickups (untick 'For every...'), or\n• add variety: when several sounds fit, one is picked at random.\nTo give ONE model its own sounds (a dragon's roar, a horse's hooves), use 🎭 Sounds for one model further down.", EditorStyles.wordWrappedMiniLabel);
+
+            string[] groupTitles = { "🧙 Player", "🎯 Touching things (pickups, jumping on creatures, bouncing)", "👹 Creatures (enemies)" };
+            foreach (SoundEntry.Group group in Enum.GetValues(typeof(SoundEntry.Group)))
             {
-                if (SoundEntry.GroupOf(e) == group) DrawSoundEvent(sounds, e);
+                if (!Foldout("sounds." + group, groupTitles[(int)group], true)) continue;
+                foreach (SoundEvent e in TabOrder)
+                {
+                    if (SoundEntry.GroupOf(e) == group) DrawSoundEvent(sounds, e);
+                }
             }
+            EditorGUILayout.Space(4);
         }
 
         // ---------------- One model
@@ -133,7 +137,8 @@ public partial class GameBuilderWindow
         bool creatures = (allowed & SoundTarget.Wanderers) != 0;
 
         EditorGUILayout.Space(6);
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        // Slightly narrower than the General sounds box, so it sits inside it
+        using (new EditorGUILayout.VerticalScope(new GUIStyle(EditorStyles.helpBox) { margin = new RectOffset(10, 10, 4, 4) }))
         {
             GUILayout.Label(SoundEntry.Label(e), soundHeaderStyle);
 
