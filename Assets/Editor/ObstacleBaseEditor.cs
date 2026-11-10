@@ -158,7 +158,17 @@ public class ObstacleBaseEditor : Editor
         EditorGUILayout.PropertyField(touch, new GUIContent(
             o.payloadType == ObstacleBase.PayloadType.Damage ? "Hurts from (metres away)" : "Touch distance (metres)", touch.tooltip));
 
-        if (!many && GUILayout.Button(new GUIContent("🎯 Fit it to the model again", "Measure the model now and fit the hit zone round it.")))
+        // A narrower button, in the middle
+        bool fitAgain = false;
+        if (!many)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            fitAgain = GUILayout.Button(new GUIContent("🎯 Fit it to the model again", "Measure the model now and fit the hit zone round it."), GUILayout.Width(240f));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+        if (fitAgain)
         {
             serializedObject.ApplyModifiedProperties();
             foreach (Object t in targets)
