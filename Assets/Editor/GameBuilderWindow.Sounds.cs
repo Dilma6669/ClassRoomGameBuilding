@@ -96,6 +96,8 @@ public partial class GameBuilderWindow
                     {
                         if (SoundEntry.GroupOf(e) == group) DrawSoundEvent(sounds, e);
                     }
+                    // Same gap under the last sound as above the first one (6 + the box's 4)
+                    EditorGUILayout.Space(6);
                 }
                 EndFoldout();
             }
