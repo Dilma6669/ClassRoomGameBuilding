@@ -75,8 +75,7 @@ public partial class GameBuilderWindow
         }
 
         // ---------------- General sound effects (the defaults)
-        Section("🔊 General sounds (used by everything, unless a model has its own)");
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        if (Box("🔊 General sounds", "Used by everything, unless a model has its own sounds.", true))
         {
             EditorGUILayout.LabelField("Each moment can have more than one sound. Click '➕ Another sound' to:\n• pick a different sound for some creatures or pickups (untick 'For every...'), or\n• add variety: when several sounds fit, one is picked at random.\nTo give ONE model its own sounds (a dragon's roar, a horse's hooves), use 🎭 Sounds for one model further down.", EditorStyles.wordWrappedMiniLabel);
 
@@ -96,23 +95,23 @@ public partial class GameBuilderWindow
             }
             EditorGUILayout.Space(4);
         }
+        EndBox();
 
         // ---------------- One model
-        Section("🎭 Sounds for one model");
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        if (Box("🎭 Sounds for one model", "Give one model its own sounds (a dragon's roar, a horse's hooves)."))
         {
             DrawModelSounds(sounds);
         }
+        EndBox();
 
         // ---------------- Music
-        Section("📀 Music (soundtrack)");
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        if (Box("📀 Music (soundtrack)", "The songs that play in your game.", true))
         {
             DrawMusic(sounds);
         }
+        EndBox();
 
-        Section("🔉 Starting volumes");
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        if (Box("🔉 Starting volumes", "How loud music and sounds are the first time someone plays.", true))
         {
             EditorGUILayout.LabelField("How loud things are the first time someone plays. Players can change it in the game (Esc > Sound & Music).", EditorStyles.wordWrappedMiniLabel);
             EditorGUI.BeginChangeCheck();
@@ -134,6 +133,7 @@ public partial class GameBuilderWindow
                 ShowNotification(new GUIContent("Done"));
             }
         }
+        EndBox();
     }
 
     private void DrawSoundEvent(GameSounds sounds, SoundEvent e)

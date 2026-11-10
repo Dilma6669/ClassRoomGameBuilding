@@ -176,9 +176,17 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
+        // ⚙️ The model a NEW character gets
+        if (Box("⚙️ Default options for new characters", "The 3D model a NEW character gets when you click Create Character (e.g. in a new level).", true))
+        {
+            EditorGUILayout.LabelField("To change THIS player's look, use 'Player Model' in 'Your character' below instead.", EditorStyles.wordWrappedMiniLabel);
+            SettingsField("defaultPlayerModel", "🧙 Default player model");
+        }
+        EndBox();
+
         // One box: Create Character + Player Model, the model's settings, and 'Show me my player'
         Health body = player.GetComponentInChildren<Health>(true);
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        if (Box("🧙 Your character", "Make your hero and choose how they look."))
         {
             DrawInspector(player, false);
 
@@ -214,26 +222,30 @@ public partial class GameBuilderWindow : EditorWindow
                 }
             }
         }
+        EndBox();
         if (body == null) return;
 
-        Section("🏃 Moving, sprinting & jumping");
-        DrawInspector(player.GetComponent<PlayerLogic>());
+        if (Box("🏃 Moving, sprinting & jumping", "How fast your hero walks and sprints, stamina, and how high they jump."))
+            DrawInspector(player.GetComponent<PlayerLogic>(), false);
+        EndBox();
 
-        Section("❤️ Health");
-        DrawInspector(body);
+        if (Box("❤️ Health", "How much health your hero has, and how they flash when hurt."))
+            DrawInspector(body, false);
+        EndBox();
 
         FallDamage fall = body.GetComponent<FallDamage>();
         if (fall != null)
         {
-            Section("🪂 Fall damage");
-            DrawInspector(fall);
+            if (Box("🪂 Fall damage", "How much falling from high up hurts."))
+                DrawInspector(fall, false);
+            EndBox();
         }
-
-        DefaultModelsFoldout("defaultPlayer", "🧩 Default player model (for Create Character)",
-            "The 3D model a NEW character gets when you click Create Character (e.g. in a new level). " +
-            "To change THIS player's look, use 'Player Model' at the top of this tab instead.",
-            ("defaultPlayerModel", "🧙 Default player model"));
     }
+
+    /// <summary>A folding box with its title in a coloured bar (blue; green = emerald for lists, tools and defaults). Draw its contents only if it returns true, then always call EndBox().</summary>
+    private static bool Box(string title, string subtitle, bool green = false) => ObstacleBaseEditor.BeginBox(title, subtitle, green);
+
+    private static void EndBox() => ObstacleBaseEditor.EndBox();
 
     // ------------------------------------------------------------------ 🏔 Level
 
@@ -242,8 +254,11 @@ public partial class GameBuilderWindow : EditorWindow
         Title("🏔 Level", "Shape the ground, paint it, and choose the sky and sunlight.");
 
         Terrain terrain = Find<Terrain>();
-        Section("⛰ The ground");
-        if (terrain == null)
+        if (!Box("⛰ The ground", "Shape the ground with brushes, and paint it."))
+        {
+            // folded shut
+        }
+        else if (terrain == null)
         {
             EnvironmentController env = Find<EnvironmentController>();
             if (env != null)
@@ -278,12 +293,13 @@ public partial class GameBuilderWindow : EditorWindow
                 Tools.current = Tool.Move;
             }
         }
+        EndBox();
 
-        DrawSunAndSky();
+        if (Box("☀️ Sun & sky", "Sunlight, the sky picture and fog.")) DrawSunAndSky();
+        EndBox();
 
-        Section("🧱 World border");
         GameSettings settings = GameSettings.Load();
-        if (settings != null)
+        if (Box("🧱 World border", "Invisible walls round the map, and how far down you can fall (all levels).") && settings != null)
         {
             EditorGUI.BeginChangeCheck();
             bool border = EditorGUILayout.ToggleLeft("Invisible walls stop players leaving the map (all levels)", settings.useWorldBorder);
@@ -302,6 +318,7 @@ public partial class GameBuilderWindow : EditorWindow
             }
             SettingsField("fallKillDepth", "Fall depth (you die)");
         }
+        EndBox();
     }
 
     /// <summary>One Game Settings value (shared by every level), shown in whichever tab it belongs to.</summary>
@@ -375,8 +392,6 @@ public partial class GameBuilderWindow : EditorWindow
 
     private void DrawSunAndSky()
     {
-        Section("☀️ Sun & sky");
-
         Light sun = RenderSettings.sun;
         if (sun == null) sun = FindAll<Light>().FirstOrDefault(l => l.type == LightType.Directional);
         if (sun != null)
@@ -465,12 +480,30 @@ public partial class GameBuilderWindow : EditorWindow
             return;
         }
 
+        // ⚙️ Settings for the buttons below
+        if (Box("⚙️ Default options for spawning platforms", "Where new platforms go, how high they float, and how they look.", true))
+        {
+            DrawClickToPlaceToggle();
+            EditorGUILayout.Space(4);
+            float newHeight = EditorGUILayout.Slider(new GUIContent("New platforms float this high (m)",
+                "How far above the ground new platforms go. Change one afterwards with 'Height above the ground' when it's selected."),
+                ScatterTools.NewPlatformHeight, 0.5f, 30f);
+            if (!Mathf.Approximately(newHeight, ScatterTools.NewPlatformHeight)) ScatterTools.NewPlatformHeight = newHeight;
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("🧩 Look for ALL new platforms (3D model, mesh, material)", EditorStyles.boldLabel);
+            DrawInspector(controller, false);
+            // The model every level falls back on when this level's 3D model box is empty
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("For every level (used when 'Platform Model' above is empty):", EditorStyles.miniBoldLabel);
+            SettingsField("defaultPlatformModel", "Default platform model");
+        }
+        EndBox();
+
+        // Always shown (even with the box folded): 'Now click in the Scene view...' + Stop
+        DrawPlacingStatus("New platforms appear where the Scene view is looking.");
+
         Section("⚡ Quick platforms");
-        DrawPlacingOptions("New platforms appear where the Scene view is looking.");
-        float newHeight = EditorGUILayout.Slider(new GUIContent("New platforms float this high (m)",
-            "How far above the ground new platforms go. Change one afterwards with 'Height above the ground' when it's selected."),
-            ScatterTools.NewPlatformHeight, 0.5f, 30f);
-        if (!Mathf.Approximately(newHeight, ScatterTools.NewPlatformHeight)) ScatterTools.NewPlatformHeight = newHeight;
         PlaceRow(4,
             ("🪨 Floating\nstays still", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still)),
             ("↔ Moving\nside to side", () => QuickPlatform(controller, ScatterTools.PlatformMove.SideToSide)),
@@ -481,32 +514,22 @@ public partial class GameBuilderWindow : EditorWindow
             ("💥 Crumbling\nfalls when you stand on it", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still, PlatformLogic.PlatformType.Crumbling)),
             ("🟢 Bouncy\nlaunches you up high", () => QuickPlatform(controller, ScatterTools.PlatformMove.Still, PlatformLogic.PlatformType.Bouncy)));
 
-        Section("🎲 Scatter lots of platforms at once");
-        PlatformScatter scatter = controller.GetComponent<PlatformScatter>();
-        if (scatter != null) DrawInspector(scatter);
-        else if (BigButton("🎲 Start scattering platforms", new Color(0.2f, 0.8f, 0.3f)))
+        EditorGUILayout.Space(6);
+        if (Box("📋 Platforms List", "Click one to change it. Drag them into folders to keep things tidy.", true))
         {
-            Undo.AddComponent<PlatformScatter>(controller.gameObject);
+            InsetList(() => DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.",
+                p => IconFor(p.platformType) + IconFor(ScatterTools.GetMovement(p)) + " " + p.name));
         }
-
-        if (BeginFoldout("platformController", "⚙ Platform look for ALL new platforms (3D model, mesh, material)"))
-        {
-            DrawInspector(controller, false);
-            // The model every level falls back on when this level's 3D model box is empty
-            EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("For every level (used when 'Platform Model' above is empty):", EditorStyles.miniBoldLabel);
-            SettingsField("defaultPlatformModel", "Default platform model");
-        }
-        EndFoldout();
-
-        Section("📋 Your platforms");
-        DrawList("platforms", platforms, "No platforms yet. Click a Quick platform button above.", p => IconFor(p.platformType) + IconFor(ScatterTools.GetMovement(p)) + " " + p.name);
+        EndBox();
 
         PlatformLogic selected = SelectedOf<PlatformLogic>();
         if (selected != null)
         {
-            Section("✏️ " + selected.name);
-            DrawNameAndFolder(selected, "platforms", platforms);
+            EditorGUILayout.Space(6);
+            DrawNameAndFolder(selected, "platforms", platforms, "✏️ Name");
+
+            if (Box("🚶 Movement & type", "How it moves, and whether it's normal, crumbling or bouncy."))
+            {
             EditorGUILayout.LabelField("Make it:", EditorStyles.miniBoldLabel);
             ScatterTools.PlatformMove now = ScatterTools.GetMovement(selected);
             Color chosen = new Color(0.6f, 0.85f, 1f);
@@ -529,16 +552,53 @@ public partial class GameBuilderWindow : EditorWindow
                 ScatterTools.SetPlatformType(selected, types[typeClicked]);
                 GUIUtility.ExitGUI();
             }
-            DrawPosition(selected.TargetChild, selected.name, hit => MovePlatformTo(selected, hit), null, () => DrawPlatformHeight(selected));
-            DrawInspector(selected);
-            DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
+            }
+            EndBox();
+
+            if (Box("📐 Platform settings", "Where it is, its size and shape, its model, how it moves, and its effects."))
+            {
+                DrawPosition(selected.TargetChild, selected.name, hit => MovePlatformTo(selected, hit), null, () => DrawPlatformHeight(selected));
+                DrawInspector(selected, false);
+            }
+            EndBox();
+
+            if (Box("✨ Glow & sparkles", "Make it glow, or add sparkles around it."))
+                DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
+            EndBox();
+
             PlatformPopulator populator = selected.GetComponent<PlatformPopulator>();
             if (populator != null)
             {
-                if (BeginFoldout("platformMore", "More: copy, delete, or scatter creatures on this platform")) DrawInspector(populator, false);
-                EndFoldout();
+                if (Box("🧩 More", "Copy or delete this platform, or scatter creatures on it."))
+                    DrawInspector(populator, false);
+                EndBox();
             }
         }
+
+        // 🎲 Lots at once
+        if (Box("🎲 Scatter tools", "Put lots of platforms down at once, with random sizes and movement.", true))
+        {
+            PlatformScatter scatter = controller.GetComponent<PlatformScatter>();
+            if (scatter != null) DrawInspector(scatter, false);
+            else if (BigButton("🎲 Start scattering platforms", new Color(0.2f, 0.8f, 0.3f)))
+            {
+                Undo.AddComponent<PlatformScatter>(controller.gameObject);
+            }
+        }
+        EndBox();
+    }
+
+    /// <summary>Draws a list a little narrower than its box, so it sits nicely inside it.</summary>
+    private static void InsetList(System.Action draw)
+    {
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Space(8);
+        EditorGUILayout.BeginVertical();
+        draw();
+        EditorGUILayout.EndVertical();
+        GUILayout.Space(8);
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space(4);
     }
 
     // ------------------------------------------------------------------ 🕷 Creatures & Pickups
@@ -621,6 +681,11 @@ public partial class GameBuilderWindow : EditorWindow
         if (selected != null)
         {
             EditorGUILayout.Space(6);
+            // One outer box round everything about the selected one: Name, Model, its settings boxes and Delete.
+            // A little narrower than the window on both sides.
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(8);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             DrawNameAndFolder(selected, "obstacles", obstacles, "✏️ Name");
 
             // 🎨 What it looks like
@@ -644,20 +709,20 @@ public partial class GameBuilderWindow : EditorWindow
             // Its settings: 📍 Move it… sits at the top of the 📐 Transform box, How it moves in the 🚶 Movement box
             ObstacleBaseEditor.MoveIt = o => DrawPosition(o.transform, o.name, hit => MoveObstacleTo(o, hit), () => PutObstacleOnGround(o));
             ObstacleBaseEditor.HowItMoves = DrawMovement;
-            try { DrawInspector(selected); }
+            try { DrawInspector(selected, false); }
             finally { ObstacleBaseEditor.HowItMoves = null; ObstacleBaseEditor.MoveIt = null; }
 
-        }
-
-        // Delete the selected one: below its settings, above Scatter tools
-        if (selected != null)
-        {
-            EditorGUILayout.Space(12);
+            // Delete it: at the bottom of its box
+            EditorGUILayout.Space(10);
             if (BigButton("🗑 Delete " + selected.name, new Color(0.95f, 0.5f, 0.5f)))
             {
                 Undo.DestroyObjectImmediate(selected.gameObject);
                 GUIUtility.ExitGUI();
             }
+            EditorGUILayout.Space(2);
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(8);
+            EditorGUILayout.EndHorizontal();
         }
 
         // 🎲 Lots at once
@@ -979,19 +1044,32 @@ public partial class GameBuilderWindow : EditorWindow
         if (scenery != null)
         {
             // One piece of scenery selected? It can glow on its own
-            Transform piece = SelectedSceneryPiece(scenery);
-            if (piece != null)
-            {
-                Section("✏️ " + piece.name);
-                DrawGlow(piece.gameObject, new Color(0.5f, 0.9f, 1f));
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("Tip: click one tree or rock in the Scene to make just that one glow.", MessageType.None);
-            }
+            // Always shown: 'Now click in the Scene view...' + Stop while placing
+            DrawPlacingStatus("'📍 Place One' puts one where the Scene view is looking.");
 
-            DrawPlacingOptions("'📍 Place One' puts one where the Scene view is looking.");
-            DrawInspector(scenery);
+            if (Box("🎲 Scenery tools", "Groups of trees, rocks and plants: pick their models, then Scatter them or Place One.", true))
+            {
+                DrawClickToPlaceToggle();
+                EditorGUILayout.Space(4);
+                DrawInspector(scenery, false);
+            }
+            EndBox();
+
+            // One piece of scenery selected? It can glow on its own
+            Transform piece = SelectedSceneryPiece(scenery);
+            if (Box("✨ Glow & sparkles (one piece)", "Make one tree, rock or plant glow, or add sparkles around it."))
+            {
+                if (piece != null)
+                {
+                    EditorGUILayout.LabelField("Selected: " + piece.name, EditorStyles.boldLabel);
+                    DrawGlow(piece.gameObject, new Color(0.5f, 0.9f, 1f));
+                }
+                else
+                {
+                    EditorGUILayout.LabelField("Click one tree or rock in the Scene to make just that one glow.", EditorStyles.wordWrappedMiniLabel);
+                }
+            }
+            EndBox();
             return;
         }
 
@@ -1019,7 +1097,11 @@ public partial class GameBuilderWindow : EditorWindow
         Section("💬 Pop-up signs");
         TriggerController triggerController = Find<TriggerController>();
         if (triggerController != null) DrawInspector(triggerController);
-        DrawList("triggers", triggers, "No pop-ups yet.", t => "💬 " + t.name);
+
+        EditorGUILayout.Space(6);
+        if (Box("📋 Pop-up Signs List", "Click one to change it. Drag them into folders to keep things tidy.", true))
+            InsetList(() => DrawList("triggers", triggers, "No pop-ups yet.", t => "💬 " + t.name));
+        EndBox();
 
         TriggerLogic trigger = SelectedOf<TriggerLogic>();
         if (trigger != lastTrigger)
@@ -1031,9 +1113,11 @@ public partial class GameBuilderWindow : EditorWindow
         }
         if (trigger != null)
         {
-            Section("✏️ " + trigger.name);
-            DrawNameAndFolder(trigger, "triggers", triggers);
-            DrawInspector(trigger);
+            EditorGUILayout.Space(6);
+            DrawNameAndFolder(trigger, "triggers", triggers, "✏️ Name");
+            if (Box("💬 Sign settings", "Its message (or video), the size of its zone, and going to another level."))
+                DrawInspector(trigger, false);
+            EndBox();
         }
 
         Section("🚩 Checkpoints");
@@ -1044,27 +1128,32 @@ public partial class GameBuilderWindow : EditorWindow
             GameMenuItems.CreateCheckpoint();
             RefreshSceneLists();
         }
-        DrawList("checkpoints", checkpoints, "No checkpoints yet.", c => "🚩 " + c.name);
+
+        EditorGUILayout.Space(6);
+        if (Box("📋 Checkpoints List", "Click one to change it.", true))
+            InsetList(() => DrawList("checkpoints", checkpoints, "No checkpoints yet.", c => "🚩 " + c.name));
+        EndBox();
 
         Checkpoint flag = SelectedOf<Checkpoint>();
         if (flag != null)
         {
-            Section("✏️ " + flag.name);
-            DrawNameAndFolder(flag, "checkpoints", checkpoints);
-            DrawInspector(flag);
+            EditorGUILayout.Space(6);
+            DrawNameAndFolder(flag, "checkpoints", checkpoints, "✏️ Name");
+            if (Box("🚩 Checkpoint settings", "This flag's settings."))
+                DrawInspector(flag, false);
+            EndBox();
         }
 
-        Section("📖 Story, Library & game title");
         GameSettings settings = GameSettings.Load();
-        if (settings == null)
+        if (Box("📖 Story, Library & game title", "Fonts, the game's title, the death screen and the Library entries (all levels)."))
         {
-            if (BigButton("⚙️ Make Game Settings", new Color(0.2f, 0.8f, 0.3f))) GameMenuItems.OpenSettings();
+            if (settings == null)
+            {
+                if (BigButton("⚙️ Make Game Settings", new Color(0.2f, 0.8f, 0.3f))) GameMenuItems.OpenSettings();
+            }
+            else DrawInspector(settings, false);
         }
-        else
-        {
-            if (BeginFoldout("settings", "Fonts, game title, death screen and Library entries")) DrawInspector(settings, false);
-            EndFoldout();
-        }
+        EndBox();
     }
 
     // ------------------------------------------------------------------ 📦 Levels & Build
@@ -1073,7 +1162,14 @@ public partial class GameBuilderWindow : EditorWindow
     {
         Title("📦 Levels & Build", "Your levels, testing, and making the game for others to play.");
 
-        Section("🗺 Levels in your game (played in this order)");
+        if (Box("🗺 Levels List", "The levels in your game, played in this order.", true)) DrawLevelsList();
+        EndBox();
+        DrawNewLevelTestShare();
+    }
+
+    /// <summary>The levels in the game: tick, ▲ ▼, Open, ✕, and 'Add this level to the game'.</summary>
+    private void DrawLevelsList()
+    {
         EditorGUILayout.HelpBox("The game starts at level 1. Use ▲ ▼ to change the order, untick a level to leave it out of the game, or ✕ to remove it from the list (the level file isn't deleted).", MessageType.None);
         Scene active = SceneManager.GetActiveScene();
         List<EditorBuildSettingsScene> scenes = EditorBuildSettings.scenes.ToList();
@@ -1146,7 +1242,13 @@ public partial class GameBuilderWindow : EditorWindow
             }
         }
 
-        Section("➕ Make a new level");
+    }
+
+    /// <summary>Make a new level, Test (Play), and Share (Build Game), each in its own box.</summary>
+    private void DrawNewLevelTestShare()
+    {
+        if (Box("➕ Make a new level", "A new empty level, or a copy of the one you're in."))
+        {
         GUI.enabled = !EditorApplication.isPlaying;
         if (string.IsNullOrEmpty(newLevelName)) newLevelName = LevelMaker.NextFreeName();
         newLevelName = EditorGUILayout.TextField("New level's name", newLevelName);
@@ -1160,7 +1262,11 @@ public partial class GameBuilderWindow : EditorWindow
         GUI.enabled = true;
         EditorGUILayout.HelpBox("New empty level: a blank level to build from scratch.\nCopy this level: a copy of the level you're in now, to change into something new.", MessageType.None);
 
-        Section("▶ Test");
+        }
+        EndBox();
+
+        if (Box("🎮 Test", "Play this level to try it out."))
+        {
         if (!EditorApplication.isPlaying)
         {
             if (BigButton("▶ Play this level", new Color(0.4f, 0.75f, 1f))) EditorApplication.EnterPlaymode();
@@ -1170,7 +1276,11 @@ public partial class GameBuilderWindow : EditorWindow
             EditorApplication.ExitPlaymode();
         }
 
-        Section("📦 Share your game");
+        }
+        EndBox();
+
+        if (Box("📦 Share your game", "Turn your game into a program anyone can play."))
+        {
         EditorGUILayout.HelpBox("Builds a Windows game into the Build/Windows folder. Copy that whole folder to share it.", MessageType.None);
         GUI.enabled = !EditorApplication.isPlaying;
         if (BigButton("📦 Build Game (Windows)", new Color(0.2f, 0.8f, 0.3f)))
@@ -1183,6 +1293,8 @@ public partial class GameBuilderWindow : EditorWindow
         {
             EditorUtility.RevealInFinder(Path.GetFullPath("Build/Windows"));
         }
+        }
+        EndBox();
     }
 
     // ------------------------------------------------------------------ Helpers
