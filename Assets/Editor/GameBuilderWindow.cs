@@ -597,13 +597,24 @@ public partial class GameBuilderWindow : EditorWindow
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
 
-        Section("📋 Your creatures & pickups");
-        // Show what kind it is only when the name doesn't already say so (e.g. 'Jump On Me  (Patroller)')
-        DrawList("obstacles", obstacles, "None yet. Click a button above.", o =>
+        if (ObstacleBaseEditor.BeginBox("📋 Your creatures & pickups", "Click one to change it. Drag them into folders to keep things tidy."))
         {
-            string kind = NiceName(o);
-            return IconFor(o) + " " + o.name + (o.name.StartsWith(kind) ? "" : "  (" + kind + ")");
-        });
+            // A little narrower than the box, so it sits nicely inside it
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(8);
+            EditorGUILayout.BeginVertical();
+            // Show what kind it is only when the name doesn't already say so (e.g. 'Jump On Me  (Patroller)')
+            DrawList("obstacles", obstacles, "None yet. Click a button above.", o =>
+            {
+                string kind = NiceName(o);
+                return IconFor(o) + " " + o.name + (o.name.StartsWith(kind) ? "" : "  (" + kind + ")");
+            });
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(8);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(4);
+        }
+        ObstacleBaseEditor.EndBox();
 
         ObstacleBase selected = SelectedOf<ObstacleBase>();
         if (selected != null)
