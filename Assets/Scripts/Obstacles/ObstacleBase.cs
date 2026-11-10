@@ -65,7 +65,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
     [Range(0f, 1f)] public float upwardBias = 0.5f;
     [Range(0f, 1f)] public float momentumTransfer = 0.3f;
 
-    [Header("Jump On Top (creatures only)")]
+    [Header("🦶 Jump On Top (creatures only)")]
     [Tooltip("How many times the player must land on this creature's head to defeat it. 0 = it can't be beaten (it hurts even from above).")]
     [Range(0, 10)] public int jumpsToDefeat = 1;
     [Tooltip("How high the player bounces off after landing on its head.")]
