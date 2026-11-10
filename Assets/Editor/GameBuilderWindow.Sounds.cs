@@ -53,8 +53,6 @@ public partial class GameBuilderWindow
         if (soundHeaderStyle == null)
         {
             soundHeaderStyle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 13, fontStyle = FontStyle.Bold };
-            // Near-white so the titles stand out on the blue boxes
-            soundHeaderStyle.normal.textColor = EditorGUIUtility.isProSkin ? new Color(0.93f, 0.95f, 1f) : Color.black;
         }
 
         using (new EditorGUILayout.HorizontalScope())
