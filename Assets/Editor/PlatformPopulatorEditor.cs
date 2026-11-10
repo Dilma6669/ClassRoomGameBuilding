@@ -104,7 +104,7 @@ public class PlatformPopulatorEditor : Editor
 
         EditorGUILayout.Space(4);
 
-        GUI.backgroundColor = new Color(0.7f, 0.4f, 0.9f);
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
         if (GUILayout.Button("🎲 Scatter Obstacles", buttonStyle))
         {
             PlatformPopulator populator = (PlatformPopulator)target;
@@ -124,7 +124,7 @@ public class PlatformPopulatorEditor : Editor
         EditorGUILayout.Space(15);
         EditorGUILayout.LabelField("Platform Management", EditorStyles.boldLabel);
 
-        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.8f);
+        GUI.backgroundColor = new Color(0.4f, 0.75f, 1f);
         if (GUILayout.Button("📋 Duplicate Platform Setup", buttonStyle))
         {
             PlatformPopulator populator = (PlatformPopulator)target;

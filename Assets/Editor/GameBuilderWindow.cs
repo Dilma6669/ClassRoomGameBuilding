@@ -251,7 +251,7 @@ public partial class GameBuilderWindow : EditorWindow
             {
                 for (int j = i; j < Mathf.Min(i + perRow, tools.Length); j++)
                 {
-                    if (BigButton(tools[j].label, new Color(0.55f, 0.85f, 0.55f)))
+                    if (BigButton(tools[j].label, new Color(0.4f, 0.75f, 1f)))
                     {
                         UseTerrainTool(terrain, tools[j].tool);
                     }

@@ -20,7 +20,7 @@ public class GameControllerEditor : Editor
         EditorGUILayout.Space(15);
 
         // Big Green Setup Button
-        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f); // Bright green tint
+        GUI.backgroundColor = new Color(0.4f, 0.75f, 1f); // Blue = open/use (green is for create)
         if (GUILayout.Button("⚙️ Game Settings & Library", buttonStyle))
         {
             controller.SetupProject();

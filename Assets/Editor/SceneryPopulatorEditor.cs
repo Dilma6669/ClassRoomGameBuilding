@@ -86,7 +86,7 @@ public class SceneryPopulatorEditor : Editor
                     EditorGUILayout.BeginHorizontal();
                     GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
                     if (GUILayout.Button("🌲 Scatter " + group.howMany)) Debug.Log($"🌲 Scattered {scenery.Scatter(group)} '{group.name}'.");
-                    GUI.backgroundColor = new Color(0.2f, 0.6f, 0.9f);
+                    GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
                     if (GUILayout.Button("📍 Place One")) scenery.PlaceOne(group, SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.pivot : scenery.transform.position);
                     GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
                     if (GUILayout.Button("🗑️ Clear")) Debug.Log($"🗑️ Removed {scenery.Clear(group)} '{group.name}'.");

@@ -111,7 +111,7 @@ public class TerrainPopulatorEditor : Editor
 
         EditorGUILayout.Space(4);
 
-        GUI.backgroundColor = new Color(0.7f, 0.4f, 0.9f);
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
         if (GUILayout.Button("🎲 Scatter Obstacles", buttonStyle))
         {
             TerrainPopulator populator = (TerrainPopulator)target;

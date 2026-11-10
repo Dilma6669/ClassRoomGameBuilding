@@ -57,7 +57,7 @@ public class PlatformControllerEditor : Editor
         EditorGUILayout.Space(8);
 
         // Create Platform Button
-        GUI.backgroundColor = new Color(0.2f, 0.6f, 0.9f); // Friendly blue tint
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f); // Green = create
         if (GUILayout.Button("🏗️ Create New Platform", createButtonStyle))
         {
             controller.CreatePlatform();
