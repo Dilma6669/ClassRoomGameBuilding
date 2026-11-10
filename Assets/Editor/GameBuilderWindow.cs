@@ -38,7 +38,7 @@ public partial class GameBuilderWindow : EditorWindow
     private List<Checkpoint> checkpoints = new List<Checkpoint>();
     private List<Material> skyMaterials;
 
-    [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle, foldoutTitleStyle;
+    [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle;
 
     [MenuItem("Game/🎮 Game Builder", priority = -100)]
     public static void Open()
@@ -977,18 +977,8 @@ public partial class GameBuilderWindow : EditorWindow
     {
         foldouts.TryGetValue(key, out bool open);
         EditorGUILayout.Space(8);
-        // A muted teal bar across the whole width (so it's clear it opens and closes), with a brighter strip on the left,
-        // then the arrow + title on top. Unity's own header bar only fits short titles.
-        if (foldoutTitleStyle == null) foldoutTitleStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
-        Rect rect = GUILayoutUtility.GetRect(0, 22, GUILayout.ExpandWidth(true));
-        if (Event.current.type == EventType.Repaint)
-        {
-            bool dark = EditorGUIUtility.isProSkin;
-            EditorGUI.DrawRect(rect, dark ? new Color(0.15f, 0.26f, 0.29f) : new Color(0.72f, 0.82f, 0.84f));
-            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3, rect.height), dark ? new Color(0.29f, 0.52f, 0.56f) : new Color(0.35f, 0.6f, 0.65f));
-        }
-        Rect inside = new Rect(rect.x + 7, rect.y + 2, rect.width - 7, rect.height - 4);
-        open = EditorGUI.Foldout(inside, open, label, true, foldoutTitleStyle);
+        // The shared teal open/close bar (Editor/FoldoutBar.cs), so every fold-out looks the same
+        open = FoldoutBar.Draw(open, label);
         foldouts[key] = open;
         return open;
     }

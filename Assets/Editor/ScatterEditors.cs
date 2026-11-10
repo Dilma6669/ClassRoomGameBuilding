@@ -173,8 +173,7 @@ public class CreatureScatterEditor : Editor
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             using (new EditorGUILayout.HorizontalScope())
             {
-                g.isExpanded = EditorGUILayout.Foldout(g.isExpanded, "  " + group.name + "  (" + group.howMany + ")", true,
-                    new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold, fontSize = 13 });
+                g.isExpanded = FoldoutBar.Draw(g.isExpanded, "  " + group.name + "  (" + group.howMany + ")");
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("include"), GUIContent.none, GUILayout.Width(18));
                 if (GUILayout.Button("✕", GUILayout.Width(24))) removeIndex = i;
             }

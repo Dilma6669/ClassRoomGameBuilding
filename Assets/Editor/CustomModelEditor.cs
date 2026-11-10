@@ -32,7 +32,7 @@ public class CustomModelEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("raiseLower"), new GUIContent("Raise / Lower"));
 
         EditorGUILayout.Space(8);
-        showAnimations = EditorGUILayout.Foldout(showAnimations, "🏃 Animations", true, new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold });
+        showAnimations = FoldoutBar.Draw(showAnimations, "🏃 Animations");
         if (showAnimations)
         {
             EditorGUI.indentLevel++;
