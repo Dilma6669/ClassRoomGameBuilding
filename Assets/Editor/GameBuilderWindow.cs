@@ -166,6 +166,14 @@ public partial class GameBuilderWindow : EditorWindow
         Health body = player.GetComponentInChildren<Health>(true);
         if (body == null) return;
 
+        // Right under 'Player Model': the chosen model's size, turn and animations
+        CustomModel model = body.GetComponent<CustomModel>();
+        if (model != null && model.model != null)
+        {
+            if (BeginFoldout("playerModel", "🎨 Model size, turn & animations")) DrawInspector(model, false);
+            EndFoldout();
+        }
+
         if (BigButton("🔍 Show me my player in the Scene"))
         {
             SelectAndFrame(body.gameObject);
@@ -182,13 +190,6 @@ public partial class GameBuilderWindow : EditorWindow
         {
             Section("🪂 Fall damage");
             DrawInspector(fall);
-        }
-
-        CustomModel model = body.GetComponent<CustomModel>();
-        if (model != null && model.model != null)
-        {
-            if (BeginFoldout("playerModel", "🎨 Model size, turn & animations")) DrawInspector(model, false);
-            EndFoldout();
         }
     }
 
