@@ -686,6 +686,10 @@ public partial class GameBuilderWindow : EditorWindow
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(8);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Space(-8); // top gap = the side gaps (the Name box adds its own gap above it)
+            // Name and Model: the same width as the settings boxes below (Unity adds a small margin round those)
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical();
             DrawNameAndFolder(selected, "obstacles", obstacles, "✏️ Name");
 
             // 🎨 What it looks like
@@ -705,6 +709,8 @@ public partial class GameBuilderWindow : EditorWindow
                 DrawGlow(selected.gameObject, Sparkles.ColourFor(selected.payloadType));
             }
             ObstacleBaseEditor.EndBox();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
 
             // Its settings: 📍 Move it… sits at the top of the 📐 Transform box, How it moves in the 🚶 Movement box
             ObstacleBaseEditor.MoveIt = o => DrawPosition(o.transform, o.name, hit => MoveObstacleTo(o, hit), () => PutObstacleOnGround(o));
@@ -714,12 +720,20 @@ public partial class GameBuilderWindow : EditorWindow
 
             // Delete it: at the bottom of its box
             EditorGUILayout.Space(10);
-            if (BigButton("🗑 Delete " + selected.name, new Color(0.95f, 0.5f, 0.5f)))
+            // The same width as the blue boxes above
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(3);
+            EditorGUILayout.BeginVertical();
+            bool delete = BigButton("🗑 Delete " + selected.name, new Color(0.95f, 0.5f, 0.5f));
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(3);
+            EditorGUILayout.EndHorizontal();
+            if (delete)
             {
                 Undo.DestroyObjectImmediate(selected.gameObject);
                 GUIUtility.ExitGUI();
             }
-            EditorGUILayout.Space(10); // the same gap as above the Name box at the top
+            EditorGUILayout.Space(5); // bottom gap = the side gaps
             EditorGUILayout.EndVertical();
             GUILayout.Space(8);
             EditorGUILayout.EndHorizontal();
