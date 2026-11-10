@@ -247,6 +247,30 @@ public partial class GameBuilderWindow : EditorWindow
 
     private static void EndBox() => ObstacleBaseEditor.EndBox();
 
+    [System.NonSerialized] private static GUIStyle groupTitle;
+
+    /// <summary>
+    /// A bordered group with a big title (not folding), a little in from both sides of the window, holding a whole
+    /// topic: its Create button, its list and the selected thing's boxes (e.g. '💬 Pop-up signs'). End it with EndGroup().
+    /// </summary>
+    private static void BeginGroup(string title)
+    {
+        EditorGUILayout.Space(10);
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Space(8);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        if (groupTitle == null) groupTitle = new GUIStyle(EditorStyles.boldLabel) { fontSize = 17 };
+        GUILayout.Label(title, groupTitle, GUILayout.Height(28));
+    }
+
+    private static void EndGroup()
+    {
+        EditorGUILayout.Space(5);
+        EditorGUILayout.EndVertical();
+        GUILayout.Space(8);
+        EditorGUILayout.EndHorizontal();
+    }
+
     // ------------------------------------------------------------------ 🏔 Level
 
     private void DrawLevelTab()
@@ -1108,9 +1132,10 @@ public partial class GameBuilderWindow : EditorWindow
     {
         Title("💬 Signs & Story", "Pop-up messages, checkpoint flags, and the story and Library your players can read.");
 
-        Section("💬 Pop-up signs");
+        // 💬 Everything about pop-up signs, in one box
+        BeginGroup("💬 Pop-up signs");
         TriggerController triggerController = Find<TriggerController>();
-        if (triggerController != null) DrawInspector(triggerController);
+        if (triggerController != null) DrawInspector(triggerController, false);
 
         EditorGUILayout.Space(6);
         if (Box("📋 Pop-up Signs List", "Click one to change it. Drag them into folders to keep things tidy.", true))
@@ -1133,8 +1158,10 @@ public partial class GameBuilderWindow : EditorWindow
                 DrawInspector(trigger, false);
             EndBox();
         }
+        EndGroup();
 
-        Section("🚩 Checkpoints");
+        // 🚩 Everything about checkpoints, in one box
+        BeginGroup("🚩 Checkpoints");
         EditorGUILayout.HelpBox("If the player dies after touching a flag, they start again from that flag.", MessageType.None);
         SettingsField("useCheckpoints", "Use checkpoints (all levels)");
         if (BigButton("🚩 Create Checkpoint", new Color(0.2f, 0.8f, 0.3f)))
@@ -1157,6 +1184,7 @@ public partial class GameBuilderWindow : EditorWindow
                 DrawInspector(flag, false);
             EndBox();
         }
+        EndGroup();
 
         GameSettings settings = GameSettings.Load();
         if (Box("📖 Story, Library & game title", "Fonts, the game's title, the death screen and the Library entries (all levels)."))
