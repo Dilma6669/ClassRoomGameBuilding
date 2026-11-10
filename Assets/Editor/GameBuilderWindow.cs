@@ -592,7 +592,7 @@ public partial class GameBuilderWindow : EditorWindow
         if (selected != null)
         {
             EditorGUILayout.Space(6);
-            DrawNameAndFolder(selected, "obstacles", obstacles, "✏️ " + selected.name);
+            DrawNameAndFolder(selected, "obstacles", obstacles, "✏️ Name");
 
             // 🎨 What it looks like
             ObstacleBaseEditor.BeginBox("🎨 Model", "What it looks like, and its animations.");
