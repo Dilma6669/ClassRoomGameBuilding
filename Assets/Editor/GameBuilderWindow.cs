@@ -278,7 +278,7 @@ public partial class GameBuilderWindow : EditorWindow
         Title("🏔 Level", "Shape the ground, paint it, and choose the sky and sunlight.");
 
         Terrain terrain = Find<Terrain>();
-        if (!Box("⛰ The ground", "Shape the ground with brushes, and paint it."))
+        if (!Box("⛰ The ground", "Shape the ground with brushes, and paint it.", true))
         {
             // folded shut
         }
