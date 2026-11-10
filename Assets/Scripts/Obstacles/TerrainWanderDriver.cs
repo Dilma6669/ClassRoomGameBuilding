@@ -5,13 +5,13 @@ public class TerrainWanderDriver : MonoBehaviour, IObstacleMovement
 {
     [Header("Wandering Settings")]
     [ShowAs("How far it wanders"), Tooltip("It walks around inside a circle this big (in metres) round its starting spot.")]
-    [Range(0.1f, 100f)] public float wanderRadius = 6f;
+    [Range(0.1f, 1000f)] public float wanderRadius = 6f;
 
     [Header("Speed Settings")]
     [ShowAs("Slowest speed"), Tooltip("Each walk picks a speed between Slowest and Fastest.")]
-    [Range(0.1f, 20f)] public float minMoveSpeed = 2f;
+    [Range(0.1f, 500f)] public float minMoveSpeed = 2f;
     [ShowAs("Fastest speed"), Tooltip("Each walk picks a speed between Slowest and Fastest.")]
-    [Range(0.1f, 20f)] public float maxMoveSpeed = 5f;
+    [Range(0.1f, 500f)] public float maxMoveSpeed = 5f;
 
     private TerrainObstacle terrainHost;
     private Rigidbody rb;

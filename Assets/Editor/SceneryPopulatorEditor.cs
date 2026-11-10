@@ -41,6 +41,7 @@ public class SceneryPopulatorEditor : Editor
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("sizeRange"), new GUIContent("Size (min, max)"));
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("tiltWithGround"));
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("solid"), new GUIContent("Solid (bump into)"));
+                EditorGUILayout.PropertyField(g.FindPropertyRelative("safeLanding"), new GUIContent("🪂 Landing on them never hurts"));
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     EditorGUILayout.PropertyField(g.FindPropertyRelative("glow"), new GUIContent("💡 Glow"));
@@ -131,6 +132,7 @@ public class SceneryPopulatorEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("maxSlope"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("edgePadding"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("sinkIntoGround"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("placeOnPlatforms"));
         serializedObject.ApplyModifiedProperties();
 
         EditorGUILayout.Space(10);

@@ -35,13 +35,13 @@ public class CustomModel : MonoBehaviour
     public GameObject model;
 
     [Tooltip("Make the model bigger or smaller.")]
-    [Range(0.1f, 5f)] public float size = 1f;
+    [Range(0.1f, 50f)] public float size = 1f;
 
     [Tooltip("Turn the model if it faces the wrong way.")]
     [Range(-180f, 180f)] public float turn = 0f;
 
     [Tooltip("Move the model up or down if it floats above or sinks into the ground.")]
-    [Range(-3f, 3f)] public float raiseLower = 0f;
+    [Range(-50f, 50f)] public float raiseLower = 0f;
 
     [Tooltip("Optional: use the animations from ANOTHER model file with the same skeleton (e.g. a re-skinned zombie using Zombie-model's animations). Leave empty to use this model's own animations.")]
     public GameObject animationsFrom;
@@ -59,7 +59,7 @@ public class CustomModel : MonoBehaviour
     public AnimationClip death;
 
     [Tooltip("Speed up or slow down all animations.")]
-    [Range(0.1f, 3f)] public float animationSpeed = 1f;
+    [Range(0.1f, 10f)] public float animationSpeed = 1f;
 
     // Saved results of fitting the model (so we don't re-measure every frame)
     [SerializeField, HideInInspector] private GameObject builtFrom;

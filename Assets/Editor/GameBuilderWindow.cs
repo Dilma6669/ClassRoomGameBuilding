@@ -36,6 +36,7 @@ public partial class GameBuilderWindow : EditorWindow
     private List<ObstacleBase> obstacles = new List<ObstacleBase>();
     private List<TriggerLogic> triggers = new List<TriggerLogic>();
     private List<Checkpoint> checkpoints = new List<Checkpoint>();
+    private List<Teleporter> teleporters = new List<Teleporter>();
     private List<Material> skyMaterials;
 
     [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle;
@@ -88,6 +89,7 @@ public partial class GameBuilderWindow : EditorWindow
         obstacles = SortByName(FindAll<ObstacleBase>());
         triggers = SortByName(FindAll<TriggerLogic>());
         checkpoints = SortByName(FindAll<Checkpoint>());
+        teleporters = SortByName(FindAll<Teleporter>());
         NameUnnamedObstacles();
 
         // Forget inspectors for things that were deleted
@@ -511,7 +513,7 @@ public partial class GameBuilderWindow : EditorWindow
             EditorGUILayout.Space(4);
             float newHeight = EditorGUILayout.Slider(new GUIContent("New platforms float this high (m)",
                 "How far above the ground new platforms go. Change one afterwards with 'Height above the ground' when it's selected."),
-                ScatterTools.NewPlatformHeight, 0.5f, 30f);
+                ScatterTools.NewPlatformHeight, 0.5f, 500f);
             if (!Mathf.Approximately(newHeight, ScatterTools.NewPlatformHeight)) ScatterTools.NewPlatformHeight = newHeight;
 
             EditorGUILayout.Space(6);
@@ -586,7 +588,7 @@ public partial class GameBuilderWindow : EditorWindow
             }
             EndBox();
 
-            if (Box("✨ Glow & sparkles", "Make it glow, or add sparkles around it."))
+            if (Box("✨ Glow & sparkles", "Make it glow, add sparkles around it, or make it see-through."))
                 DrawGlow(selected.TargetChild != null ? selected.TargetChild.gameObject : null, new Color(0.5f, 0.8f, 1f));
             EndBox();
 
@@ -647,7 +649,7 @@ public partial class GameBuilderWindow : EditorWindow
             float newSize = EditorGUILayout.Slider(new GUIContent("New creatures are this big",
                 "Size of new creatures (and scattered ones). 2 = a zombie about as tall as the player. " +
                 "Change one afterwards with its Object Scale. Pickups aren't changed."),
-                ScatterTools.NewCreatureSize, 0.5f, 6f);
+                ScatterTools.NewCreatureSize, 0.5f, 100f);
             if (!Mathf.Approximately(newSize, ScatterTools.NewCreatureSize)) ScatterTools.NewCreatureSize = newSize;
             EditorGUILayout.LabelField("Tip: the player jumps about 1.7 m, so very tall creatures can only be jumped on from something higher.", EditorStyles.wordWrappedMiniLabel);
 
@@ -899,12 +901,46 @@ public partial class GameBuilderWindow : EditorWindow
             DrawInspector(sparkles);
             if (GUILayout.Button("Remove sparkles")) { Undo.DestroyObjectImmediate(sparkles); GUIUtility.ExitGUI(); }
         }
+        DrawSeeThrough(go);
+    }
+
+    /// <summary>👻 See-through slider: 0% = solid (no SeeThrough component), more = ghostly.</summary>
+    private static void DrawSeeThrough(GameObject go)
+    {
+        if (go == null) return;
+        SeeThrough s = go.GetComponent<SeeThrough>();
+        EditorGUILayout.Space(4);
+        EditorGUI.BeginChangeCheck();
+        float amount = EditorGUILayout.Slider(new GUIContent("👻 See-through (%)",
+            "0 = solid, 50 = half see-through (ghosts, glass, teleporters), 100 = invisible (you still bump into it!)."),
+            s != null ? s.howSeeThrough : 0f, 0f, 100f);
+        if (!EditorGUI.EndChangeCheck()) return;
+        if (amount <= 0f)
+        {
+            if (s != null) { Undo.DestroyObjectImmediate(s); GUIUtility.ExitGUI(); }
+            return;
+        }
+        if (s == null) s = Undo.AddComponent<SeeThrough>(go);
+        else Undo.RecordObject(s, "See-through");
+        s.howSeeThrough = amount;
+        s.Apply();
+        EditorUtility.SetDirty(s);
     }
 
     /// <summary>The scattered scenery piece (tree, rock...) that's selected, if any.</summary>
     private static Transform SelectedSceneryPiece(SceneryPopulator scenery)
     {
         GameObject go = Selection.activeGameObject;
+
+        // A tree standing on a platform: the child of the platform's scenery holder (not a teleporter pad)
+        PlatformSceneryHolder holder = go != null ? go.GetComponentInParent<PlatformSceneryHolder>() : null;
+        if (holder != null && go.transform != holder.transform)
+        {
+            Transform p = go.transform;
+            while (p.parent != holder.transform) p = p.parent;
+            return p.GetComponent<Teleporter>() == null ? p : null;
+        }
+
         Transform root = scenery.transform.Find(SceneryPopulator.ContainerName);
         if (go == null || root == null || !go.transform.IsChildOf(root) || go.transform == root) return null;
 
@@ -1102,6 +1138,10 @@ public partial class GameBuilderWindow : EditorWindow
                 {
                     EditorGUILayout.LabelField("Selected: " + piece.name, EditorStyles.boldLabel);
                     DrawGlow(piece.gameObject, new Color(0.5f, 0.9f, 1f));
+                    SafeLanding safe = piece.GetComponent<SafeLanding>();
+                    bool wantSafe = EditorGUILayout.Toggle(new GUIContent("🪂 Landing on it never hurts", "Falling onto this one never gives fall damage."), safe != null);
+                    if (wantSafe && safe == null) Undo.AddComponent<SafeLanding>(piece.gameObject);
+                    else if (!wantSafe && safe != null) { Undo.DestroyObjectImmediate(safe); GUIUtility.ExitGUI(); }
                 }
                 else
                 {
@@ -1128,6 +1168,59 @@ public partial class GameBuilderWindow : EditorWindow
     // ------------------------------------------------------------------ 💬 Signs & Story
 
     [System.NonSerialized] private TriggerLogic lastTrigger;
+
+    /// <summary>🌀 Teleporters: make a linked pair (two clicks), the list, and the selected pad's settings.</summary>
+    private void DrawTeleporters()
+    {
+        BeginGroup("🌀 Teleporters");
+        EditorGUILayout.HelpBox("Step on one pad and you appear at the other! A pad can go on a platform too (it rides along).", MessageType.None);
+        bool placing = ScenePlacer.IsPlacing && ScenePlacer.What != null && ScenePlacer.What.StartsWith("Teleporter");
+        if (BigButton(placing ? "📍 Click in the Scene… (Esc to stop)" : "🌀 Make a teleporter pair", placing ? new Color(0.6f, 0.85f, 1f) : new Color(0.2f, 0.8f, 0.3f)))
+        {
+            if (placing) ScenePlacer.Cancel();
+            else if (ScenePlacer.ClickToPlace)
+            {
+                ScenePlacer.Begin("Teleporter: the FIRST pad", first =>
+                    ScenePlacer.Begin("Teleporter: the SECOND pad (where it sends you)", second =>
+                    {
+                        TeleporterTools.CreatePair(first, second);
+                        RefreshSceneLists();
+                    }));
+            }
+            else
+            {
+                Vector3 look = ScatterTools.LookPoint();
+                TeleporterTools.CreatePair(look + Vector3.left * 4f, null, look + Vector3.right * 4f, null);
+                RefreshSceneLists();
+            }
+        }
+
+        EditorGUILayout.Space(6);
+        if (Box("📋 Teleporters List", "Click one to change it.", true))
+            InsetList(() => DrawList("teleporters", teleporters, "No teleporters yet.", t => "🌀 " + t.name));
+        EndBox();
+
+        Teleporter pad = SelectedOf<Teleporter>();
+        if (pad != null)
+        {
+            EditorGUILayout.Space(6);
+            DrawNameAndFolder(pad, "teleporters", teleporters, "✏️ Name");
+            if (Box("🌀 Teleporter settings", "Where it sends you, its colour, and what happens when you go through."))
+                DrawInspector(pad, false);
+            EndBox();
+            DrawSeeThrough(pad.gameObject);
+            DrawPosition(pad.transform, pad.name, hit =>
+            {
+                // A new spot: on a platform it rides along, on the ground it stays put
+                Undo.RecordObject(pad.transform, "Move teleporter");
+                PlatformLogic platform = TeleporterTools.PlatformAt(hit);
+                Transform parent = platform != null ? PlatformSceneryHolder.For(platform) : GameObject.Find(TeleporterTools.RootName)?.transform;
+                if (parent != pad.transform.parent) Undo.SetTransformParent(pad.transform, parent, "Move teleporter");
+                pad.transform.position = hit.point;
+            });
+        }
+        EndGroup();
+    }
 
     private void DrawSignsTab()
     {
@@ -1186,6 +1279,8 @@ public partial class GameBuilderWindow : EditorWindow
             EndBox();
         }
         EndGroup();
+
+        DrawTeleporters();
 
         GameSettings settings = GameSettings.Load();
         if (Box("📖 Story, Library & game title", "Fonts, the game's title, the death screen and the Library entries (all levels)."))

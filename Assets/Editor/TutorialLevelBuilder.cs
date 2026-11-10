@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -85,11 +86,15 @@ public static class TutorialLevelBuilder
     public static string BuildTutorialGameMac()
     {
         string root = Directory.GetParent(Application.dataPath).FullName;
-        string[] scenes = File.Exists(ShowcaseLevelBuilder.ScenePath) ? new[] { ScenePath, ShowcaseLevelBuilder.ScenePath } : new[] { ScenePath };
+        string[] scenes = TutorialScenes();
         UnityEditor.Build.Reporting.BuildReport report = GameMenuItems.BuildMacApp(scenes, Path.Combine(root, "Build", "TutorialMac"), "TutorialIsland");
         if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded) return null;
         return MacZip.ZipApp(Path.Combine(root, "Build", "TutorialMac", "TutorialIsland.app"), Path.Combine(root, "Build", "TutorialIsland (Mac).zip"));
     }
+
+    /// <summary>Tutorial Island, then Adventure Park and the bonus Playground Madness level (each Finish sign leads to the next), if they have been built.</summary>
+    public static string[] TutorialScenes() =>
+        new[] { ScenePath, ShowcaseLevelBuilder.ScenePath, MegaLevelBuilder.ScenePath }.Where(File.Exists).ToArray();
 
     /// <summary>Builds a game with ONLY the tutorial level into Build/Tutorial (the class's level order isn't touched).</summary>
     public static UnityEditor.Build.Reporting.BuildReport BuildTutorialGame()
@@ -100,7 +105,7 @@ public static class TutorialLevelBuilder
         BuildPlayerOptions options = new BuildPlayerOptions
         {
             // Tutorial Island first, then Adventure Park (its Finish sign leads there) if it's been built
-            scenes = File.Exists(ShowcaseLevelBuilder.ScenePath) ? new[] { ScenePath, ShowcaseLevelBuilder.ScenePath } : new[] { ScenePath },
+            scenes = TutorialScenes(),
             locationPathName = Path.Combine(TutorialBuildFolder, "TutorialIsland.exe"),
             target = BuildTarget.StandaloneWindows64,
             targetGroup = BuildTargetGroup.Standalone,

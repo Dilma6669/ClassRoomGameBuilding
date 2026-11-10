@@ -67,7 +67,7 @@ public class FallDamage : MonoBehaviour
         }
         else if (!wasGrounded && isGrounded)
         {
-            if (!protectedFall) ProcessLandingDamage(currentFallTimer);
+            if (!protectedFall && !LandedSafely()) ProcessLandingDamage(currentFallTimer);
             currentFallTimer = 0f;
             protectedFall = false;
         }
@@ -75,6 +75,14 @@ public class FallDamage : MonoBehaviour
         wasGrounded = isGrounded;
 #endif
     }
+
+#if HAS_KINEMATIC_CC
+    /// <summary>Landed on a platform, creature, pickup or scenery with 'Landing on it never hurts' ticked?</summary>
+    private bool LandedSafely()
+    {
+        return SafeLanding.IsSafe(motor.GroundingStatus.GroundCollider);
+    }
+#endif
 
     private void ProcessLandingDamage(float fallDuration)
     {

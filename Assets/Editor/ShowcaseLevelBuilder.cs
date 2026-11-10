@@ -79,7 +79,7 @@ public static class ShowcaseLevelBuilder
         try
         {
             // 2. Ground: its own copy, with a wide flat park (room for exhibits on both sides of the path)
-            terrain = TutorialLevelBuilder.CreateTutorialTerrain(TerrainPath, new Rect(Start.x - 50f, Start.z - 25f, 100f, 250f), ParkHeight, newMountainsSeed: 7);
+            terrain = TutorialLevelBuilder.CreateTutorialTerrain(TerrainPath, new Rect(Start.x - 50f, Start.z - 25f, 100f, 285f), ParkHeight, newMountainsSeed: 7);
             signs = new GameObject("Park Signs").transform;
             signMaterial = TutorialLevelBuilder.GetSignMaterial();
             platforms = Object.FindAnyObjectByType<PlatformController>();
@@ -104,6 +104,8 @@ public static class ShowcaseLevelBuilder
             RunawayThings();
             GlowAndEffects();
             MakeItYours();
+            ModelPlatforms();
+            TeleportersAndGhosts();
             Finish();
 
             // 4. Save and add to the build, right after Tutorial Island
@@ -384,11 +386,118 @@ public static class ShowcaseLevelBuilder
             "Give things a Name and put them in a Folder, then drag them in the lists to sort them. Made a mistake? Ctrl+Z!");
     }
 
+    private static void ModelPlatforms()
+    {
+        const string folder = "Model platforms";
+        StationSign(196f, "12. Model platforms",
+            "These platforms are SCENERY MODELS: a giant tree stump and a moving log! Click a platform > Platform Model: drag in any model.\n" +
+            "Creatures walk on its real shape. Trees on platforms: Scenery > Place One, then click the platform. They ride along!", 5f);
+
+        GameObject stump = AssetDatabase.LoadAssetAtPath<GameObject>(TutorialLevelBuilder.NatureFolder + "TreeStump_Moss.fbx");
+        GameObject log = AssetDatabase.LoadAssetAtPath<GameObject>(TutorialLevelBuilder.NatureFolder + "WoodLog_Moss.fbx");
+        GameObject willow = AssetDatabase.LoadAssetAtPath<GameObject>(TutorialLevelBuilder.NatureFolder + "Willow_2.fbx");
+        GameObject bush = AssetDatabase.LoadAssetAtPath<GameObject>(TutorialLevelBuilder.NatureFolder + "BushBerries_1.fbx");
+
+        // A step up, then the stump island (a still platform with the stump model, about 3 m up)
+        PlatformLogic step = ScatterTools.CreatePlatformAt(platforms, At(-9f, 204f, 1f), 2.5f, 2.5f, 0.6f, 0f, null);
+        ScatterTools.SetMovement(step, ScatterTools.PlatformMove.Still, 0f, 1f);
+        Folder(step, folder, "Step Up");
+
+        PlatformLogic island = ScatterTools.CreatePlatformAt(platforms, At(-16f, 206f, 2.2f), 10f, 10f, 1.2f, 0f, stump);
+        ScatterTools.SetMovement(island, ScatterTools.PlatformMove.Still, 0f, 1f);
+        Folder(island, folder, "Tree Stump Island");
+
+        // A long log that moves side to side, with a bush on it
+        PlatformLogic logPlatform = ScatterTools.CreatePlatformAt(platforms, At(-18f, 221f, 2.6f), 11f, 4f, 1f, 90f, log);
+        ScatterTools.SetMovement(logPlatform, ScatterTools.PlatformMove.SideToSide, 6f, 1.2f);
+        Folder(logPlatform, folder, "Moving Log");
+        Physics.SyncTransforms();
+
+        // Scenery standing ON the platforms (the Scenery tab's Place One, clicking the platform)
+        SceneryPopulator scenery = Object.FindAnyObjectByType<SceneryPopulator>();
+        SceneryPopulator.SceneryGroup trees = scenery != null ? scenery.groups.Find(g => g.name == "Trees") : null;
+        if (trees != null)
+        {
+            if (willow != null) scenery.PlaceOnPlatform(trees, willow, island, island.TargetChild.position + new Vector3(-2.5f, 0f, 2f), 1.3f);
+            if (bush != null) scenery.PlaceOnPlatform(trees, bush, logPlatform, logPlatform.TargetChild.position + new Vector3(0f, 0f, 3f), 1.2f);
+        }
+
+        // Creatures scattered onto just these platforms (Creatures & Pickups > Scatter tools)
+        ScatterOnto(island, folder, new CreatureScatter.Group { name = "Stump spiders", kind = CreatureScatter.Kind.Wanderer, howMany = 3,
+            sizeRange = new Vector2(1.2f, 1.4f), speedRange = new Vector2(1f, 1.6f), roamRange = new Vector2(2f, 3f), models = { Model("Spider") },
+            onGround = false, onStillPlatforms = true });
+        ScatterOnto(island, folder, new CreatureScatter.Group { name = "Stump health", kind = CreatureScatter.Kind.Health, howMany = 1, sizeRange = Vector2.one,
+            glow = true, onGround = false, onStillPlatforms = true });
+        ScatterOnto(logPlatform, folder, new CreatureScatter.Group { name = "Log fox", kind = CreatureScatter.Kind.Patroller, howMany = 1,
+            sizeRange = new Vector2(1.6f, 1.6f), speedRange = new Vector2(1f, 1.4f), roamRange = new Vector2(3f, 3f), models = { Model("Fox") },
+            onGround = false, onMovingPlatforms = true });
+    }
+
+    private static void TeleportersAndGhosts()
+    {
+        const string folder = "Teleporters & ghosts";
+        StationSign(214f, "13. Teleporters & see-through",
+            "Step on the glowing pad to TELEPORT up to the ledge! Signs & Story > Make a teleporter pair, then click two spots.\n" +
+            "That zombie is a GHOST and the platform is GLASS: click anything > Glow & sparkles > See-through (%).");
+
+        // A high ledge you can only reach by teleporting
+        PlatformLogic ledge = ScatterTools.CreatePlatformAt(platforms, At(16f, 228f, 11f), 7f, 7f, 1f, 0f, null);
+        ScatterTools.SetMovement(ledge, ScatterTools.PlatformMove.Still, 0f, 1f);
+        Folder(ledge, folder, "Teleport Ledge");
+        Physics.SyncTransforms();
+        float ledgeTop = TutorialLevelBuilder.TopOf(ledge.gameObject);
+        Vector3 onLedge = ledge.TargetChild.position;
+        onLedge.y = ledgeTop;
+
+        Teleporter pad = TeleporterTools.CreatePair(At(8f, 214f), null, onLedge + new Vector3(-1.5f, 0f, -1.5f), ledge);
+        if (pad != null)
+        {
+            pad.name = "Teleporter Up";
+            pad.sendsYouTo.name = "Teleporter Down";
+            Folder(pad, folder);
+            Folder(pad.sendsYouTo, folder);
+        }
+        Pickup(SpawnOnPlatform(ledge, ObstacleBase.PayloadType.JumpBuff, ObstacleSpawnType.Static, 2, 8f, true), folder, "Ledge Super Jump");
+
+        // A ghost zombie and a glass platform
+        ObstacleBase ghost = SpawnOnGround(At(-10f, 228f), ObstacleBase.PayloadType.Damage, ObstacleSpawnType.Wander, 10, 5f, false, Model("Zombie"), 2f);
+        if (ghost != null)
+        {
+            SetWander(ghost, 4f, 1f, 1.5f);
+            SeeThrough s = ghost.gameObject.AddComponent<SeeThrough>();
+            s.howSeeThrough = 60f;
+            AddSparkles(ghost.gameObject, AmbientSparkles.Style.Shimmer, new Color(0.7f, 0.9f, 1f));
+        }
+        Folder(ghost, folder, "Ghost Zombie");
+
+        PlatformLogic glass = Quick(ScatterTools.PlatformMove.Still, 6f, 230f, 1.2f);
+        glass.TargetChild.gameObject.AddComponent<SeeThrough>().howSeeThrough = 70f;
+        Folder(glass, folder, "Glass Platform");
+    }
+
     private static void Finish()
     {
-        StationSign(196f, "12. Finish!",
+        GameObject finish = TutorialLevelBuilder.Sign(signs, signMaterial, At(-4f, 242f), At(0f, 242f, 1.5f), "14. Finish!",
             "You finished ADVENTURE PARK! Now make your OWN level: Game Builder > Levels & Build > New empty level.\n" +
-            "Want another go? Esc > Restart Level.");
+            "Next: the BONUS level, PLAYGROUND MADNESS, where every slider is turned up to the max...");
+        Folder(finish.GetComponent<TriggerLogic>(), SignFolder);
+        TriggerLogic t = finish.GetComponent<TriggerLogic>();
+        t.changeScene = true;
+        t.sceneToLoad = MegaLevelBuilder.SceneName;
+    }
+
+    /// <summary>Creature scatter (the Creatures & Pickups tab's tool) aimed at just one platform.</summary>
+    private static void ScatterOnto(PlatformLogic platform, string folder, CreatureScatter.Group group)
+    {
+        CreatureScatter cs = terrain.GetComponent<CreatureScatter>();
+        if (cs == null) cs = terrain.gameObject.AddComponent<CreatureScatter>();
+        ScatterPlace oldPlace = cs.place;
+        cs.place = new ScatterPlace { area = ScatterArea.AroundSceneView, areaSize = 2f, spacing = 1.5f, keepAwayFromStart = 0f };
+        HashSet<ObstacleBase> before = new HashSet<ObstacleBase>(Object.FindObjectsByType<ObstacleBase>(FindObjectsSortMode.None));
+        ScatterTools.PlaceAt = platform.TargetChild.position;
+        try { ScatterTools.ScatterCreatures(cs, group); }
+        finally { ScatterTools.PlaceAt = null; cs.place = oldPlace; }
+        foreach (ObstacleBase o in Object.FindObjectsByType<ObstacleBase>(FindObjectsSortMode.None).Where(o => !before.Contains(o))) Folder(o, folder);
     }
 
     // ------------------------------------------------------------------ Scenery
@@ -411,7 +520,7 @@ public static class ShowcaseLevelBuilder
 
         // Keep the park itself clear
         Transform root = scenery.transform.Find(SceneryPopulator.ContainerName);
-        Rect park = new Rect(Start.x - 46f, Start.z - 18f, 92f, 238f);
+        Rect park = new Rect(Start.x - 46f, Start.z - 18f, 92f, 273f);
         if (root != null)
         {
             List<GameObject> remove = new List<GameObject>();
@@ -422,7 +531,7 @@ public static class ShowcaseLevelBuilder
         }
 
         // A row of trees down each side, and flowers by the gate
-        for (float z = -10f; z <= 205f; z += 12f)
+        for (float z = -10f; z <= 240f; z += 12f)
         {
             if (trees != null)
             {

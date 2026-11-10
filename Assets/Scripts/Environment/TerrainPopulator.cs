@@ -41,17 +41,17 @@ public class TerrainPopulator : MonoBehaviour
     [System.Serializable]
     public class BaseObstacleSettings
     {
-        [Range(0.1f, 50f)] public float objectScale = 1f;
+        [Range(0.1f, 200f)] public float objectScale = 1f;
         [Range(0f, 360f)] public float initialYRotation = 0f;
         public ObstacleBase.PayloadType payloadType = ObstacleBase.PayloadType.Damage;
-        [Range(1, 100f)] public int payloadAmount = 10;
-        [Range(1f, 60f)] public float buffDuration = 5f;
+        [Range(1, 1000f)] public int payloadAmount = 10;
+        [Range(1f, 600f)] public float buffDuration = 5f;
         public bool destroyOnTrigger = false;
 
         [Header("Bounce Settings")]
         public bool isBouncy = false;
         [Range(0.5f, 5f)] public float triggerRadius = 0.5f;
-        [Range(5f, 50f)] public float launchForce = 25f;
+        [Range(5f, 500f)] public float launchForce = 25f;
         [Range(0f, 1f)] public float upwardBias = 0.5f;
         [Range(0f, 1f)] public float momentumTransfer = 0.3f;
     }

@@ -25,13 +25,15 @@ public class SceneryPopulator : MonoBehaviour
         [Tooltip("Models to pick from at random.")]
         public List<GameObject> models = new List<GameObject>();
         [Tooltip("How many to scatter each time.")]
-        [Range(1, 2000)] public int howMany = 30;
+        [Range(1, 5000)] public int howMany = 30;
         [Tooltip("Random size range (1 = the model's normal size).")]
         public Vector2 sizeRange = new Vector2(0.8f, 1.3f);
         [Tooltip("Tilt with the ground (good for rocks; off for trees so they grow straight up).")]
         public bool tiltWithGround = false;
         [Tooltip("The player bumps into these (on), or walks straight through them (off, good for grass).")]
         public bool solid = true;
+        [Tooltip("Landing on these never hurts, however far you fell (giant mushrooms, bouncy trees...).")]
+        public bool safeLanding = false;
 
         [Tooltip("Make these glow (great for crystals, mushrooms or lanterns). Lots of glowing things can slow the game down.")]
         public bool glow = false;
@@ -57,6 +59,8 @@ public class SceneryPopulator : MonoBehaviour
     [Range(0f, 100f)] public float edgePadding = 10f;
     [ShowAs("Push into the ground"), Tooltip("Sink a little into the ground so nothing looks like it's floating on bumpy ground.")]
     [Range(0f, 2f)] public float sinkIntoGround = 0.1f;
+    [ShowAs("Click a platform: put it ON the platform"), Tooltip("Place One: clicking a platform stands the tree (or rock) on that platform, and it moves and spins with it.\nOff: it goes on the ground under the platform instead.")]
+    public bool placeOnPlatforms = true;
 
     private void Reset()
     {
@@ -188,6 +192,12 @@ public class SceneryPopulator : MonoBehaviour
 
         Vector3 point = clicked.point;
         Vector3 normal = clicked.normal;
+
+        // Clicked a platform? Stand it on the platform, so it rides along
+        PlatformLogic platform = clicked.collider != null ? clicked.collider.GetComponentInParent<PlatformLogic>() : null;
+        if (placeOnPlatforms && platform != null && platform.TargetChild != null)
+            return PlaceOnPlatform(group, models[Random.Range(0, models.Count)], platform, point);
+
         if (!(clicked.collider is TerrainCollider))
         {
             Terrain terrain = FindTerrain();
@@ -201,9 +211,38 @@ public class SceneryPopulator : MonoBehaviour
         return PlaceAt(group, models[Random.Range(0, models.Count)], point, normal, "Place Scenery");
     }
 
-    private GameObject PlaceAt(SceneryGroup group, GameObject model, Vector3 groundPoint, Vector3 groundNormal, string undoName)
+    /// <summary>
+    /// Stands one model (null = a random one from the group) on a platform at 'point' (or on the platform's surface under it).
+    /// It's put in the platform's scenery holder, so it moves, spins and floats with the platform.
+    /// </summary>
+    public GameObject PlaceOnPlatform(SceneryGroup group, GameObject model, PlatformLogic platform, Vector3 point, float size = 0f)
     {
-        Transform container = GetContainer(group);
+        if (model == null)
+        {
+            List<GameObject> models = group.models.FindAll(m => m != null);
+            if (models.Count == 0) return null;
+            model = models[Random.Range(0, models.Count)];
+        }
+        Transform holder = PlatformSceneryHolder.For(platform);
+        if (holder == null) return null;
+
+        // The platform's surface at this spot (the top of a rock model, or the cylinder's top)
+        Physics.SyncTransforms();
+        Vector3 surface = point;
+        float best = float.NegativeInfinity;
+        foreach (RaycastHit hit in Physics.RaycastAll(point + Vector3.up * 300f, Vector3.down, 600f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (!hit.transform.IsChildOf(platform.TargetChild) || hit.transform.IsChildOf(holder)) continue;
+            if (hit.point.y > best) { best = hit.point.y; surface = hit.point; }
+        }
+
+        GameObject go = PlaceAt(group, model, surface, Vector3.up, "Place Scenery on Platform", holder, size);
+        return go;
+    }
+
+    private GameObject PlaceAt(SceneryGroup group, GameObject model, Vector3 groundPoint, Vector3 groundNormal, string undoName, Transform onPlatform = null, float size = 0f)
+    {
+        Transform container = onPlatform != null ? onPlatform : GetContainer(group);
 
         // The model sits inside a holder that we size and turn, so the model keeps its own built-in
         // rotation and scale (FBX files from Blender have a 90 degree turn and x100 scale on them)
@@ -217,7 +256,7 @@ public class SceneryPopulator : MonoBehaviour
         Quaternion turn = randomTurn ? Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) : Quaternion.identity;
         Quaternion tilt = group.tiltWithGround ? Quaternion.FromToRotation(Vector3.up, groundNormal) : Quaternion.identity;
         go.transform.rotation = tilt * turn;
-        go.transform.localScale = Vector3.one * Random.Range(Mathf.Min(group.sizeRange.x, group.sizeRange.y), Mathf.Max(group.sizeRange.x, group.sizeRange.y));
+        go.transform.localScale = Vector3.one * (size > 0f ? size : Random.Range(Mathf.Min(group.sizeRange.x, group.sizeRange.y), Mathf.Max(group.sizeRange.x, group.sizeRange.y)));
 
         // Stand the bottom of the model on the ground
         go.transform.position = groundPoint;
@@ -242,7 +281,9 @@ public class SceneryPopulator : MonoBehaviour
             }
         }
 
-        GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+        // Static = merged and never moves (scenery on a platform has to move with it)
+        if (onPlatform == null) GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic);
+        if (group.safeLanding) go.AddComponent<SafeLanding>();
         if (group.glow) AddGlow(go, group);
         if (group.sparkles) AddSparkles(go, group);
         Undo.RegisterCreatedObjectUndo(go, undoName);

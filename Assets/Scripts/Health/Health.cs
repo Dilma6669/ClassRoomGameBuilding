@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 
 public class Health : MonoBehaviour, IDamagable
 {
-    [Range(10f, 500f)][SerializeField] private int maxHealth = 100;
+    [Range(10f, 10000f)][SerializeField] private int maxHealth = 100;
     private int currentHealth;
     
     private bool isInvincible = false;

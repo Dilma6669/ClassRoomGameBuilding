@@ -29,13 +29,13 @@ public class AmbientSparkles : MonoBehaviour
     [Tooltip("A second colour: each sparkle is somewhere between the two.")]
     public Color secondColour = Color.white;
     [Tooltip("How many sparkles each second.")]
-    [Range(1f, 100f)] public float amount = 20f;
+    [Range(1f, 500f)] public float amount = 20f;
     [Tooltip("How big the sparkles are (1 = normal).")]
-    [Range(0.3f, 4f)] public float size = 1f;
+    [Range(0.3f, 10f)] public float size = 1f;
     [Tooltip("Fit the sparkle area to the object's size automatically.")]
     public bool fitToObject = true;
     [Tooltip("How wide the sparkle area is (metres), when not fitting automatically.")]
-    [Range(0.2f, 20f)] public float areaSize = 1.5f;
+    [Range(0.2f, 200f)] public float areaSize = 1.5f;
 
     private enum Place { Top, Sides, Bottom, Centre }
 

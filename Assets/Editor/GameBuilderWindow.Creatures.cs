@@ -95,7 +95,7 @@ public partial class GameBuilderWindow
         EditorGUI.BeginChangeCheck();
         float wanted = EditorGUILayout.Slider(new GUIContent("⬆ Height (m)",
             "How high this platform floats above the ground under it. (A moving platform: where it starts.)"),
-            height, 0f, Mathf.Max(40f, height));
+            height, 0f, Mathf.Max(500f, height));
         if (!EditorGUI.EndChangeCheck()) return;
 
         // Its height is 'Offset Y' (relative to the platform's holder); set it through Unity so Undo and OnValidate work

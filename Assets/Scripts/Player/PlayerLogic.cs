@@ -9,14 +9,14 @@ using KinematicCharacterController.Examples;
 public class PlayerLogic : MonoBehaviour
 {
     [Header("Movement Controls")]
-    [Range(1f, 300f)] public float moveSpeed = 10f;
+    [Range(1f, 1000f)] public float moveSpeed = 10f;
     public bool enableSprint = true;
     public KeyCode sprintKey = KeyCode.LeftShift;
     [ShowAs("Sprint speed (× normal)"), Tooltip("How much faster you go while holding the sprint key. 2 = twice as fast.")]
-    [Range(1f, 4f)] public float sprintMultiplier = 1.8f;
+    [Range(1f, 20f)] public float sprintMultiplier = 1.8f;
 
     [Header("Stamina Settings")]
-    [Range(10f, 200f)] public float maxStamina = 100f;
+    [Range(10f, 10000f)] public float maxStamina = 100f;
     [ShowAs("Stamina used per second"), Tooltip("How much stamina sprinting uses up each second.")]
     [Range(5f, 100f)] public float staminaDrainRate = 25f;
     [ShowAs("Stamina refill speed"), Tooltip("How much stamina comes back each second after you stop sprinting.")]
@@ -27,13 +27,13 @@ public class PlayerLogic : MonoBehaviour
     [HideInInspector] public StaminaHUD staminaHUD;
 
     [Header("Jump Controls")]
-    [Range(1f, 300f)] public float jumpHeight = 10f;
+    [Range(1f, 1000f)] public float jumpHeight = 10f;
 
     [ShowAs("Forward push when jumping"), Tooltip("An extra push forwards when you jump while moving.")]
-    [Range(0f, 20f)] public float jumpForwardBoost = 2f;
+    [Range(0f, 200f)] public float jumpForwardBoost = 2f;
 
     [ShowAs("Steering in the air"), Tooltip("How well you can change direction while you're in the air.")]
-    [Range(0f, 50f)] public float airSteerSpeed = 15f;
+    [Range(0f, 200f)] public float airSteerSpeed = 15f;
 
 #if HAS_KINEMATIC_CC
     private ExampleCharacterController characterController;

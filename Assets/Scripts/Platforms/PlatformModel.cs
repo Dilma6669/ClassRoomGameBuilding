@@ -28,13 +28,13 @@ public class PlatformModel : MonoBehaviour
     public bool keepProportions = true;
 
     [Tooltip("Make the model bigger or smaller.")]
-    [Range(0.1f, 5f)] public float size = 1f;
+    [Range(0.1f, 50f)] public float size = 1f;
 
     [Tooltip("Turn the model around.")]
     [Range(-180f, 180f)] public float turn = 0f;
 
     [Tooltip("Move the model up or down. By default the top of the model sits where the top of the cylinder was.")]
-    [Range(-20f, 20f)] public float raiseLower = 0f;
+    [Range(-200f, 200f)] public float raiseLower = 0f;
 
     [SerializeField, HideInInspector] private GameObject builtFrom;
     [SerializeField, HideInInspector] private Transform holder;
@@ -222,7 +222,7 @@ public class PlatformModel : MonoBehaviour
     {
         for (Transform p = t; p != null && p != target; p = p.parent)
         {
-            if (p.name == HolderName) return true;
+            if (p.name == HolderName || p.name == PlatformSceneryHolder.HolderName) return true; // the model, or scenery standing on the platform
         }
         return false;
     }

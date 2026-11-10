@@ -77,6 +77,7 @@ public static class ScatterTools
         if (changed && type == PlatformLogic.PlatformType.Bouncy)
         {
             if (p.landEffect == Sparkles.Effect.None) p.landEffect = Sparkles.Effect.Ring;
+            p.safeLanding = true; // bounce from one to the next without getting hurt
             p.effectColour = PlatformLogic.BouncyColour;
         }
         else if (changed && type == PlatformLogic.PlatformType.Crumbling)
@@ -176,7 +177,7 @@ public static class ScatterTools
 
         p.moveDistance = (move == PlatformMove.SideToSide || move == PlatformMove.UpAndDown) ? distance : 0f;
         p.moveSpeed = Mathf.Max(0.1f, speed);
-        p.rotationSpeedY = 25f * speed * (Random.value < 0.5f ? -1f : 1f);
+        p.rotationSpeedY = Mathf.Min(3600f, 25f * speed) * (Random.value < 0.5f ? -1f : 1f);
         p.scaleSpeed = Mathf.Max(0.3f, speed * 0.6f);
         p.minScale = 0.5f;
         p.maxScale = 1.3f;
@@ -341,6 +342,7 @@ public static class ScatterTools
             made.name = KindName(g.kind);
             if (IsCreature(g.kind)) made.jumpsToDefeat = g.jumpsToDefeat;
             if (g.kind == CreatureScatter.Kind.BounceBall) made.upwardBias = 0.25f; // fly off at different angles
+            if (made is TerrainObstacle flyer && (g.flyHeightRange.x > 0f || g.flyHeightRange.y > 0f)) SetFlyHeight(flyer, RandomIn(g.flyHeightRange));
             if (g.glow) AddGlow(made.gameObject, Sparkles.ColourFor(made.payloadType));
             Tag(made.gameObject, CreatureGroupId(g));
             taken.Add(made.transform.position);
@@ -358,7 +360,7 @@ public static class ScatterTools
 
         // Borrow the spawner's settings for this one, then put them back
         string saved = JsonUtility.ToJson(spawner);
-        spawner.scatterObstacleType = Movement(g.kind);
+        spawner.scatterObstacleType = Movement(g);
         ApplyKind(spawner.baseSettings, g);
         spawner.wanderSettings.wanderRadius = RandomIn(g.roamRange);
         spawner.wanderSettings.minMoveSpeed = Mathf.Min(g.speedRange.x, g.speedRange.y);
@@ -388,7 +390,7 @@ public static class ScatterTools
         HashSet<ObstacleBase> before = new HashSet<ObstacleBase>(Object.FindObjectsByType<ObstacleBase>(FindObjectsInactive.Include, FindObjectsSortMode.None));
 
         string saved = JsonUtility.ToJson(spawner);
-        spawner.scatterObstacleType = Movement(g.kind);
+        spawner.scatterObstacleType = Movement(g);
         ApplyKind(spawner.baseSettings, g);
         spawner.wanderSettings.wanderRadius = RandomIn(g.roamRange);
         spawner.wanderSettings.minMoveSpeed = Mathf.Min(g.speedRange.x, g.speedRange.y);
@@ -462,6 +464,18 @@ public static class ScatterTools
             default: payload = ObstacleBase.PayloadType.Damage; usedUp = false; break; // creatures
         }
     }
+
+    /// <summary>Ground creatures and pickups: float (or fly) this high above the ground. Moves the model and hit zone up straight away.</summary>
+    public static void SetFlyHeight(TerrainObstacle o, float metres)
+    {
+        o.heightOffset = metres;
+        o.ApplyVisualHeightOffset();
+        o.UpdateHitZone(true);
+        EditorUtility.SetDirty(o);
+    }
+
+    private static ObstacleSpawnType Movement(CreatureScatter.Group g) =>
+        !IsCreature(g.kind) && g.pickupsWander ? ObstacleSpawnType.Wander : Movement(g.kind);
 
     private static ObstacleSpawnType Movement(CreatureScatter.Kind kind)
     {

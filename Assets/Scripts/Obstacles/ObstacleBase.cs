@@ -47,7 +47,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
         if (o != null && obstacle.name.StartsWith("ObstacleLogic")) obstacle.name = o.KindName();
     }
 
-    [Range(0.1f, 50f)] // shown in the 📐 Transform settings box
+    [Range(0.1f, 200f)] // shown in the 📐 Transform settings box
     public float objectScale = 1f;
     [Tooltip("Automatically lift the shape so it sits ON the ground instead of half inside it.")]
     public bool sitOnGround = true;
@@ -55,21 +55,23 @@ public abstract partial class ObstacleBase : MonoBehaviour
     [Range(0f, 360f)] public float initialYRotation = 0f;
     
     public PayloadType payloadType = PayloadType.Damage; // shown in the ✋ When you touch it box
-    [Range(1, 100f)] public int payloadAmount = 10;
-    [Range(1f, 60f)] public float buffDuration = 5f;
+    [Range(1, 1000f)] public int payloadAmount = 10;
+    [Range(1f, 600f)] public float buffDuration = 5f;
     public bool destroyOnTrigger = false;
 
     public bool isBouncy = false; // shown in the 🏀 Bounce settings box
     [Range(0.5f, 5f)] public float triggerRadius = 0.5f;
-    [Range(5f, 50f)] public float launchForce = 25f;
+    [Range(5f, 500f)] public float launchForce = 25f;
     [Range(0f, 1f)] public float upwardBias = 0.5f;
     [Range(0f, 1f)] public float momentumTransfer = 0.3f;
+    [Tooltip("Landing on it never hurts, however far you fell (shown in the 🏀 Bounce box).")]
+    public bool safeLanding = false;
 
     [Header("🦶 Jump On Top (creatures only)")]
     [Tooltip("How many times the player must land on this creature's head to defeat it. 0 = it can't be beaten (it hurts even from above).")]
-    [Range(0, 10)] public int jumpsToDefeat = 1;
+    [Range(0, 100)] public int jumpsToDefeat = 1;
     [Tooltip("How high the player bounces off after landing on its head.")]
-    [Range(5f, 30f)] public float stompBounce = 12f;
+    [Range(5f, 300f)] public float stompBounce = 12f;
 
     [Header("Effects (when picked up or beaten)")]
     [Tooltip("A burst of sparkles when it's picked up or defeated.")]
@@ -81,9 +83,9 @@ public abstract partial class ObstacleBase : MonoBehaviour
     public bool customSparkleColour = false;
     public Color sparkleColour = Color.white;
     [Tooltip("How many sparkles (1 = normal).")]
-    [Range(0.2f, 5f)] public float sparkleAmount = 1f;
+    [Range(0.2f, 20f)] public float sparkleAmount = 1f;
     [Tooltip("How big the sparkles are (1 = normal).")]
-    [Range(0.3f, 4f)] public float sparkleSize = 1f;
+    [Range(0.3f, 10f)] public float sparkleSize = 1f;
 
     private int jumpsTaken;
     private bool defeated;

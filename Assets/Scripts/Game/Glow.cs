@@ -13,9 +13,9 @@ public class Glow : MonoBehaviour
     [Tooltip("The glow colour.")]
     public Color colour = new Color(1f, 0.85f, 0.3f);
     [Tooltip("How bright the glow is.")]
-    [Range(0.2f, 4f)] public float strength = 1.5f;
+    [Range(0.2f, 20f)] public float strength = 1.5f;
     [Tooltip("How far the light spreads around it (metres).")]
-    [Range(1f, 20f)] public float lightRange = 4f;
+    [Range(1f, 200f)] public float lightRange = 4f;
     [Tooltip("Gently get brighter and dimmer.")]
     public bool pulse = true;
     [Tooltip("How many pulses each second (1 = one pulse every second, 0.5 = one every two seconds).")]

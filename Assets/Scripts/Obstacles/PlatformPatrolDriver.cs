@@ -5,13 +5,13 @@ public class PlatformPatrolDriver : MonoBehaviour, IObstacleMovement, IObstacleA
 {
     [Header("Patrol Settings")]
     [ShowAs("Patrol distance"), Tooltip("How far it walks back and forth (in metres).")]
-    [Range(0.1f, 100f)] public float moveDistance = 3f;
+    [Range(0.1f, 1000f)] public float moveDistance = 3f;
 
     [Header("Speed Settings")]
     [ShowAs("Slowest speed"), Tooltip("Each walk picks a speed between Slowest and Fastest.")]
-    [Range(0.1f, 20f)] public float minMoveSpeed = 2f;
+    [Range(0.1f, 500f)] public float minMoveSpeed = 2f;
     [ShowAs("Fastest speed"), Tooltip("Each walk picks a speed between Slowest and Fastest.")]
-    [Range(0.1f, 20f)] public float maxMoveSpeed = 5f;
+    [Range(0.1f, 500f)] public float maxMoveSpeed = 5f;
 
     private PlatformObstacle platformHost;
     private Vector3 initialPlatformLocalPosition;

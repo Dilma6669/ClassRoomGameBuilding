@@ -52,7 +52,7 @@ public class TriggerLogic : MonoBehaviour
     [HideInInspector] public string sceneToLoad = "";
 
     [Header("Sign zone")]
-    [Range(0.5f, 20f)] public float size = 3f;
+    [Range(0.5f, 200f)] public float size = 3f;
 
     [Header("Where the zone is")]
     [Range(-500f, 500f)] public float offsetX = 0f;

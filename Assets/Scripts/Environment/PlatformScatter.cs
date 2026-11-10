@@ -5,7 +5,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class PlatformScatter : MonoBehaviour
 {
-    [Range(1, 200)] public int howMany = 15;
+    [Range(1, 1000)] public int howMany = 15;
     [Tooltip("Random width and length (metres).")]
     public Vector2 sizeRange = new Vector2(2.5f, 5f);
     [Tooltip("Random thickness (metres).")]

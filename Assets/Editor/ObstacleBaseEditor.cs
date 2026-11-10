@@ -22,7 +22,7 @@ public class ObstacleBaseEditor : Editor
         "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
         "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
         "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "showPickupMessage", "pickupMessage", "speedBoostFreeSprint", "superJumpNoFallDamage", // ✋ When you touch it box
-        "isBouncy", "launchForce", "upwardBias", "momentumTransfer", // 🏀 Bounce settings box
+        "isBouncy", "launchForce", "upwardBias", "momentumTransfer", "safeLanding", // 🏀 Bounce settings box
     };
 
     [System.NonSerialized] private static GUIStyle boxTitle;
@@ -148,6 +148,7 @@ public class ObstacleBaseEditor : Editor
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("upwardBias"), new GUIContent("Straight up (0-1)", "0 = you fly off at wild angles, depending on where you hit it. 1 = always straight up."));
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("momentumTransfer"), new GUIContent("Keep your speed (0-1)", "How much of your running speed you keep when you bounce."));
             }
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("safeLanding"), new GUIContent("🪂 Landing on it never hurts", "Falling onto it never gives fall damage, however far you fell."));
         }
         EndBox();
 

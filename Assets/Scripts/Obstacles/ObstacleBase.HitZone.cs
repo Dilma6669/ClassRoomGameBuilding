@@ -29,7 +29,7 @@ public abstract partial class ObstacleBase
     [Tooltip("How tall the hit zone is (at Object Scale 1).")]
     [Min(0.05f)] public float hitZoneHeight = 1f;
     [Tooltip("How far past its sides the player gets hurt (or picks it up), in metres. A creature's top never hurts, so you can land on it. Bounce balls and pickups also reach this far above their top, so landing on one launches you or picks it up.")]
-    [Range(0f, 1.5f)] public float touchDistance = 0.3f;
+    [Range(0f, 20f)] public float touchDistance = 0.3f;
 
     // Where the zone sits (bottom centre, at Object Scale 1). Set by the automatic fit.
     [SerializeField, HideInInspector] private Vector3 hitZoneBottom = Vector3.zero;

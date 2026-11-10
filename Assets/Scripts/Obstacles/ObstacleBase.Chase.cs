@@ -10,11 +10,11 @@ public abstract partial class ObstacleBase
     [Tooltip("Run at the player when they come close.")]
     public bool chasePlayer = false;
     [Tooltip("How close the player must be (in metres) before it starts chasing.")]
-    [Range(1f, 50f)] public float chaseStartDistance = 8f;
+    [Range(1f, 500f)] public float chaseStartDistance = 8f;
     [Tooltip("It gives up when the player is this far (in metres) from where the creature started, then walks home.")]
-    [Range(2f, 100f)] public float chaseGiveUpDistance = 20f;
+    [Range(2f, 1000f)] public float chaseGiveUpDistance = 20f;
     [Tooltip("How fast it runs while chasing.")]
-    [Range(0.5f, 20f)] public float chaseSpeed = 4f;
+    [Range(0.5f, 500f)] public float chaseSpeed = 4f;
 
     private enum ChaseState { Off, Chasing, GoingHome }
     private ChaseState chaseState;

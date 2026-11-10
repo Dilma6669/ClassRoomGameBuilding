@@ -14,17 +14,21 @@ public class CreatureScatter : MonoBehaviour
         [Tooltip("Untick to leave this group out when you click Scatter All.")]
         public bool include = true;
         public Kind kind = Kind.Wanderer;
-        [Range(1, 300)] public int howMany = 10;
+        [Range(1, 2000)] public int howMany = 10;
         [Tooltip("Random size (1 = normal size).")]
         public Vector2 sizeRange = new Vector2(0.8f, 1.3f);
         [Tooltip("Random speed for creatures that move.")]
         public Vector2 speedRange = new Vector2(2f, 5f);
         [Tooltip("How far wanderers roam, or how far patrollers walk (metres).")]
         public Vector2 roamRange = new Vector2(4f, 10f);
+        [Tooltip("Ground ones float (or fly) this high above the ground, in metres. 0 = on the ground. Great for dragons and birds!")]
+        public Vector2 flyHeightRange = Vector2.zero;
+        [Tooltip("Pickups and bounce balls: run around (wander) instead of staying still. Catch them if you can!")]
+        public bool pickupsWander = false;
         [Tooltip("3D models to pick from at random. Leave empty to use the normal look.")]
         public List<GameObject> models = new List<GameObject>();
         [Tooltip("Creatures: how many times the player must jump on its head to beat it. 0 = can't be beaten.")]
-        [Range(0, 10)] public int jumpsToDefeat = 1;
+        [Range(0, 100)] public int jumpsToDefeat = 1;
         [Tooltip("Make them glow.")]
         public bool glow = false;
 

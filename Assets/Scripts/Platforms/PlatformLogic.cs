@@ -32,17 +32,17 @@ public class PlatformLogic : MonoBehaviour
     // Movement Settings
     public InitialDirection initialDirection = InitialDirection.Forward;
     [Range(0f, 1000f)] public float moveDistance = 0f;
-    [Range(0.1f, 100f)] public float moveSpeed = 2f;
+    [Range(0.1f, 1000f)] public float moveSpeed = 2f;
 
     // Rotation Settings
-    [Range(-500f, 500f)]
+    [Range(-3600f, 3600f)]
     [Tooltip("Degrees per second to rotate around the Y axis.")]
     public float rotationSpeedY = 90f;
 
     // Scale Settings (X & Z only)
     [Range(0.1f, 100f)] public float scaleSpeed = 2f;
-    [Range(0.1f, 10f)] public float minScale = 0.5f;
-    [Range(0.1f, 10f)] public float maxScale = 1.5f;
+    [Range(0.1f, 50f)] public float minScale = 0.5f;
+    [Range(0.1f, 50f)] public float maxScale = 1.5f;
 
     public enum PlatformType { Normal, Crumbling, Bouncy }
 
@@ -50,11 +50,14 @@ public class PlatformLogic : MonoBehaviour
     [Tooltip("Normal, Crumbling (falls soon after you stand on it), or Bouncy (launches you up).")]
     public PlatformType platformType = PlatformType.Normal;
     [Tooltip("Seconds of shaking before it falls.")]
-    [Range(0.2f, 5f)] public float crumbleAfter = 2f;
+    [Range(0.2f, 60f)] public float crumbleAfter = 2f;
     [Tooltip("Seconds until it comes back. 0 = gone for good.")]
-    [Range(0f, 20f)] public float comeBackAfter = 3f;
+    [Range(0f, 300f)] public float comeBackAfter = 3f;
     [Tooltip("How high it launches you.")]
-    [Range(5f, 50f)] public float bounceStrength = 20f;
+    [Range(5f, 500f)] public float bounceStrength = 20f;
+    [Tooltip("Landing on it never hurts, however far you fell. Bouncy platforms have it on, so you can bounce from one to the next.")]
+    [ShowAs("🪂 Landing on it never hurts")]
+    public bool safeLanding = false;
     [Tooltip("Colour it so players can tell it's special.")]
     public bool colourIt = true;
 
@@ -66,9 +69,9 @@ public class PlatformLogic : MonoBehaviour
     [Tooltip("The sparkles' colour.")]
     public Color effectColour = new Color(1f, 0.85f, 0.5f);
     [Tooltip("How many sparkles (1 = normal).")]
-    [Range(0.2f, 5f)] public float effectAmount = 1f;
+    [Range(0.2f, 20f)] public float effectAmount = 1f;
     [Tooltip("How big the sparkles are (1 = normal).")]
-    [Range(0.3f, 4f)] public float effectSize = 1f;
+    [Range(0.3f, 10f)] public float effectSize = 1f;
     [Tooltip("Crumbling: flash while it shakes, so players can count down to it breaking.")]
     public bool warningFlash = true;
     [Tooltip("Seconds between flashes (1 = one flash every second).")]
@@ -203,8 +206,10 @@ public class PlatformLogic : MonoBehaviour
         if (tintBlock == null) tintBlock = new MaterialPropertyBlock();
 
         Color colour = platformType == PlatformType.Bouncy ? BouncyColour : CrumblingColour;
+        colour.a = SeeThrough.AlphaFor(target);
         foreach (Renderer r in target.GetComponentsInChildren<Renderer>(true))
         {
+            if (r.GetComponentInParent<PlatformSceneryHolder>(true) != null) continue; // trees on it keep their own colours
             if (!wantTint) { r.SetPropertyBlock(null); continue; }
             r.GetPropertyBlock(tintBlock);
             tintBlock.SetColor("_Color", colour);

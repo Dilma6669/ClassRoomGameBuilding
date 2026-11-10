@@ -79,9 +79,9 @@ public class PlatformScatterEditor : Editor
         PlatformScatter s = (PlatformScatter)target;
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("howMany"), new GUIContent("How many"));
-        ScatterGUI.Range(serializedObject.FindProperty("sizeRange"), "Size (metres)", 0.5f, 50f);
-        ScatterGUI.Range(serializedObject.FindProperty("thicknessRange"), "Thickness", 0.2f, 10f);
-        ScatterGUI.Range(serializedObject.FindProperty("heightRange"), "Height above ground", 0f, 100f);
+        ScatterGUI.Range(serializedObject.FindProperty("sizeRange"), "Size (metres)", 0.5f, 500f);
+        ScatterGUI.Range(serializedObject.FindProperty("thicknessRange"), "Thickness", 0.2f, 100f);
+        ScatterGUI.Range(serializedObject.FindProperty("heightRange"), "Height above ground", 0f, 1000f);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("randomTurn"), new GUIContent("Random turn"));
 
         EditorGUILayout.Space(6);
@@ -98,8 +98,8 @@ public class PlatformScatterEditor : Editor
             Tick("growing", "Growing");
             GUILayout.FlexibleSpace();
         }
-        if (s.sideToSide || s.upAndDown) ScatterGUI.Range(serializedObject.FindProperty("moveDistanceRange"), "How far they move", 0.5f, 100f);
-        if (s.sideToSide || s.upAndDown || s.spinning || s.growing) ScatterGUI.Range(serializedObject.FindProperty("speedRange"), "Speed", 0.1f, 20f);
+        if (s.sideToSide || s.upAndDown) ScatterGUI.Range(serializedObject.FindProperty("moveDistanceRange"), "How far they move", 0.5f, 1000f);
+        if (s.sideToSide || s.upAndDown || s.spinning || s.growing) ScatterGUI.Range(serializedObject.FindProperty("speedRange"), "Speed", 0.1f, 1000f);
 
         EditorGUILayout.Space(6);
         EditorGUILayout.LabelField("💥 Special platforms (out of every 100)", EditorStyles.boldLabel);
@@ -184,14 +184,17 @@ public class CreatureScatterEditor : Editor
                 SerializedProperty kindProp = g.FindPropertyRelative("kind");
                 kindProp.enumValueIndex = EditorGUILayout.Popup("What", kindProp.enumValueIndex, KindLabels);
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("howMany"), new GUIContent("How many"));
-                ScatterGUI.Range(g.FindPropertyRelative("sizeRange"), "Size (1 = normal)", 0.1f, 20f);
-                if (ScatterTools.Moves(kind))
+                ScatterGUI.Range(g.FindPropertyRelative("sizeRange"), "Size (1 = normal)", 0.1f, 200f);
+                if (!ScatterTools.IsCreature(kind))
+                    EditorGUILayout.PropertyField(g.FindPropertyRelative("pickupsWander"), new GUIContent("🏃 They run around", g.FindPropertyRelative("pickupsWander").tooltip));
+                if (ScatterTools.Moves(kind) || (!ScatterTools.IsCreature(kind) && g.FindPropertyRelative("pickupsWander").boolValue))
                 {
-                    ScatterGUI.Range(g.FindPropertyRelative("speedRange"), "Speed", 0.1f, 50f);
-                    ScatterGUI.Range(g.FindPropertyRelative("roamRange"), kind == CreatureScatter.Kind.Wanderer ? "How far they roam" : "How far they walk", 0.5f, 100f);
+                    ScatterGUI.Range(g.FindPropertyRelative("speedRange"), "Speed", 0.1f, 500f);
+                    ScatterGUI.Range(g.FindPropertyRelative("roamRange"), kind == CreatureScatter.Kind.Wanderer ? "How far they roam" : "How far they walk", 0.5f, 1000f);
                 }
                 if (ScatterTools.IsCreature(kind))
                     EditorGUILayout.PropertyField(g.FindPropertyRelative("jumpsToDefeat"), new GUIContent("🦶 Jumps on head to beat", "0 = can't be beaten by jumping on it"));
+                ScatterGUI.Range(g.FindPropertyRelative("flyHeightRange"), "🐉 Fly this high (m)", 0f, 300f);
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("glow"), new GUIContent("✨ Glow"));
                 EditorGUILayout.PropertyField(g.FindPropertyRelative("models"), new GUIContent("🎨 Models (random pick)", "Leave empty for the normal look."), true);
 
