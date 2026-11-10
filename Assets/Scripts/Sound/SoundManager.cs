@@ -19,6 +19,7 @@ public class SoundManager : MonoBehaviour
     private const string MusicVolumeKey = "Sound.MusicVolume";
     private const string EffectsVolumeKey = "Sound.EffectsVolume";
     private const string OrderKey = "Sound.MusicOrder";
+    private const string RepeatKey = "Sound.RepeatSong";
 
     private AudioSource music;
     private readonly List<AudioSource> pool = new List<AudioSource>();
@@ -268,15 +269,40 @@ public class SoundManager : MonoBehaviour
     public int CurrentTrack => currentTrack;
     public bool IsMusicPaused => userPausedMusic || !music.isPlaying;
 
+    /// <summary>The order songs play in: In order or Shuffle. (Repeating one song is its own switch: RepeatSong.)</summary>
     public GameSounds.MusicOrder Order
     {
-        get => (GameSounds.MusicOrder)PlayerPrefs.GetInt(OrderKey, (int)Sounds.musicOrder);
+        get
+        {
+            GameSounds.MusicOrder saved = (GameSounds.MusicOrder)PlayerPrefs.GetInt(OrderKey, (int)Sounds.musicOrder);
+            return saved == GameSounds.MusicOrder.RepeatOneSong ? GameSounds.MusicOrder.InOrder : saved;
+        }
         set
         {
+            // Remember the repeat switch first (it may only be 'on' because of the old order setting)
+            if (!PlayerPrefs.HasKey(RepeatKey)) PlayerPrefs.SetInt(RepeatKey, RepeatSong ? 1 : 0);
             PlayerPrefs.SetInt(OrderKey, (int)value);
             PlayerPrefs.Save();
             shuffleOrder.Clear();
-            music.loop = value == GameSounds.MusicOrder.RepeatOneSong;
+        }
+    }
+
+    /// <summary>
+    /// Keep playing the same song over and over. Starts on if the Game Builder's order is
+    /// 'Repeat one song'; players switch it in Esc > Sound & Music.
+    /// </summary>
+    public bool RepeatSong
+    {
+        get
+        {
+            bool startsOn = (GameSounds.MusicOrder)PlayerPrefs.GetInt(OrderKey, (int)Sounds.musicOrder) == GameSounds.MusicOrder.RepeatOneSong;
+            return PlayerPrefs.GetInt(RepeatKey, startsOn ? 1 : 0) == 1;
+        }
+        set
+        {
+            PlayerPrefs.SetInt(RepeatKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+            music.loop = value;
         }
     }
 
@@ -297,7 +323,7 @@ public class SoundManager : MonoBehaviour
         musicStarted = true;
         if (clip == null) return; // an empty slot: Update moves on to the next song
         music.clip = clip;
-        music.loop = Order == GameSounds.MusicOrder.RepeatOneSong;
+        music.loop = RepeatSong;
         music.time = 0f;
         music.Play();
     }

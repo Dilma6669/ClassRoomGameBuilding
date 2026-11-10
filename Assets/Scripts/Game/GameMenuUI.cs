@@ -29,6 +29,9 @@ public class GameMenuUI : MonoBehaviour
     private TextMeshProUGUI nowPlaying;
     private TextMeshProUGUI pauseButtonLabel;
     private TextMeshProUGUI orderButtonLabel;
+    private Button repeatButton;
+    private Button shuffleButton;
+    private TextMeshProUGUI repeatButtonLabel;
     private RectTransform trackListContent;
     private readonly List<Image> trackImages = new List<Image>();
     private float lastPreviewTime;
@@ -450,8 +453,16 @@ public class GameMenuUI : MonoBehaviour
         Button pause = UIBuilder.Button(row, "Pause", bodyFont, 26, UIBuilder.AccentColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.ToggleMusicPause(); RefreshSoundScreen(); });
         pauseButtonLabel = pause.GetComponentInChildren<TextMeshProUGUI>();
         UIBuilder.Button(row, "Next >", bodyFont, 26, UIBuilder.ButtonColor, () => { if (SoundManager.Instance != null) SoundManager.Instance.NextTrack(); RefreshSoundScreen(); });
-        Button order = UIBuilder.Button(row, "In order", bodyFont, 26, UIBuilder.ButtonColor, () => CycleOrder());
-        orderButtonLabel = order.GetComponentInChildren<TextMeshProUGUI>();
+        // Shuffle: play the songs in a mixed-up order (lit up when it's on; off = in order)
+        shuffleButton = UIBuilder.Button(row, "Shuffle: Off", bodyFont, 26, UIBuilder.ButtonColor, () => CycleOrder());
+        orderButtonLabel = shuffleButton.GetComponentInChildren<TextMeshProUGUI>();
+        // Repeat: keep playing the same song (lit up when it's on)
+        repeatButton = UIBuilder.Button(row, "Repeat: Off", bodyFont, 26, UIBuilder.ButtonColor, () =>
+        {
+            if (SoundManager.Instance != null) SoundManager.Instance.RepeatSong = !SoundManager.Instance.RepeatSong;
+            RefreshSoundScreen();
+        });
+        repeatButtonLabel = repeatButton.GetComponentInChildren<TextMeshProUGUI>();
 
         // The songs: click one to play it
         Image listBG = UIBuilder.Image(p, "TrackListBackground", UIBuilder.PanelLightColor);
@@ -469,7 +480,7 @@ public class GameMenuUI : MonoBehaviour
     {
         SoundManager sm = SoundManager.Instance;
         if (sm == null) return;
-        sm.Order = (GameSounds.MusicOrder)(((int)sm.Order + 1) % 3);
+        sm.Order = sm.Order == GameSounds.MusicOrder.Shuffle ? GameSounds.MusicOrder.InOrder : GameSounds.MusicOrder.Shuffle;
         RefreshSoundScreen();
     }
 
@@ -515,12 +526,12 @@ public class GameMenuUI : MonoBehaviour
         else nowPlaying.text = (sm.IsMusicPaused ? "Paused: " : "Now playing: ") + sm.TrackName(sm.CurrentTrack);
 
         pauseButtonLabel.text = sm.IsMusicPaused ? "Play" : "Pause";
-        switch (sm.Order)
-        {
-            case GameSounds.MusicOrder.Shuffle: orderButtonLabel.text = "Shuffle"; break;
-            case GameSounds.MusicOrder.RepeatOneSong: orderButtonLabel.text = "Repeat song"; break;
-            default: orderButtonLabel.text = "In order"; break;
-        }
+        bool shuffle = sm.Order == GameSounds.MusicOrder.Shuffle;
+        orderButtonLabel.text = shuffle ? "Shuffle: On" : "Shuffle: Off";
+        shuffleButton.GetComponent<Image>().color = shuffle ? UIBuilder.AccentColor : UIBuilder.ButtonColor;
+        bool repeat = sm.RepeatSong;
+        repeatButtonLabel.text = repeat ? "Repeat: On" : "Repeat: Off";
+        repeatButton.GetComponent<Image>().color = repeat ? UIBuilder.AccentColor : UIBuilder.ButtonColor;
 
         for (int i = 0; i < trackImages.Count; i++)
         {

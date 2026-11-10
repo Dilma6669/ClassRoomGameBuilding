@@ -218,7 +218,8 @@ public partial class GameBuilderWindow
         {
             sound = (AudioClip)EditorGUILayout.ObjectField(a?.sound, typeof(AudioClip), false, GUILayout.Height(20));
             GUI.enabled = a != null && a.sound != null;
-            if (GUILayout.Button("▶", GUILayout.Width(28))) SoundTools.Preview(a.sound);
+            if (GUILayout.Button(new GUIContent("▶", "Play it"), GUILayout.Width(28))) SoundTools.Preview(a.sound);
+            if (GUILayout.Button(new GUIContent("■", "Stop it"), GUILayout.Width(28))) SoundTools.StopPreview();
             GUI.enabled = true;
         }
         if (a != null && a.sound != null)
@@ -284,7 +285,8 @@ public partial class GameBuilderWindow
                 GUIUtility.ExitGUI();
             }
             GUI.enabled = entry != null && entry.clip != null;
-            if (GUILayout.Button("▶", GUILayout.Width(28))) SoundTools.Preview(entry.clip);
+            if (GUILayout.Button(new GUIContent("▶", "Play it"), GUILayout.Width(28))) SoundTools.Preview(entry.clip);
+            if (GUILayout.Button(new GUIContent("■", "Stop it"), GUILayout.Width(28))) SoundTools.StopPreview();
             GUI.enabled = true;
         }
     }

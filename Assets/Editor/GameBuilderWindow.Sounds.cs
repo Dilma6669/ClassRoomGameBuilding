@@ -131,6 +131,7 @@ public partial class GameBuilderWindow
                 PlayerPrefs.DeleteKey("Sound.MusicVolume");
                 PlayerPrefs.DeleteKey("Sound.EffectsVolume");
                 PlayerPrefs.DeleteKey("Sound.MusicOrder");
+                PlayerPrefs.DeleteKey("Sound.RepeatSong");
                 ShowNotification(new GUIContent("Done"));
             }
         }
@@ -168,7 +169,8 @@ public partial class GameBuilderWindow
                 {
                     clip = (AudioClip)EditorGUILayout.ObjectField(entry.clip, typeof(AudioClip), false, GUILayout.Height(22));
                     GUI.enabled = entry.clip != null;
-                    if (GUILayout.Button("▶", GUILayout.Width(30), GUILayout.Height(22))) SoundTools.Preview(entry.clip);
+                    if (GUILayout.Button(new GUIContent("▶", "Play it"), GUILayout.Width(30), GUILayout.Height(22))) SoundTools.Preview(entry.clip);
+                    if (GUILayout.Button(new GUIContent("■", "Stop it"), GUILayout.Width(30), GUILayout.Height(22))) SoundTools.StopPreview();
                     GUI.enabled = true;
                     if (GUILayout.Button(new GUIContent("✕", entries.Count > 1 ? "Remove this sound" : "Empty this slot"), GUILayout.Width(30), GUILayout.Height(22))) remove = entry;
                 }
@@ -291,7 +293,8 @@ public partial class GameBuilderWindow
                         SoundsChanged(sounds);
                     }
                     GUI.enabled = sounds.soundtrack[i] != null;
-                    if (GUILayout.Button("▶", GUILayout.Width(28))) SoundTools.Preview(sounds.soundtrack[i]);
+                    if (GUILayout.Button(new GUIContent("▶", "Play it"), GUILayout.Width(28))) SoundTools.Preview(sounds.soundtrack[i]);
+                    if (GUILayout.Button(new GUIContent("■", "Stop it"), GUILayout.Width(28))) SoundTools.StopPreview();
                     GUI.enabled = i > 0;
                     if (GUILayout.Button("▲", GUILayout.Width(26))) { moveFrom = i; moveTo = i - 1; }
                     GUI.enabled = i < sounds.soundtrack.Count - 1;
