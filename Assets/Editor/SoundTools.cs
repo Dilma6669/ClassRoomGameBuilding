@@ -183,9 +183,11 @@ public static class SoundTools
         Make(StarterFolder, "Bounce", 0.3f, t => Sine(Sweep(t, 0.3f, 180, 820) + 0f) * (0.7f + 0.3f * Mathf.Sin(t * 90f)) * Fade(t, 0.3f) * 0.6f);
 
         // Two little songs (they loop nicely). Notes are semitones above A3 (220 Hz); -99 = rest.
+        // Sunny Hills: C major, chords C G Am F | C F G C (one chord per bar, every tune note fits its chord)
         Make(StarterMusicFolder, "Sunny Hills", 16f, t => Song(t, 0.25f,
-            new[] { 7, 11, 14, 11, 12, 11, 9, 7, 9, 12, 16, 12, 14, 12, 11, 9, 7, 11, 14, 19, 18, 16, 14, 12, 11, 12, 14, 11, 9, 7, 7, -99 },
-            new[] { -14, -14, -9, -9, -11, -11, -16, -14 }));
+            new[] { 7, 10, 15, 10,   17, 14, 10, 14,   15, 12, 7, 12,   15, 12, 8, 12,
+                    10, 15, 19, 15,  12, 15, 20, 15,   17, 14, 10, 14,  15, 10, 15, -99 },
+            new[] { -9, -14, -12, -16, -9, -16, -14, -9 }));
         Make(StarterMusicFolder, "Cave Echoes", 19.2f, t => Song(t, 0.3f,
             new[] { 0, 3, 7, 3, 8, 7, 3, 2, 0, 3, 7, 10, 8, 7, 5, 3, 5, 8, 12, 8, 7, 3, 2, -2, 0, -99, 0, 3, 2, -2, 0, -99 },
             new[] { -12, -12, -16, -16, -19, -19, -17, -17 }));
