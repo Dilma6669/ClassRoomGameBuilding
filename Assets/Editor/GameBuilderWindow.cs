@@ -618,27 +618,37 @@ public partial class GameBuilderWindow : EditorWindow
             try { DrawInspector(selected); }
             finally { ObstacleBaseEditor.HowItMoves = null; ObstacleBaseEditor.MoveIt = null; }
 
+        }
+
+        // 🎲 Lots at once
+        if (ObstacleBaseEditor.BeginBox("🎲 Scatter tools", "Put lots of creatures and pickups down at once, on the ground and/or on platforms."))
+        {
+            Terrain terrain = Find<Terrain>();
+            CreatureScatter scatter = terrain != null ? terrain.GetComponent<CreatureScatter>() : null;
+            if (scatter != null) DrawInspector(scatter, false);
+            else if (terrain == null) EditorGUILayout.HelpBox("Make the ground first (🏔 Level tab).", MessageType.Warning);
+            else if (BigButton("🎲 Start scattering creatures & pickups", new Color(0.2f, 0.8f, 0.3f)))
+            {
+                Undo.AddComponent<CreatureScatter>(terrain.gameObject);
+            }
+        }
+        ObstacleBaseEditor.EndBox();
+
+        DefaultModelsFoldout("defaultCreatures", "🧩 Default models for new creatures",
+            "The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard above (in every level). " +
+            "To change one creature that's already made, click it in 'Your creatures & pickups' instead.",
+            ("defaultWanderEnemy", "🕷 Wanderer"), ("defaultPatrolEnemy", "🧟 Patroller"), ("defaultStaticEnemy", "🐍 Guard"));
+
+        // Delete the selected one: at the very bottom, away from everything else
+        if (selected != null)
+        {
+            EditorGUILayout.Space(12);
             if (BigButton("🗑 Delete " + selected.name, new Color(0.95f, 0.5f, 0.5f)))
             {
                 Undo.DestroyObjectImmediate(selected.gameObject);
                 GUIUtility.ExitGUI();
             }
         }
-
-        Section("🎲 Scatter lots at once (on the ground and/or on platforms)");
-        Terrain terrain = Find<Terrain>();
-        CreatureScatter scatter = terrain != null ? terrain.GetComponent<CreatureScatter>() : null;
-        if (scatter != null) DrawInspector(scatter);
-        else if (terrain == null) EditorGUILayout.HelpBox("Make the ground first (🏔 Level tab).", MessageType.Warning);
-        else if (BigButton("🎲 Start scattering creatures & pickups", new Color(0.2f, 0.8f, 0.3f)))
-        {
-            Undo.AddComponent<CreatureScatter>(terrain.gameObject);
-        }
-
-        DefaultModelsFoldout("defaultCreatures", "🧩 Default models for new creatures",
-            "The 3D model each NEW creature gets when you click Wanderer, Patroller or Guard above (in every level). " +
-            "To change one creature that's already made, click it in 'Your creatures & pickups' instead.",
-            ("defaultWanderEnemy", "🕷 Wanderer"), ("defaultPatrolEnemy", "🧟 Patroller"), ("defaultStaticEnemy", "🐍 Guard"));
     }
 
     private void QuickPlatform(PlatformController controller, ScatterTools.PlatformMove move, PlatformLogic.PlatformType type = PlatformLogic.PlatformType.Normal)
