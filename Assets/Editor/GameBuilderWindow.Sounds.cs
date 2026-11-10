@@ -73,7 +73,6 @@ public partial class GameBuilderWindow
                 GUIUtility.ExitGUI();
             }
         }
-        if (BigButton("⏹ Stop the sound preview")) SoundTools.StopPreview();
 
         // ---------------- General sound effects (the defaults)
         Section("🔊 General sounds (used by everything, unless a model has its own)");
