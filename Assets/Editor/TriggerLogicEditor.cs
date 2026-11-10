@@ -114,7 +114,6 @@ public class TriggerLogicEditor : Editor
         using (new EditorGUILayout.HorizontalScope())
         {
             GUILayout.Space(EditorGUI.indentLevel * 15);
-            GUI.backgroundColor = new Color(0.35f, 0.65f, 1f); // blue = "save/confirm" (green is for "create")
             clicked = GUILayout.Button(new GUIContent("✔ Confirm message", "Finish typing and save the level"), GUILayout.Height(26));
             GUI.backgroundColor = Color.white;
         }
