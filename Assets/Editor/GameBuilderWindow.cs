@@ -1149,6 +1149,22 @@ public partial class GameBuilderWindow : EditorWindow
                 }
             }
             EndBox();
+
+            // The in-game Library has a Scenery page: add a tree or rock to it, with a picture
+            if (Box("📖 Library (one piece)", "Add a tree, rock or plant to the game's Library (Esc > Library > Scenery)."))
+            {
+                if (piece != null)
+                {
+                    string entryName = ObjectNames.NicifyVariableName(piece.name);
+                    CustomModelEditor.DrawLibrarySection(entryName, piece, () => LibraryCategory.Scenery,
+                        "What is the " + entryName + "? Where does it grow or come from, and is there a story about it?\n\nWrite about it here!");
+                }
+                else
+                {
+                    EditorGUILayout.LabelField("Click one tree, rock or plant in the Scene, then add it to the Library with a picture.", EditorStyles.wordWrappedMiniLabel);
+                }
+            }
+            EndBox();
             return;
         }
 

@@ -28,6 +28,10 @@ public class SeeThrough : MonoBehaviour
     /// <summary>Everything currently made see-through (the editor puts them back before saving).</summary>
     public static readonly HashSet<SeeThrough> Active = new HashSet<SeeThrough>();
 
+    // Saved "Fade" materials in Assets/Resources (see CopyOf)
+    public const string TemplateName = "SeeThroughFade";
+    public const string TemplateGlowName = "SeeThroughFadeGlow";
+
     private void OnEnable()
     {
         Active.Add(this);
@@ -133,12 +137,18 @@ public class SeeThrough : MonoBehaviour
         if (source == null) return null;
         if (!copies.TryGetValue(source, out Material copy) || copy == null)
         {
-            copy = new Material(Shader.Find("Standard")) { name = source.name + " (see-through)", hideFlags = HideFlags.DontSave };
+            bool glows = source.IsKeywordEnabled("_EMISSION") && source.HasProperty("_EmissionColor");
+            // Start from a saved see-through material in Resources: a built game only has the shader's see-through
+            // version if a saved material uses it (a material made from scratch here would draw solid in the build).
+            Material template = Resources.Load<Material>(glows ? TemplateGlowName : TemplateName);
+            copy = template != null ? new Material(template) : new Material(Shader.Find("Standard"));
+            copy.name = source.name + " (see-through)";
+            copy.hideFlags = HideFlags.DontSave;
             // Keep its picture and colour (Standard, glTF and most other shaders)
             Texture tex = Pick<Texture>(source, "_MainTex", "baseColorTexture", "_BaseMap", "_BaseColorMap");
             if (tex != null) copy.mainTexture = tex;
             copy.SetFloat("_Glossiness", source.HasProperty("_Glossiness") ? source.GetFloat("_Glossiness") : 0.2f);
-            if (source.IsKeywordEnabled("_EMISSION") && source.HasProperty("_EmissionColor"))
+            if (glows)
             {
                 copy.EnableKeyword("_EMISSION");
                 copy.SetColor("_EmissionColor", source.GetColor("_EmissionColor"));

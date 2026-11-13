@@ -16,13 +16,26 @@ public static class MacZip
     public const string HowToOpen =
         "HOW TO OPEN THIS GAME ON A MAC\r\n" +
         "==============================\r\n\r\n" +
-        "1. Double-click the zip to unzip it, then drag the game into your Applications folder (or anywhere).\r\n" +
-        "2. The first time: RIGHT-click (or Control-click) the game and choose Open, then click Open again.\r\n" +
-        "   (A normal double-click says it can't be opened, because the game isn't signed by Apple.)\r\n" +
-        "   After that, a normal double-click works.\r\n\r\n" +
-        "If the Mac says the game \"is damaged and can't be opened\":\r\n" +
-        "   Open the Terminal app, type   xattr -cr   (with a space after it), drag the game onto the Terminal window,\r\n" +
-        "   press Return, then try step 2 again.\r\n";
+        "The Mac blocks games that weren't bought from the App Store or paid for by a registered Apple developer.\r\n" +
+        "This class game is safe, so you just tell the Mac it's OK, once. Pick ONE of the ways below.\r\n\r\n" +
+        "1. Double-click the zip to unzip it. Drag the game into your Applications folder.\r\n\r\n" +
+        "EASIEST WAY (works on every Mac): the Terminal\r\n" +
+        "   a. Open the Terminal app (press Command + Space, type Terminal, press Return).\r\n" +
+        "   b. Copy this line, paste it into Terminal and press Return:\r\n\r\n" +
+        "        xattr -cr \"/Applications/{APP}\"\r\n\r\n" +
+        "   c. Double-click the game. Done! It opens normally from now on.\r\n" +
+        "   (If the game is NOT in Applications: type  xattr -cr  and a space, drag the game onto the Terminal\r\n" +
+        "    window, then press Return.)\r\n\r\n" +
+        "OTHER WAY (no Terminal): System Settings\r\n" +
+        "   a. Double-click the game. The Mac says it can't be opened: click Done (or OK).\r\n" +
+        "   b. Open System Settings > Privacy & Security and scroll right down.\r\n" +
+        "   c. Next to '{NAME} was blocked', click 'Open Anyway', then type your Mac password.\r\n" +
+        "   d. Double-click the game again and click 'Open Anyway'.\r\n" +
+        "   (On older Macs, RIGHT-click the game, choose Open, then click Open.)\r\n\r\n" +
+        "STILL WON'T OPEN, or it says \"damaged\"?\r\n" +
+        "   Do the Terminal way above, then also paste this line and press Return:\r\n\r\n" +
+        "        codesign --force --deep --sign - \"/Applications/{APP}\"\r\n\r\n" +
+        "   Then double-click the game.\r\n";
 
     /// <summary>Zips appPath (a .app folder) into zipPath, with the right permissions. Returns zipPath.</summary>
     public static string ZipApp(string appPath, string zipPath)
@@ -51,7 +64,7 @@ public static class MacZip
             note.ExternalAttributes = Normal << 16;
             using (StreamWriter writer = new StreamWriter(note.Open()))
             {
-                writer.Write(HowToOpen);
+                writer.Write(HowToOpen.Replace("{APP}", appName).Replace("{NAME}", Path.GetFileNameWithoutExtension(appName)));
             }
         }
         Debug.Log("Mac zip ready: " + zipPath + " (" + (new FileInfo(zipPath).Length / (1024 * 1024)) + " MB)");

@@ -77,6 +77,7 @@ public class CustomModelEditor : Editor
             else if (targets.Length == 1 && cm.GetComponentInParent<Health>() != null)
                 AnimationSlot(cm, new GUIContent("Hurt (when you get hurt)", "Plays when something hurts you. Drag in any animation."), cm.hurt, c => cm.hurt = c);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animationSpeed"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("animationMovesModel"), new GUIContent("Animation can move it", "Off (normal): the model stays in its spot. On: an animation that walks the model forwards moves it away, then it snaps back when the animation starts again."));
             EditorGUI.indentLevel--;
 
             if (targets.Length == 1 && cm.model != null && cm.idle == null && cm.walk == null && cm.run == null && cm.jump == null && cm.fall == null)
@@ -137,9 +138,14 @@ public class CustomModelEditor : Editor
     public static void DrawLibrarySection(CustomModel cm)
     {
         if (cm == null || cm.model == null) return;
+        DrawLibrarySection(ObjectNames.NicifyVariableName(cm.model.name), cm.ModelInstance, () => GuessCategory(cm), null);
+    }
+
+    /// <summary>The Library box for any model: entryName = its Library name, model = what the picture shows.</summary>
+    public static void DrawLibrarySection(string entryName, Transform model, System.Func<LibraryCategory> category, string backstory)
+    {
         if (libraryBigButton == null) libraryBigButton = new GUIStyle(GUI.skin.button) { fontSize = 14, fontStyle = FontStyle.Bold, fixedHeight = 40 };
 
-        string entryName = ObjectNames.NicifyVariableName(cm.model.name);
         GameSettings settings = GameSettings.Load();
         LibraryEntry entry = settings != null ? settings.libraryEntries.Find(e => e != null && e.name == entryName) : null;
 
@@ -152,10 +158,10 @@ public class CustomModelEditor : Editor
             if (entry == null)
             {
                 EditorGUILayout.LabelField("'" + entryName + "' isn't in the Library yet.", EditorStyles.miniBoldLabel);
-                using (new EditorGUI.DisabledScope(cm.ModelInstance == null))
+                using (new EditorGUI.DisabledScope(model == null))
                 {
                     GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
-                    if (GUILayout.Button("📸 Add to Library (takes a picture)", libraryBigButton)) { AddToLibrary(cm); GUIUtility.ExitGUI(); }
+                    if (GUILayout.Button("📸 Add to Library (takes a picture)", libraryBigButton)) { AddToLibrary(entryName, model, category, backstory); GUIUtility.ExitGUI(); }
                     GUI.backgroundColor = Color.white;
                 }
                 return;
@@ -182,10 +188,10 @@ public class CustomModelEditor : Editor
             EditorGUILayout.Space(4);
             using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUI.DisabledScope(cm.ModelInstance == null))
+                using (new EditorGUI.DisabledScope(model == null))
                 {
                     GUI.backgroundColor = new Color(0.4f, 0.75f, 1f);
-                    if (GUILayout.Button(entry.picture != null ? "📸 Take a new picture" : "📸 Take a picture", libraryBigButton)) { AddToLibrary(cm); GUIUtility.ExitGUI(); }
+                    if (GUILayout.Button(entry.picture != null ? "📸 Take a new picture" : "📸 Take a picture", libraryBigButton)) { AddToLibrary(entryName, model, category, backstory); GUIUtility.ExitGUI(); }
                 }
                 using (new EditorGUI.DisabledScope(entry.picture == null))
                 {
@@ -216,10 +222,9 @@ public class CustomModelEditor : Editor
 
     // ------------------------------------------------------------------ Library picture
 
-    private static void AddToLibrary(CustomModel cm)
+    private static void AddToLibrary(string entryName, Transform model, System.Func<LibraryCategory> category, string backstory)
     {
-        string entryName = ObjectNames.NicifyVariableName(cm.model.name);
-        Sprite picture = TakePicture(cm, entryName);
+        Sprite picture = TakePicture(model, entryName);
         if (picture == null)
         {
             EditorUtility.DisplayDialog("Couldn't take a picture", "Make sure the model is visible in the scene and try again.", "OK");
@@ -237,8 +242,8 @@ public class CustomModelEditor : Editor
             entry = new LibraryEntry
             {
                 name = entryName,
-                category = GuessCategory(cm),
-                backstory = "Who is " + entryName + "? Where did they come from, and why are they here?\n\nWrite the backstory here!"
+                category = category(),
+                backstory = backstory ?? "Who is " + entryName + "? Where did they come from, and why are they here?\n\nWrite the backstory here!"
             };
             settings.libraryEntries.Add(entry);
         }
@@ -269,9 +274,11 @@ public class CustomModelEditor : Editor
     private const int PictureLayer = 31;
 
     /// <summary>Renders just the model with a temporary camera and saves it as a Sprite.</summary>
-    public static Sprite TakePicture(CustomModel cm, string pictureName)
+    public static Sprite TakePicture(CustomModel cm, string pictureName) => TakePicture(cm != null ? cm.ModelInstance : null, pictureName);
+
+    /// <summary>Renders just this object (and its children) with a temporary camera and saves it as a Sprite.</summary>
+    public static Sprite TakePicture(Transform model, string pictureName)
     {
-        Transform model = cm.ModelInstance;
         if (model == null) return null;
 
         Renderer[] renderers = model.GetComponentsInChildren<Renderer>();

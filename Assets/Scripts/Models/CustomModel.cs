@@ -61,6 +61,9 @@ public class CustomModel : MonoBehaviour
     [Tooltip("Speed up or slow down all animations.")]
     [Range(0.1f, 10f)] public float animationSpeed = 1f;
 
+    [Tooltip("Off (normal): the model stays where it is while it animates, even if an animation walks it forwards. On: animations that walk or jump the model away move it (it snaps back when the animation loops).")]
+    public bool animationMovesModel = false;
+
     // Saved results of fitting the model (so we don't re-measure every frame)
     [SerializeField, HideInInspector] private GameObject builtFrom;
     [SerializeField, HideInInspector] private GameObject clipsFoundFrom;
@@ -118,6 +121,32 @@ public class CustomModel : MonoBehaviour
     {
         if (!Application.isPlaying || !graph.IsValid()) return;
         UpdateAnimation(Time.deltaTime);
+    }
+
+    // Some animations walk the model forwards (its root bone moves), then snap it back when they loop.
+    // Keep that bone over its starting spot (up and down still moves, for jumps and crouches).
+    private Transform motionBone;
+    private Vector3 motionBoneRest; // in model-holder space
+
+    private void LateUpdate()
+    {
+        if (animationMovesModel || motionBone == null || modelInstance == null || !Application.isPlaying || !graph.IsValid()) return;
+        Vector3 p = modelInstance.InverseTransformPoint(motionBone.position);
+        p.x = motionBoneRest.x;
+        p.z = motionBoneRest.z;
+        motionBone.position = modelInstance.TransformPoint(p);
+    }
+
+    private void FindMotionBone(bool isHumanoid)
+    {
+        motionBone = null;
+        if (isHumanoid || modelInstance == null) return; // humanoids already stay in place
+        SkinnedMeshRenderer biggest = null;
+        foreach (SkinnedMeshRenderer smr in modelInstance.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            if (smr.rootBone != null && (biggest == null || smr.sharedMesh != null && biggest.sharedMesh != null && smr.sharedMesh.vertexCount > biggest.sharedMesh.vertexCount)) biggest = smr;
+        if (biggest == null) return;
+        motionBone = biggest.rootBone;
+        motionBoneRest = modelInstance.InverseTransformPoint(motionBone.position);
     }
 
     // ------------------------------------------------------------------ Building the model
@@ -435,6 +464,7 @@ public class CustomModel : MonoBehaviour
         actionWeight = 0f;
         actionTimeLeft = 0f;
         isHumanoidRig = isHumanoid;
+        FindMotionBone(isHumanoid);
 
         int input = 0;
         for (int i = 0; i < 5; i++)

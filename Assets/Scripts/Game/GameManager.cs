@@ -102,6 +102,7 @@ public class GameManager : MonoBehaviour
         // A checkpoint only counts in the level it was reached in
         if (hasCheckpoint && checkpointScene != scene.path) hasCheckpoint = false;
         if (hasCheckpoint) MovePlayerToCheckpoint();
+        KeepPlayerAboveGround();
 
         if (Settings.useWorldBorder)
         {
@@ -338,6 +339,39 @@ public class GameManager : MonoBehaviour
 #endif
         Health player = FindAnyObjectByType<Health>();
         if (player != null) player.transform.SetPositionAndRotation(checkpointPosition, checkpointRotation);
+    }
+
+    /// <summary>
+    /// If the player starts (or comes back at a checkpoint) under the ground, e.g. because the ground was sculpted
+    /// higher afterwards, put them on top of it. Otherwise they would fall out of the bottom of the world.
+    /// </summary>
+    private static void KeepPlayerAboveGround()
+    {
+        Transform player = null;
+#if HAS_KINEMATIC_CC
+        KinematicCharacterMotor motor = FindAnyObjectByType<KinematicCharacterMotor>();
+        if (motor != null) player = motor.transform;
+#endif
+        if (player == null) { Health h = FindAnyObjectByType<Health>(); if (h != null) player = h.transform; }
+        if (player == null) return;
+
+        Vector3 p = player.position;
+        foreach (Terrain t in Terrain.activeTerrains)
+        {
+            if (t == null || t.terrainData == null) continue;
+            Vector3 local = p - t.transform.position;
+            Vector3 size = t.terrainData.size;
+            if (local.x < 0f || local.z < 0f || local.x > size.x || local.z > size.z) continue;
+            float ground = t.SampleHeight(p) + t.transform.position.y;
+            if (p.y >= ground - 0.05f) return;
+            p.y = ground + 0.1f;
+            Debug.LogWarning($"⚠️ The player started under the ground in '{player.gameObject.scene.name}', so they were put on top of it. Move the player (or the checkpoint) up above the ground in the Scene to fix it for good.");
+#if HAS_KINEMATIC_CC
+            if (motor != null) { motor.SetPosition(p); return; }
+#endif
+            player.position = p;
+            return;
+        }
     }
 
     // ------------------------------------------------------------------ Helpers
