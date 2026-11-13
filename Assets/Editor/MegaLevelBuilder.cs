@@ -128,6 +128,7 @@ public static class MegaLevelBuilder
             Stampedes();
             Creatures();
             PlatformCrowds();
+            BecomeCharacters();
 
             Selection.activeGameObject = null;
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
@@ -688,6 +689,53 @@ public static class MegaLevelBuilder
             chaser.payloadAmount = 50;
         }
         Folder(chaser, folder, "Chasing T-Rex");
+    }
+
+    /// <summary>Two 'become a character' pickups either side of the start: Roses Fox (a student's) and a flying dragon.</summary>
+    private static void BecomeCharacters()
+    {
+        const string folder = "Become a character";
+        Sign(G(-1f, -191f), "12. Become a character",
+            "Touch the FOX to turn into Roses Fox (a student's model!): super fast for 30 seconds.\n" +
+            "Touch the DRAGON to become a dragon that FLIES: jump, then hold Space to go up and Ctrl to come down. Creatures need half the jumps!\n" +
+            "Make one: Creatures & Pickups > Become a Character (or Become a Flyer), then pick any model.");
+
+        BecomePickup(G(-10f, -196f), "Roses Fox - Rigged & Animated (C)", false, folder, "Become Roses Fox", 1.8f, s =>
+        {
+            s.changeSpeed = true; s.moveSpeed = 25f;
+            s.changeJump = true; s.jumpHeight = 16f;
+            s.noFallDamage = true;
+        });
+        BecomePickup(G(10f, -196f), "Dragon-model", true, folder, "Become a Dragon", 2.5f, s =>
+        {
+            s.look.size = 2f;
+            s.flyUpSpeed = 15f; s.flyDownSpeed = 15f;
+            s.noFallDamage = true;
+            s.creatureHits = CreatureHitsChange.DivideBy; s.creatureHitsAmount = 2;
+        });
+    }
+
+    private static void BecomePickup(Vector3 at, string modelName, bool canFly, string folder, string name, float scale, System.Action<BecomeSettings> settings)
+    {
+        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelFolder + modelName + ".glb");
+        ObstacleBase o = Spawn(at, CreatureScatter.Kind.Health, ObstacleSpawnType.Static, model, scale); // the pickup looks like who you become
+        if (o == null) return;
+        o.payloadType = ObstacleBase.PayloadType.BecomeCharacter;
+        o.payloadAmount = 1;
+        o.buffDuration = 30f;
+        o.destroyOnTrigger = false; // touch it again any time
+        o.showPickupMessage = true; o.pickupMessage = ""; // the automatic message says who you are (and how to fly)
+        o.become = new BecomeSettings { canFly = canFly };
+        o.become.look.model = model;
+        BecomeEditor.FindAnimations(o);
+        settings(o.become);
+        Turn(o, 180f); // facing the start
+        Glow glow = ScatterTools.AddGlow(o.gameObject, Sparkles.ColourFor(o.payloadType));
+        glow.colour = Sparkles.ColourFor(o.payloadType);
+        glow.strength = 2f;
+        AddSparkles(o.gameObject, AmbientSparkles.Style.Fireflies, Sparkles.ColourFor(o.payloadType), 20f);
+        EditorUtility.SetDirty(o);
+        Folder(o, folder, name);
     }
 
     /// <summary>Creatures and pickups ON the platforms: spiders, dinosaurs on sky islands, pickups riding spinners.</summary>

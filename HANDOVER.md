@@ -1,8 +1,14 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-14, session 13 (NEXT JOB part 3 done: flying). Next: NEXT JOB part 4 (Tutorial 3 showcase, needs the teacher's OK to rebuild). Read START HERE first._
+_Last updated: 2026-11-14, session 13 (NEXT JOB parts 3 + 4 done: flying, Tutorial 3 showcase). Next: new class builds (Windows + Mac), then whatever the teacher asks. Read START HERE first._
 
 ## ▶ START HERE (state at 2026-11-14)
+### 📍 SESSION 13 (later): part 4 done, Tutorial 3 rebuilt (teacher's OK)
+- `MegaLevelBuilder.BecomeCharacters()` (runs last): sign **"12. Become a character"** at (-1, -191) and two glowing, fireflies, NOT used-up pickups either side of the start, each LOOKING like who you become: **"Become Roses Fox"** (-10, -196), size 1.8, 30 s, speed 25, jump 16, no fall damage; **"Become a Dragon"** (10, -196), size 2.5, look size 2, Can fly (up/down 15), no fall damage, creature jumps divided by 2. Folder "Become a character". Helper `BecomePickup(...)` (spawns a Health then switches it to BecomeCharacter + `BecomeEditor.FindAnimations`). When the teacher's classroom dragon is ready: change "Dragon-model" in `BecomeCharacters()` and rebuild.
+- Before the rebuild, Tutorial 2's unsaved changes were SAVED (teacher chose "Save Tutorial 2 first"); not committed. Backup of the old Tutorial3.unity + Tutorial3Terrain.asset in the session-13 scratchpad (also in git, d411daa).
+- Verified in Play: both visible from the start (screenshot), touching the fox = fox at speed 25, then the dragon = dragon, canFly, up 15, 6 jumps -> 3, countdown "Dragon 0:28". No console errors. Tutorial 2 re-opened afterwards.
+- Class builds NOT redone yet.
+
 ### 📍 SESSION 13 (2026-11-14): part 3 of the NEXT JOB done (flying)
 - **🐉 Can fly** option on Become a Character pickups (`BecomeSettings.canFly`, `flyUpSpeed`, `flyDownSpeed`, default 10). Box "🐉 Flying" in the pickup's settings (`BecomeEditor`); the Fly animation slot shows there when Can fly is ticked. New Game Builder button **"🐉 Become a Flyer"** (Creatures & Pickups > Pickups): `SpawnBecome("Dragon-model", true)` (Dragon-model.glb, finds Fly_Flap).
 - Controls: jump to take off; in the air hold **Space** = up, **Ctrl** = down, let go = hover (no gravity); steering uses the normal speed (incl. sprint). Pickup message adds "Jump, then hold Space to fly up, Ctrl to come down!".
