@@ -6,7 +6,8 @@ using ClipTrim = CustomModel.ClipTrim;
 /// <summary>
 /// ✂ Trim animations: a two-handle slider under each animation box, so only part of the animation plays
 /// (e.g. cut the slow start off an attack, or the stumble at the end of a walk). The animation file itself is never
-/// changed: the trim is saved on that one creature / player / pickup. ▶ plays the trimmed part on the model in the Scene view.
+/// changed: the trim is saved on that one creature / player / pickup. ▶ opens a little picture right under the slider
+/// that plays the trimmed part on a copy of the model (nothing in the level is touched).
 /// </summary>
 public static class AnimationTrimEditor
 {
@@ -22,15 +23,15 @@ public static class AnimationTrimEditor
     public static void ShowTrimsToggle()
     {
         bool show = EditorGUILayout.ToggleLeft(new GUIContent("✂ Trim animations (play only part of them)",
-            "Shows a slider under each animation: drag its two ends to cut off the start or the end. Only this one creature / player changes, never the animation file."), ShowTrims);
+            "Shows a slider under each animation: drag its two ends to cut off the start or the end. ▶ shows it playing. Only this one creature / player changes, never the animation file."), ShowTrims);
         if (show != ShowTrims) ShowTrims = show;
     }
 
     /// <summary>
     /// The trim row for one animation. owner = the object that holds the trims list (for Undo),
-    /// previewOn = the model to play it on in the Scene view (null = no ▶ button), speed = its animation speed.
+    /// model = the model it plays on (for the ▶ picture; null = no picture), turn = its turn slider, speed = its animation speed.
     /// </summary>
-    public static void TrimRow(Object owner, List<ClipTrim> trims, AnimationClip clip, CustomModel previewOn, float speed)
+    public static void TrimRow(Object owner, List<ClipTrim> trims, AnimationClip clip, GameObject model, float turn, float speed)
     {
         if (owner == null || trims == null || clip == null || clip.length <= 0.06f) return;
         float len = clip.length;
@@ -41,6 +42,9 @@ public static class AnimationTrimEditor
             if (trimmed) EditorGUILayout.LabelField(" ", "✂ Plays " + s.ToString("0.00") + " to " + e.ToString("0.00") + " s (of " + len.ToString("0.00") + " s)", EditorStyles.miniLabel);
             return;
         }
+
+        bool open = AnimationTrimPreview.IsOpen(owner, clip);
+        bool canPreview = model != null && !EditorApplication.isPlayingOrWillChangePlaymode;
 
         EditorGUI.indentLevel++;
         float newS = s, newE = e;
@@ -57,15 +61,15 @@ public static class AnimationTrimEditor
             EditorGUIUtility.labelWidth = oldLabel;
             GUILayout.Label("of " + len.ToString("0.00") + " s", EditorStyles.miniLabel, GUILayout.ExpandWidth(false));
 
-            GameObject root = previewOn != null && previewOn.model != null ? previewOn.AnimationRoot() : null;
-            using (new EditorGUI.DisabledScope(root == null || EditorApplication.isPlayingOrWillChangePlaymode))
+            using (new EditorGUI.DisabledScope(!canPreview))
             {
-                bool playing = AnimationTrimPreview.IsPlaying(root, clip);
-                if (GUILayout.Button(new GUIContent(playing ? "■" : "▶", playing ? "Stop the preview." :
-                        root == null ? "No model in the scene to show it on." : "Plays the trimmed part on the model in the Scene view, over and over."), GUILayout.Width(26)))
+                bool want = GUILayout.Toggle(open, new GUIContent(" Show preview", !canPreview && model == null ? "It has no model to show it on." :
+                        "Shows the trimmed part playing in a picture just below (one animation at a time)."), GUILayout.ExpandWidth(false));
+                if (want != open)
                 {
-                    if (playing) AnimationTrimPreview.Stop();
-                    else AnimationTrimPreview.Play(root, clip, trims, speed);
+                    if (want) AnimationTrimPreview.Open(owner, clip, model, turn);
+                    else AnimationTrimPreview.Close();
+                    open = AnimationTrimPreview.IsOpen(owner, clip);
                 }
             }
             using (new EditorGUI.DisabledScope(!trimmed))
@@ -74,7 +78,6 @@ public static class AnimationTrimEditor
             }
             EditorGUI.indentLevel = oldIndent;
         }
-        EditorGUI.indentLevel--;
 
         newS = Mathf.Clamp(newS, 0f, len - 0.05f);
         newE = Mathf.Clamp(newE, newS + 0.05f, len);
@@ -83,11 +86,17 @@ public static class AnimationTrimEditor
             Undo.RecordObject(owner, "Trim animation");
             SetTrim(trims, clip, newS, newE);
             EditorUtility.SetDirty(owner);
-            // Show the frame at the end that was dragged
-            GameObject root = previewOn != null && previewOn.model != null ? previewOn.AnimationRoot() : null;
-            if (root != null && !EditorApplication.isPlayingOrWillChangePlaymode)
-                AnimationTrimPreview.Peek(root, clip, trims, speed, Mathf.Abs(newE - e) > 0.0001f ? Mathf.Min(newE, len - 0.001f) : newS);
+            // Open the picture (if it isn't) and show the frame at the end that was dragged
+            if (canPreview)
+            {
+                if (!AnimationTrimPreview.IsOpen(owner, clip)) AnimationTrimPreview.Open(owner, clip, model, turn);
+                AnimationTrimPreview.Hold(Mathf.Abs(newE - e) > 0.0001f ? Mathf.Min(newE, len - 0.001f) : newS);
+                open = true;
+            }
         }
+
+        if (open && canPreview) AnimationTrimPreview.Draw(trims, speed);
+        EditorGUI.indentLevel--;
     }
 
     /// <summary>Saves a trim (the whole animation = no trim, so it's removed).</summary>
@@ -144,90 +153,141 @@ public static class AnimationTrimEditor
     }
 }
 
-/// <summary>Plays a trimmed animation on a model in the Scene view (nothing is saved: the pose goes back when it stops).</summary>
+/// <summary>
+/// The ▶ picture under a trim slider: a copy of the model on its own little stage (not in the level),
+/// playing just the trimmed part over and over, with a bar showing where it is in the whole animation.
+/// </summary>
 [InitializeOnLoad]
 public static class AnimationTrimPreview
 {
-    private static GameObject root;
+    private const float Height = 180f;
+
+    private static Object owner;
     private static AnimationClip clip;
-    private static List<ClipTrim> trims;
-    private static float speed = 1f;
-    private static bool looping;
-    private static double time, lastTick, peekUntil;
-    private static float peekAt;
-    private static bool hooked;
+    private static GameObject model, copy, animRoot;
+    private static PreviewRenderUtility stage;
+    private static Vector3 lookAt;
+    private static float distance;
+    private static double startedAt, holdUntil;
+    private static float holdAt;
+    private static readonly List<EditorWindow> windows = new List<EditorWindow>();
 
     static AnimationTrimPreview()
     {
-        EditorApplication.playModeStateChanged += _ => Stop();
-        AssemblyReloadEvents.beforeAssemblyReload += Stop;
-        Selection.selectionChanged += Stop;
-        UnityEditor.SceneManagement.EditorSceneManager.sceneClosing += (s, r) => Stop();
+        EditorApplication.playModeStateChanged += _ => Close();
+        AssemblyReloadEvents.beforeAssemblyReload += Close;
+        Selection.selectionChanged += Close;
     }
 
-    public static bool IsPlaying(GameObject r, AnimationClip c) => looping && r != null && root == r && clip == c;
+    public static bool IsOpen(Object o, AnimationClip c) => stage != null && copy != null && owner == o && clip == c;
 
-    /// <summary>Plays the trimmed part over and over.</summary>
-    public static void Play(GameObject r, AnimationClip c, List<ClipTrim> t, float s)
+    public static void Open(Object o, AnimationClip c, GameObject m, float turn)
     {
-        Begin(r, c, t, s);
-        looping = true;
-        time = 0;
-        peekUntil = 0;
-    }
+        Close();
+        if (m == null || c == null) return;
+        owner = o; clip = c; model = m;
 
-    /// <summary>Shows one moment for a little while (while dragging a trim end), then carries on / stops.</summary>
-    public static void Peek(GameObject r, AnimationClip c, List<ClipTrim> t, float s, float at)
-    {
-        if (!(root == r && clip == c)) { Begin(r, c, t, s); looping = false; }
-        peekAt = at;
-        peekUntil = EditorApplication.timeSinceStartup + 0.8;
-        time = 0;
-        Tick();
-    }
+        stage = new PreviewRenderUtility();
+        stage.camera.fieldOfView = 30f;
+        stage.camera.clearFlags = CameraClearFlags.SolidColor;
+        stage.camera.backgroundColor = new Color(0.16f, 0.18f, 0.22f);
+        stage.lights[0].intensity = 1.3f;
+        stage.lights[0].transform.rotation = Quaternion.Euler(40f, 40f, 0f);
+        stage.lights[1].intensity = 0.6f;
+        stage.ambientColor = new Color(0.35f, 0.35f, 0.4f);
 
-    public static void Stop()
-    {
-        if (hooked) EditorApplication.update -= Tick;
-        hooked = false;
-        looping = false;
-        root = null;
-        clip = null;
-        trims = null;
-        if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
-        SceneView.RepaintAll();
-    }
+        copy = Object.Instantiate(m);
+        copy.hideFlags = HideFlags.HideAndDontSave;
+        foreach (MonoBehaviour b in copy.GetComponentsInChildren<MonoBehaviour>(true)) Object.DestroyImmediate(b); // just the look, no scripts
+        copy.transform.position = Vector3.zero;
+        copy.transform.rotation = Quaternion.Euler(0f, turn, 0f);
+        stage.AddSingleGO(copy);
+        Animator animator = copy.GetComponentInChildren<Animator>();
+        animRoot = animator != null ? animator.gameObject : copy;
 
-    private static void Begin(GameObject r, AnimationClip c, List<ClipTrim> t, float s)
-    {
-        if (root != null && root != r && AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode(); // put the other model back
-        root = r; clip = c; trims = t; speed = Mathf.Max(0.1f, s);
-        if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
-        lastTick = EditorApplication.timeSinceStartup;
-        if (!hooked) { EditorApplication.update += Tick; hooked = true; }
-    }
-
-    private static void Tick()
-    {
-        if (root == null || clip == null || EditorApplication.isPlayingOrWillChangePlaymode || !AnimationMode.InAnimationMode()) { Stop(); return; }
-        double now = EditorApplication.timeSinceStartup;
-        double dt = now - lastTick;
-        lastTick = now;
-
-        float at;
-        if (now < peekUntil) at = peekAt;
-        else if (!looping) { Stop(); return; }
-        else
+        // Frame it from its starting pose (so you can see it move)
+        clip.SampleAnimation(animRoot, 0f);
+        Bounds b2 = new Bounds(copy.transform.position, Vector3.zero);
+        bool any = false;
+        foreach (Renderer r in copy.GetComponentsInChildren<Renderer>(true))
         {
-            CustomModel.GetTrim(trims, clip, out float s, out float e);
-            time += dt * speed;
-            double len = Mathf.Max(0.05f, e - s);
-            at = s + (float)(time % len);
+            if (!any) { b2 = r.bounds; any = true; } else b2.Encapsulate(r.bounds);
         }
+        float size = Mathf.Max(0.1f, b2.extents.magnitude);
+        lookAt = b2.center;
+        distance = size * 3.6f;
+        stage.camera.nearClipPlane = distance * 0.01f;
+        stage.camera.farClipPlane = distance * 10f;
 
-        AnimationMode.BeginSampling();
-        AnimationMode.SampleAnimationClip(root, clip, at);
-        AnimationMode.EndSampling();
-        SceneView.RepaintAll();
+        startedAt = EditorApplication.timeSinceStartup;
+        holdUntil = 0;
+
+        windows.Clear();
+        foreach (EditorWindow w in Resources.FindObjectsOfTypeAll<EditorWindow>())
+        {
+            string n = w.GetType().Name;
+            if (n == "InspectorWindow" || n == "GameBuilderWindow") windows.Add(w);
+        }
+        EditorApplication.update += RepaintWindows;
+    }
+
+    /// <summary>Show this moment for a little while (while a trim end is dragged), then carry on playing.</summary>
+    public static void Hold(float at)
+    {
+        holdAt = at;
+        holdUntil = EditorApplication.timeSinceStartup + 0.8;
+        startedAt = holdUntil;
+    }
+
+    public static void Close()
+    {
+        EditorApplication.update -= RepaintWindows;
+        if (copy != null) Object.DestroyImmediate(copy);
+        if (stage != null) stage.Cleanup();
+        stage = null; copy = null; animRoot = null; owner = null; clip = null; model = null;
+        windows.Clear();
+    }
+
+    private static double lastRepaint;
+    private static void RepaintWindows()
+    {
+        double now = EditorApplication.timeSinceStartup;
+        if (now - lastRepaint < 1.0 / 30.0) return;
+        lastRepaint = now;
+        foreach (EditorWindow w in windows) if (w != null) w.Repaint();
+    }
+
+    /// <summary>Draws the picture (and the where-is-it bar) at this spot in the panel.</summary>
+    public static void Draw(List<ClipTrim> trims, float speed)
+    {
+        if (stage == null || copy == null || clip == null) return;
+        CustomModel.GetTrim(trims, clip, out float s, out float e);
+        double now = EditorApplication.timeSinceStartup;
+        float at = now < holdUntil ? holdAt : s + (float)(((now - startedAt) * Mathf.Max(0.1f, speed)) % Mathf.Max(0.05f, e - s));
+
+        Rect area = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(10f, Height, GUILayout.ExpandWidth(true)));
+        Rect bar = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(10f, 14f, GUILayout.ExpandWidth(true)));
+        EditorGUILayout.Space(4);
+        if (Event.current.type != EventType.Repaint) return;
+
+        clip.SampleAnimation(animRoot, at);
+
+        // Slowly turn round it so you can see it from the side and the front
+        float angle = 30f + Mathf.Sin((float)now * 0.4f) * 25f;
+        Quaternion rot = Quaternion.Euler(12f, angle + 180f, 0f);
+        stage.camera.transform.position = lookAt - rot * Vector3.forward * distance;
+        stage.camera.transform.rotation = rot;
+
+        stage.BeginPreview(area, GUIStyle.none);
+        stage.camera.Render();
+        Texture tex = stage.EndPreview();
+        GUI.DrawTexture(area, tex, ScaleMode.StretchToFill, false);
+        GUI.Label(new Rect(area.x + 6, area.y + 4, area.width - 12, 18), clip.name + "   " + at.ToString("0.00") + " s", EditorStyles.whiteMiniLabel);
+
+        // The bar: the whole animation, the part that plays (green), and where it is now (white line)
+        float len = clip.length;
+        EditorGUI.DrawRect(bar, new Color(0.25f, 0.25f, 0.25f));
+        EditorGUI.DrawRect(new Rect(bar.x + bar.width * (s / len), bar.y, bar.width * ((e - s) / len), bar.height), new Color(0.3f, 0.75f, 0.35f));
+        EditorGUI.DrawRect(new Rect(bar.x + bar.width * (at / len) - 1f, bar.y - 2f, 2f, bar.height + 4f), Color.white);
     }
 }

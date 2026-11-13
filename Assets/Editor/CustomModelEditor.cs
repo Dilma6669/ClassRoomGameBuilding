@@ -29,7 +29,7 @@ public class CustomModelEditor : Editor
     {
         if (cm == null) return;
         if (cm.trims == null) cm.trims = new System.Collections.Generic.List<CustomModel.ClipTrim>();
-        AnimationTrimEditor.TrimRow(cm, cm.trims, clip, cm, cm.animationSpeed);
+        AnimationTrimEditor.TrimRow(cm, cm.trims, clip, cm.model, cm.turn, cm.animationSpeed);
     }
 
     private bool showAnimations = true;

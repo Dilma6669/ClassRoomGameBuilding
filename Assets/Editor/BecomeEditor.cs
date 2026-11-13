@@ -192,9 +192,7 @@ public static class BecomeEditor
         if (clip == null) return;
         CustomModel.Look look = o.become.look;
         if (look.trims == null) look.trims = new System.Collections.Generic.List<CustomModel.ClipTrim>();
-        CustomModel shown = o.GetComponentInChildren<CustomModel>();
-        if (shown != null && shown.model != look.model) shown = null;
-        AnimationTrimEditor.TrimRow(o, look.trims, clip, shown, look.animationSpeed);
+        AnimationTrimEditor.TrimRow(o, look.trims, clip, look.model, look.turn, look.animationSpeed);
     }
 
     private static void Toggle(SerializedProperty parent, string name, string label, string tip)
