@@ -37,6 +37,11 @@ public class BecomeSettings
     [Tooltip("Falling never hurts while you are the character.")]
     public bool noFallDamage;
 
+    [Tooltip("Flying characters (dragons...): jump to take off, then hold Space to go up and Ctrl to come down. Let go to hover.")]
+    public bool canFly;
+    public float flyUpSpeed = 10f;
+    public float flyDownSpeed = 10f;
+
     [Tooltip("Creatures need fewer jumps on the head to be beaten while you are the character.")]
     public CreatureHitsChange creatureHits = CreatureHitsChange.NoChange;
     [Range(1, 100)] public int creatureHitsAmount = 1;

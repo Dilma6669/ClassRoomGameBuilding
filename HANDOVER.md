@@ -1,8 +1,17 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-13, session 12 (NEXT JOB part 2 done: become-a-character pickup). Next: NEXT JOB part 3 (flying). Read START HERE first._
+_Last updated: 2026-11-14, session 13 (NEXT JOB part 3 done: flying). Next: NEXT JOB part 4 (Tutorial 3 showcase, needs the teacher's OK to rebuild). Read START HERE first._
 
-## ▶ START HERE (state at 2026-11-13)
+## ▶ START HERE (state at 2026-11-14)
+### 📍 SESSION 13 (2026-11-14): part 3 of the NEXT JOB done (flying)
+- **🐉 Can fly** option on Become a Character pickups (`BecomeSettings.canFly`, `flyUpSpeed`, `flyDownSpeed`, default 10). Box "🐉 Flying" in the pickup's settings (`BecomeEditor`); the Fly animation slot shows there when Can fly is ticked. New Game Builder button **"🐉 Become a Flyer"** (Creatures & Pickups > Pickups): `SpawnBecome("Dragon-model", true)` (Dragon-model.glb, finds Fly_Flap).
+- Controls: jump to take off; in the air hold **Space** = up, **Ctrl** = down, let go = hover (no gravity); steering uses the normal speed (incl. sprint). Pickup message adds "Jump, then hold Space to fly up, Ctrl to come down!".
+- Code: `PlayerCharacterInputs.FlyUp/FlyDown` (read in `ExamplePlayer`), `ExampleCharacterController.CanFly/FlyUpSpeed/FlyDownSpeed/IsFlying` (NonSerialized, set by `BecomeCharacter`, switched off in PutBack), flying branch in `UpdateVelocity` (lerp to steer + up/down, sharpness 4). `FallDamage`: the fall timer is reset while flying, so flying down never hurts, but if the countdown ends in the air the real fall counts from then.
+- `CustomModel.AnimSlot.Fly` (appended, index 5; `SlotCount` = 6), `fly` clip (found by fly/flying/hover/flap/soar/glide), in `Look`, the 🏃 Animations list and Sounds' "used for" list. Flying with no Fly clip uses idle/walk/run. Old models are NOT auto-upgraded (so open levels aren't changed); "Find its animations again" fills it.
+- Verified in Play (Tutorial 2, done by code only, nothing saved): dragon look + Fly_Flap, up at 10/s, hover vy 0, Ctrl down to the ground with no damage (100 health), countdown ending at ~40 m: back to the monster girl, fell, normal fall hurt (100 -> 83). Screenshot of the dragon hovering over the park. No new console errors.
+- ⚠ In the Unity Editor, Ctrl + a key can trigger Editor shortcuts (e.g. Ctrl+D duplicates the selected object) while playing; builds are fine. Not yet: a person flying with the real keys; the new button clicked; a build.
+- Tutorial2.unity still has the teacher's changes (modified on disk + unsaved in Unity): NOT committed.
+
 ### 📍 SESSION 12 (2026-11-13): part 2 of the NEXT JOB done (committed)
 - **🦊 Become a Character pickup:** new `PayloadType.BecomeCharacter` (appended, old ints unchanged). Button in Creatures & Pickups > Pickups ("🦊 Become a Character", `GameBuilderWindow.SpawnBecome`): Roses Fox + its animations, 20 s, used up on touch, pink glow (`Sparkles.ColourFor`).
 - Settings: `ObstacleBase.Become.cs` (`become` = `BecomeSettings`: `look` (`CustomModel.Look`: model, size, turn, raise, animation speed, idle/walk/run/jump/fall/attack/hurt/death clips), forever, showCountdown, tick + value for walking speed, sprint, jump, air steering, most stamina, stamina use, most health, invincible, no fall damage, creature hits No Change / Take Away / Divide By N (never below 1)). Countdown length = `buffDuration`. Box "🦊 Become a character" in the pickup's settings (`Editor/BecomeEditor.cs`); picking a model finds its animations there (AutoFindClips is editor-only, so clips are saved on the pickup).

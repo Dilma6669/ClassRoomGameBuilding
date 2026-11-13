@@ -69,6 +69,7 @@ public class CustomModelEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("run"), new GUIContent("Run (sprinting)"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("jump"), new GUIContent("Jump (going up)"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fall"), new GUIContent("Fall (coming down)"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("fly"), new GUIContent("Fly (flying characters)", "Only plays for a player that can fly (a 'become a character' pickup with Can fly)."));
             if (targets.Length == 1 && cm.GetComponentInParent<ObstacleBase>() != null)
             {
                 AnimationSlot(cm, new GUIContent("Attack (when it hurts you)", "Drag in any animation, e.g. a Jump if it has no attack one."), cm.attack, c => cm.attack = c);

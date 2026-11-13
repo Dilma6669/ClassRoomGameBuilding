@@ -32,7 +32,9 @@ public abstract partial class ObstacleBase
             case PayloadType.SprintBuff: return "Speed Boost for " + seconds + "!";
             case PayloadType.BecomeCharacter:
                 string who = become != null ? become.CharacterName : "someone else";
-                return become != null && become.forever ? "You are " + who + "!" : "You are " + who + " for " + seconds + "!";
+                string becomeMessage = become != null && become.forever ? "You are " + who + "!" : "You are " + who + " for " + seconds + "!";
+                if (become != null && become.canFly) becomeMessage += "\nJump, then hold Space to fly up, Ctrl to come down!";
+                return becomeMessage;
         }
         return "";
     }

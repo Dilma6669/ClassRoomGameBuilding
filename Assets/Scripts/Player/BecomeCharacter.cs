@@ -1,6 +1,9 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+#if HAS_KINEMATIC_CC
+using KinematicCharacterController.Examples;
+#endif
 
 /// <summary>
 /// Added to the player (by code) when they touch a "Become a character" pickup: swaps the player's model,
@@ -43,6 +46,9 @@ public class BecomeCharacter : MonoBehaviour
     private CustomModel.Look normalLook;
     private float moveSpeed, sprintMultiplier, jumpHeight, airSteerSpeed, maxStamina, staminaDrainRate;
     private int maxHealth;
+#if HAS_KINEMATIC_CC
+    private ExampleCharacterController controller;
+#endif
 
     private TextMeshProUGUI countdown;
 
@@ -79,6 +85,15 @@ public class BecomeCharacter : MonoBehaviour
         if (s.changeStaminaUse) logic.staminaDrainRate = s.staminaDrainRate;
         if (s.changeStamina) { logic.maxStamina = s.maxStamina; logic.RestoreStamina(s.maxStamina); }
         if (s.changeHealth && health != null) health.SetMaxHealth(s.maxHealth, true);
+#if HAS_KINEMATIC_CC
+        controller = player.GetComponentInChildren<ExampleCharacterController>();
+        if (controller != null && s.canFly)
+        {
+            controller.CanFly = true;
+            controller.FlyUpSpeed = Mathf.Max(0.1f, s.flyUpSpeed);
+            controller.FlyDownSpeed = Mathf.Max(0.1f, s.flyDownSpeed);
+        }
+#endif
         logic.SettingsChanged();
 
         active = this;
@@ -103,6 +118,9 @@ public class BecomeCharacter : MonoBehaviour
             logic.SettingsChanged();
         }
         if (s.changeHealth && health != null) health.SetMaxHealth(maxHealth, false);
+#if HAS_KINEMATIC_CC
+        if (controller != null) controller.CanFly = false; // in the air? you fall now
+#endif
         HideCountdown();
     }
 

@@ -30,6 +30,7 @@ public class FallDamage : MonoBehaviour
 
 #if HAS_KINEMATIC_CC
     private KinematicCharacterMotor motor;
+    private KinematicCharacterController.Examples.ExampleCharacterController flyer;
 #endif
 
     private float currentFallTimer = 0f;
@@ -47,6 +48,7 @@ public class FallDamage : MonoBehaviour
 
 #if HAS_KINEMATIC_CC
         motor = GetComponent<KinematicCharacterMotor>();
+        flyer = GetComponent<KinematicCharacterController.Examples.ExampleCharacterController>();
 #endif
     }
 
@@ -59,7 +61,9 @@ public class FallDamage : MonoBehaviour
 
         if (!isGrounded)
         {
-            if (motor.BaseVelocity.y < 0f)
+            // Flying: coming down on purpose never counts as falling (if the flying ends in the air, the fall counts from then)
+            if (flyer != null && flyer.IsFlying) currentFallTimer = 0f;
+            else if (motor.BaseVelocity.y < 0f)
             {
                 currentFallTimer += Time.deltaTime;
             }

@@ -41,6 +41,7 @@ public static class BecomeEditor
         Clip(look, "run", "Run (sprinting)");
         Clip(look, "jump", "Jump");
         Clip(look, "fall", "Fall");
+        if (o.become.canFly) Clip(look, "fly", "Fly (while flying)");
         Clip(look, "hurt", "Hurt (when you get hurt)");
         if (GUILayout.Button(new GUIContent("🔍 Find its animations again", "Looks in the model file for idle, walk, run, jump... (replaces the ones above).")))
         {
@@ -71,6 +72,19 @@ public static class BecomeEditor
         Change(become, "changeHealth", "maxHealth", "Most health", "Your health is filled to this. Afterwards it goes back to the normal most.", 10f, 10000f);
         Toggle(become, "invincible", "🛡 Nothing can hurt you", "Creatures and falls can't hurt you while you are the character.");
         Toggle(become, "noFallDamage", "🪂 Falling never hurts", "Landing from high up never hurts while you are the character.");
+
+        // 🐉 Flying
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("🐉 Flying", EditorStyles.boldLabel);
+        Toggle(become, "canFly", "Can fly", "Jump to take off, then hold Space to go up and Ctrl to come down. Let go to hover. Its Fly animation plays in the air (set it above).");
+        if (o.become.canFly)
+        {
+            EditorGUI.indentLevel++;
+            Slider(become, "flyUpSpeed", "Going up speed", "How fast Space takes you up. Normal: 10.", 1f, 200f);
+            Slider(become, "flyDownSpeed", "Coming down speed", "How fast Ctrl takes you down. Normal: 10.", 1f, 200f);
+            EditorGUI.indentLevel--;
+            if (o.become.look.fly == null) EditorGUILayout.HelpBox("This model has no Fly animation, so it uses standing / walking / running in the air. Drag one into 'Fly' above, or press 🔍 Find its animations again.", MessageType.None);
+        }
 
         // ⚔ Beating creatures
         EditorGUILayout.Space(6);
@@ -123,7 +137,7 @@ public static class BecomeEditor
     {
         CustomModel.Look look = o.become.look;
         Undo.RecordObject(o, "Find animations");
-        look.idle = look.walk = look.run = look.jump = look.fall = look.attack = look.hurt = look.death = null;
+        look.idle = look.walk = look.run = look.jump = look.fall = look.attack = look.hurt = look.death = look.fly = null;
         if (look.model != null)
         {
             GameObject temp = new GameObject("temp") { hideFlags = HideFlags.HideAndDontSave };
@@ -135,7 +149,7 @@ public static class BecomeEditor
                 probe.AutoFindClips();
                 CustomModel.Look found = probe.GetLook();
                 look.idle = found.idle; look.walk = found.walk; look.run = found.run; look.jump = found.jump;
-                look.fall = found.fall; look.attack = found.attack; look.hurt = found.hurt; look.death = found.death;
+                look.fall = found.fall; look.attack = found.attack; look.hurt = found.hurt; look.death = found.death; look.fly = found.fly;
             }
             finally { Object.DestroyImmediate(temp); }
         }

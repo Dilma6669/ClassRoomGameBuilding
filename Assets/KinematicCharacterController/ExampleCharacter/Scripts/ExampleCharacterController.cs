@@ -25,6 +25,8 @@ namespace KinematicCharacterController.Examples
         public bool JumpDown;
         public bool CrouchDown;
         public bool CrouchUp;
+        public bool FlyUp;   // class game: held down while flying (Space)
+        public bool FlyDown; // class game: held down while flying (Ctrl)
     }
 
     public struct AICharacterInputs
@@ -83,6 +85,16 @@ namespace KinematicCharacterController.Examples
 
         /// <summary>Called the moment the character jumps (class game: used for the Jump sound).</summary>
         public System.Action OnJumped;
+
+        // Class game: flying (a 'become a character' pickup with "Can fly"). Set by code while playing, never saved.
+        // Jump to take off; in the air, hold Space to go up, Ctrl to come down, nothing = hover.
+        [System.NonSerialized] public bool CanFly;
+        [System.NonSerialized] public float FlyUpSpeed = 10f;
+        [System.NonSerialized] public float FlyDownSpeed = 10f;
+        private bool _flyUp, _flyDown;
+        /// <summary>Flying right now (can fly and not standing on the ground).</summary>
+        public bool IsFlying => CanFly && Motor != null && !Motor.GroundingStatus.IsStableOnGround;
+
         private float _timeSinceJumpRequested = Mathf.Infinity;
         private float _timeSinceLastAbleToJump = 0f;
         private Vector3 _internalVelocityAdd = Vector3.zero;
@@ -172,6 +184,9 @@ namespace KinematicCharacterController.Examples
                                 _lookInputVector = _moveInputVector.normalized;
                                 break;
                         }
+
+                        _flyUp = inputs.FlyUp;
+                        _flyDown = inputs.FlyDown;
 
                         // Jumping input
                         if (inputs.JumpDown)
@@ -304,6 +319,13 @@ namespace KinematicCharacterController.Examples
 
                             // Smooth movement Velocity
                             currentVelocity = Vector3.Lerp(currentVelocity, targetMovementVelocity, 1f - Mathf.Exp(-StableMovementSharpness * deltaTime));
+                        }
+                        // Flying (class game): move where you steer, Space up, Ctrl down, otherwise hover. No gravity.
+                        else if (CanFly)
+                        {
+                            float upDown = _flyUp ? FlyUpSpeed : (_flyDown ? -FlyDownSpeed : 0f);
+                            Vector3 targetFlyVelocity = (_moveInputVector * MaxAirMoveSpeed) + (Motor.CharacterUp * upDown);
+                            currentVelocity = Vector3.Lerp(currentVelocity, targetFlyVelocity, 1f - Mathf.Exp(-4f * deltaTime));
                         }
                         // Air movement
                         else

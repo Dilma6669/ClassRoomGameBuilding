@@ -29,7 +29,8 @@ public class CustomModel : MonoBehaviour
 {
     public const string ModelChildPrefix = "Model (auto)";
 
-    public enum AnimSlot { Idle, Walk, Run, Jump, Fall }
+    public enum AnimSlot { Idle, Walk, Run, Jump, Fall, Fly }
+    private const int SlotCount = 6;
 
     [Tooltip("Drag a 3D model here (.fbx, .glb or .obj from your Assets/MyModels folder, or a prefab).")]
     public GameObject model;
@@ -51,6 +52,7 @@ public class CustomModel : MonoBehaviour
     [Tooltip("Plays when moving fast (sprinting).")] public AnimationClip run;
     [Tooltip("Plays when going up in the air.")] public AnimationClip jump;
     [Tooltip("Plays when falling.")] public AnimationClip fall;
+    [Tooltip("Plays while flying (a 'become a character' pickup with Can fly). Empty = it uses idle/walk/run in the air.")] public AnimationClip fly;
     [Tooltip("Creatures: plays when it hurts the player (found by name: Scratch, Bite, Attack, Punch, Kick...). An animation picked in Game Builder > Sounds for 'it attacks you' is used instead.")]
     public AnimationClip attack;
     [Tooltip("The player: plays when something hurts you (found by name: Hit, Hurt, Damage...). An animation picked in Game Builder > Sounds for 'gets hurt' is used instead.")]
@@ -80,15 +82,16 @@ public class CustomModel : MonoBehaviour
     // Runtime animation
     private PlayableGraph graph;
     private AnimationMixerPlayable mixer;
-    private readonly AnimationClipPlayable[] clipPlayables = new AnimationClipPlayable[5];
-    private readonly int[] mixerInput = { -1, -1, -1, -1, -1 };
-    private readonly float[] weights = new float[5];
+    private readonly AnimationClipPlayable[] clipPlayables = new AnimationClipPlayable[SlotCount];
+    private readonly int[] mixerInput = { -1, -1, -1, -1, -1, -1 };
+    private readonly float[] weights = new float[SlotCount];
     private AnimSlot currentSlot = AnimSlot.Idle;
     private Vector3 lastPosition;
     private bool isStaticObstacle;
     private PlayerLogic playerLogic;
 #if HAS_KINEMATIC_CC
     private KinematicCharacterMotor motor;
+    private ExampleCharacterController flyer;
 #endif
 
     // ------------------------------------------------------------------ Lifecycle
@@ -196,14 +199,14 @@ public class CustomModel : MonoBehaviour
         public GameObject animationsFrom;
         public float size = 1f, turn, raiseLower, animationSpeed = 1f;
         public bool animationMovesModel;
-        public AnimationClip idle, walk, run, jump, fall, attack, hurt, death;
+        public AnimationClip idle, walk, run, jump, fall, attack, hurt, death, fly;
     }
 
     public Look GetLook() => new Look
     {
         model = model, animationsFrom = animationsFrom, size = size, turn = turn, raiseLower = raiseLower,
         animationSpeed = animationSpeed, animationMovesModel = animationMovesModel,
-        idle = idle, walk = walk, run = run, jump = jump, fall = fall, attack = attack, hurt = hurt, death = death,
+        idle = idle, walk = walk, run = run, jump = jump, fall = fall, attack = attack, hurt = hurt, death = death, fly = fly,
     };
 
     /// <summary>Changes to another look while playing (a 'become a character' pickup) and starts its animations.</summary>
@@ -213,7 +216,7 @@ public class CustomModel : MonoBehaviour
         size = look.size; turn = look.turn; raiseLower = look.raiseLower;
         animationSpeed = look.animationSpeed; animationMovesModel = look.animationMovesModel;
         idle = look.idle; walk = look.walk; run = look.run; jump = look.jump; fall = look.fall;
-        attack = look.attack; hurt = look.hurt; death = look.death;
+        attack = look.attack; hurt = look.hurt; death = look.death; fly = look.fly;
         Rebuild();
         if (!Application.isPlaying) return;
         CacheMovementSources();
@@ -442,6 +445,7 @@ public class CustomModel : MonoBehaviour
         playerLogic = GetComponentInParent<PlayerLogic>();
 #if HAS_KINEMATIC_CC
         motor = GetComponent<KinematicCharacterMotor>();
+        flyer = GetComponent<ExampleCharacterController>();
 #endif
         isStaticObstacle = GetComponent<PlatformStaticDriver>() != null || GetComponent<TerrainStaticDriver>() != null;
     }
@@ -454,6 +458,7 @@ public class CustomModel : MonoBehaviour
             case AnimSlot.Walk: return walk;
             case AnimSlot.Run: return run;
             case AnimSlot.Jump: return jump;
+            case AnimSlot.Fly: return fly;
             default: return fall;
         }
     }
@@ -474,9 +479,9 @@ public class CustomModel : MonoBehaviour
 
         // Humanoid characters need humanoid animations (and the other way round), or the pose breaks
         bool isHumanoid = animator.avatar != null && animator.avatar.isHuman;
-        AnimationClip[] usable = new AnimationClip[5];
+        AnimationClip[] usable = new AnimationClip[SlotCount];
         int clipCount = 0;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < SlotCount; i++)
         {
             AnimationClip clip = GetClip((AnimSlot)i);
             if (clip == null) continue;
@@ -500,7 +505,7 @@ public class CustomModel : MonoBehaviour
         FindMotionBone(isHumanoid);
 
         int input = 0;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < SlotCount; i++)
         {
             mixerInput[i] = -1;
             AnimationClip clip = usable[i];
@@ -516,7 +521,7 @@ public class CustomModel : MonoBehaviour
         output.SetSourcePlayable(mixer);
 
         currentSlot = PickFallback(AnimSlot.Idle);
-        for (int i = 0; i < 5; i++) weights[i] = i == (int)currentSlot ? 1f : 0f;
+        for (int i = 0; i < SlotCount; i++) weights[i] = i == (int)currentSlot ? 1f : 0f;
         ApplyWeights();
         graph.Play();
     }
@@ -539,8 +544,18 @@ public class CustomModel : MonoBehaviour
         float horizontalSpeed = isStaticObstacle ? 0f : new Vector3(velocity.x, 0f, velocity.z).magnitude;
         float runAbove = playerLogic != null ? playerLogic.moveSpeed * 1.15f : 6f;
 
+        // Flying: the fly animation, or (without one) idle/walk/run as if on the ground
+        bool flying = false;
+#if HAS_KINEMATIC_CC
+        flying = flyer != null && flyer.IsFlying;
+#endif
+
         AnimSlot target;
-        if (!grounded && (jump != null || fall != null))
+        if (flying && mixerInput[(int)AnimSlot.Fly] >= 0)
+        {
+            target = AnimSlot.Fly;
+        }
+        else if (!grounded && !flying && (jump != null || fall != null))
         {
             target = velocity.y > 0.5f ? AnimSlot.Jump : AnimSlot.Fall;
         }
@@ -576,12 +591,12 @@ public class CustomModel : MonoBehaviour
 
         // Smoothly blend between animations
         float total = 0f;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < SlotCount; i++)
         {
             weights[i] = Mathf.MoveTowards(weights[i], i == (int)currentSlot ? 1f : 0f, dt * 8f);
             total += weights[i];
         }
-        if (total > 0f) for (int i = 0; i < 5; i++) weights[i] /= total;
+        if (total > 0f) for (int i = 0; i < SlotCount; i++) weights[i] /= total;
         UpdateAction(dt);
         ApplyWeights();
     }
@@ -622,6 +637,7 @@ public class CustomModel : MonoBehaviour
         AnimSlot[] order;
         switch (wanted)
         {
+            case AnimSlot.Fly: order = new[] { AnimSlot.Fly, AnimSlot.Idle, AnimSlot.Walk, AnimSlot.Run, AnimSlot.Jump, AnimSlot.Fall }; break;
             case AnimSlot.Fall: order = new[] { AnimSlot.Fall, AnimSlot.Jump, AnimSlot.Idle, AnimSlot.Walk, AnimSlot.Run }; break;
             case AnimSlot.Jump: order = new[] { AnimSlot.Jump, AnimSlot.Fall, AnimSlot.Idle, AnimSlot.Walk, AnimSlot.Run }; break;
             case AnimSlot.Run: order = new[] { AnimSlot.Run, AnimSlot.Walk, AnimSlot.Idle, AnimSlot.Jump, AnimSlot.Fall }; break;
@@ -634,7 +650,7 @@ public class CustomModel : MonoBehaviour
 
     private void ApplyWeights()
     {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < SlotCount; i++)
         {
             if (mixerInput[i] < 0) continue;
             mixer.SetInputWeight(mixerInput[i], weights[i] * (1f - actionWeight));
@@ -794,7 +810,7 @@ public class CustomModel : MonoBehaviour
 
     public void ClearClips()
     {
-        idle = walk = run = jump = fall = attack = hurt = death = null;
+        idle = walk = run = jump = fall = attack = hurt = death = fly = null;
         attackLookedFor = hurtLookedFor = deathLookedFor = false;
     }
 
@@ -841,6 +857,7 @@ public class CustomModel : MonoBehaviour
         if (attack == null) attack = BestClip(clips, source.name, "scratch", "bite", "attack", "punch", "kick", "claw", "strike", "sting", "peck", "swipe", "slash");
         if (hurt == null) hurt = BestClip(clips, source.name, "hit", "hurt", "damage", "flinch", "react");
         if (death == null) death = BestClip(clips, source.name, "death", "die", "dead", "defeat", "dying");
+        if (fly == null) fly = BestClip(clips, source.name, "fly", "flying", "hover", "flap", "soar", "glide");
         attackLookedFor = hurtLookedFor = deathLookedFor = true;
 
         // A model with just one animation (e.g. a flapping bird) plays it all the time
@@ -860,7 +877,7 @@ public class CustomModel : MonoBehaviour
             CustomModel probe = temp.AddComponent<CustomModel>();
             probe.model = modelAsset;
             probe.AutoFindClips();
-            AnimationClip[] picked = { probe.idle, probe.walk, probe.run, probe.jump, probe.fall };
+            AnimationClip[] picked = { probe.idle, probe.walk, probe.run, probe.jump, probe.fall, probe.fly };
             for (int i = 0; i < picked.Length; i++)
             {
                 if (picked[i] == null) continue;

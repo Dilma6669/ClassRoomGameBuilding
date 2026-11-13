@@ -701,7 +701,8 @@ public partial class GameBuilderWindow : EditorWindow
             ("🦘 Super Jump\njump higher", () => Spawn(ObstacleBase.PayloadType.JumpBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)),
-            ("🦊 Become a Character\nturn into someone", () => SpawnBecome()));
+            ("🦊 Become a Character\nturn into someone", () => SpawnBecome()),
+            ("🐉 Become a Flyer\nturn into a dragon", () => SpawnBecome("Dragon-model", true)));
 
         EditorGUILayout.Space(6); // the same gap as between the boxes below
         if (ObstacleBaseEditor.BeginBox("📋 Creatures and Pickups List", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
@@ -1023,13 +1024,15 @@ public partial class GameBuilderWindow : EditorWindow
     }
 
     /// <summary>A 'Become a character' pickup: Roses Fox (if it's in MyModels) with its animations, for 20 seconds.</summary>
-    private void SpawnBecome()
+    /// <summary>A 'become a character' pickup: Roses Fox, or another model from Assets/MyModels (e.g. a flying dragon).</summary>
+    private void SpawnBecome(string modelName = "Roses Fox", bool canFly = false)
     {
         ObstacleBase created = Spawn(ObstacleBase.PayloadType.BecomeCharacter, ObstacleSpawnType.Static, 1, 20f, true, false);
         if (created == null) return;
-        string guid = AssetDatabase.FindAssets("Roses Fox t:GameObject", new[] { "Assets/MyModels" }).FirstOrDefault();
-        if (guid == null) return;
         Undo.RecordObject(created, "Become a character");
+        created.become.canFly = canFly;
+        string guid = AssetDatabase.FindAssets(modelName + " t:GameObject", new[] { "Assets/MyModels" }).FirstOrDefault();
+        if (guid == null) return;
         created.become.look.model = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
         BecomeEditor.FindAnimations(created);
     }
