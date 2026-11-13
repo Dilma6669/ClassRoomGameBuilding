@@ -1,6 +1,6 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-14, session 16 (✂ trim animations + ▶ preview). Next: class builds when the teacher says. Read START HERE first._
+_Last updated: 2026-11-14, session 16 (✂ trim animations + in-panel preview, sprint = trimmed roll in all tutorials, class builds redone 02:12, everything committed AND PUSHED to origin `feature/menus-models-checkpoints`; not merged to main). Next: ask the teacher how play-testing the builds went. Read START HERE first._
 
 ## ▶ START HERE (state at 2026-11-14)
 ### 📍 SESSION 16 (2026-11-14): ✂ trim animations (teacher's "one more request")
@@ -92,7 +92,7 @@ Teacher asked: Scenery in the Library; terrain changes stick even when not savin
 - **See-through in builds:** cause = a built game only has the Standard shader's "Fade" version if a saved material uses it; the copies made at runtime fell back to solid. Now `SeeThrough.CopyOf` starts from `Assets/Resources/SeeThroughFade.mat` / `SeeThroughFadeGlow.mat` (Fade, + emission). Verified in Play; NOT yet checked in a real build (needs a new class build).
 - **Scenery in the Library:** `LibraryCategory.Scenery` (appended, ints unchanged), in-game Library tab "Scenery" (index 5, own empty-page hint). Game Builder > 🌲 Scenery > "📖 Library (one piece)": select a tree/rock → Add to Library (picture + "What is the …?" backstory). `CustomModelEditor.DrawLibrarySection(name, Transform, category, backstory)` + `TakePicture(Transform, name)` are the general versions. Verified: picture of a tree, the tab shows in Play.
 - **Mac "won't open":** the app IS ad-hoc signed by Unity (has _CodeSignature); it's Gatekeeper blocking a downloaded app, and macOS 15+ removed right-click > Open. `MacZip.HowToOpen` rewritten: Terminal `xattr -cr "/Applications/<App>.app"` (easiest), or System Settings > Privacy & Security > Open Anyway, and `codesign --force --deep --sign -` if it says damaged. The existing Mac zip still has the OLD note: rebuild to get the new one.
-- **Other computers:** all packages come from Unity's registry (download on first open, needs internet); KCC is in Assets; needs Unity 6000.3.20f1 via Unity Hub. Copy the project folder WITHOUT Library/Temp/Logs/Build (or git; this branch is NOT pushed). Mac builds need the Mac Build Support (Mono) module on that PC.
+- **Other computers:** all packages come from Unity's registry (download on first open, needs internet); KCC is in Assets; needs Unity 6000.3.20f1 via Unity Hub. Copy the project folder WITHOUT Library/Temp/Logs/Build (or git: the branch was pushed to GitHub in session 16). Mac builds need the Mac Build Support (Mono) module on that PC.
 - **Stamina:** sprinting lasts twice as long: `PlayerLogic.staminaDrainRate` default 25 -> 12.5 per second (8 s from full). Old levels still saved with 25 are upgraded once (`settingsVersion`, in Awake + OnValidate); other values are kept.
 - **Class builds redone (2026-11-13, after the stamina change):** `Build/TutorialIsland.zip` (Windows, 82 MB; ran 25 s, no errors in Player.log) and `Build/TutorialIsland (Mac).zip` (90 MB, new Mac note inside). They include the teacher's saved Tutorial2.unity edits. The Windows build took ~35 min (new see-through shader versions compiling). See-through in a build still not checked by eye.
 - **Later in session 10 (teacher's corrections):**
