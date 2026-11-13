@@ -793,7 +793,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.3, g: 0.8, b: 1, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -893,6 +893,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -8151,7 +8192,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.55, g: 0.35, b: 1, a: 1}
-  m_Intensity: 0.8330148
+  m_Intensity: 0.8002287
   m_Range: 6
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -9625,6 +9666,7 @@ MonoBehaviour:
   run: {fileID: 2025402319704000096, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
   jump: {fileID: 7602436819081699039, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
   fall: {fileID: -610593931719907590, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
   hurt: {fileID: 0}
   death: {fileID: -4669247909627572057, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
@@ -9656,6 +9698,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -9665,7 +9748,7 @@ MonoBehaviour:
   hitZoneWidth: 0.57109785
   hitZoneHeight: 0.47245312
   touchDistance: 0.3
-  hitZoneBottom: {x: -0.000012531877, y: -0.5000005, z: 0.0000006556511}
+  hitZoneBottom: {x: 0.0000004172325, y: -0.5000005, z: 0.000005990267}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -10231,7 +10314,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.3, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -10331,6 +10414,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -10340,7 +10464,7 @@ MonoBehaviour:
   hitZoneWidth: 1.0000001
   hitZoneHeight: 1
   touchDistance: 0.3
-  hitZoneBottom: {x: 0.00000032782555, y: -0.5, z: -0.00000017881393}
+  hitZoneBottom: {x: 0.000001013279, y: -0.5, z: -0.00000017881393}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -17041,7 +17165,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.4, g: 1, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -17141,16 +17265,57 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
   chaseSpeed: 4
   hitZoneShape: 0
   fitHitZoneToModel: 1
-  hitZoneWidth: 1
+  hitZoneWidth: 1.0000001
   hitZoneHeight: 1
   touchDistance: 0.3
-  hitZoneBottom: {x: -0.0000025629997, y: -0.5, z: 0.00000035762787}
+  hitZoneBottom: {x: 0.00000059604645, y: -0.5, z: 0.0000022947788}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -19408,6 +19573,7 @@ MonoBehaviour:
   run: {fileID: 1396513020575543376, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   jump: {fileID: 4236263215594919904, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: -6065923176475441197, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   hurt: {fileID: -5645037370960705071, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   death: {fileID: 3065992380904858723, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
@@ -19595,7 +19761,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.5, b: 0.85, a: 1}
-  m_Intensity: 0.6247611
+  m_Intensity: 0.60017157
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -21792,6 +21958,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -21823,16 +21990,57 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
   chaseSpeed: 4
   hitZoneShape: 0
   fitHitZoneToModel: 1
-  hitZoneWidth: 0.86613536
+  hitZoneWidth: 0.8661355
   hitZoneHeight: 0.24400628
   touchDistance: 0.3
-  hitZoneBottom: {x: -0.00000017881393, y: -0.4999994, z: 0.00000071525574}
+  hitZoneBottom: {x: -0.0000019669533, y: -0.4999994, z: -0.00000017881393}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -23070,6 +23278,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 0}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: 652b943745eff5041a0d1003a0e1f395, type: 3}
   hurt: {fileID: -5193681874456876713, guid: 652b943745eff5041a0d1003a0e1f395, type: 3}
   death: {fileID: -4669247909627572057, guid: 652b943745eff5041a0d1003a0e1f395, type: 3}
@@ -23101,6 +23310,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -25409,6 +25659,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -25440,6 +25691,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -30954,7 +31246,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.6, b: 0.2, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -31054,6 +31346,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -34345,6 +34678,7 @@ MonoBehaviour:
   run: {fileID: 2025402319704000096, guid: ee58824b086ee15478c6310fd1167bfa, type: 3}
   jump: {fileID: 0}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 1262805275419845591, guid: ee58824b086ee15478c6310fd1167bfa, type: 3}
   hurt: {fileID: 0}
   death: {fileID: -4669247909627572057, guid: ee58824b086ee15478c6310fd1167bfa, type: 3}
@@ -34376,6 +34710,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -36478,7 +36853,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.3, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -36578,6 +36953,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -41802,7 +42218,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.3, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -41902,6 +42318,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -42874,7 +43331,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.3, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -42974,6 +43431,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -42983,7 +43481,7 @@ MonoBehaviour:
   hitZoneWidth: 1
   hitZoneHeight: 1
   touchDistance: 0.3
-  hitZoneBottom: {x: -0.000000059604645, y: -0.5, z: 0.0000013709068}
+  hitZoneBottom: {x: -0.00000047683716, y: -0.5, z: 0}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -44803,6 +45301,7 @@ MonoBehaviour:
   run: {fileID: 5438174844696091, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   jump: {fileID: -8844117769254719942, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   fall: {fileID: 1056361834947429861, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
+  fly: {fileID: 0}
   attack: {fileID: -2321885862696751710, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   hurt: {fileID: -754717251854896129, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   death: {fileID: -8117488893570252154, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
@@ -44834,6 +45333,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -48092,6 +48632,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -48123,6 +48664,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -50898,7 +51480,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.4, g: 1, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -50998,6 +51580,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -51483,7 +52106,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.9, b: 0.2, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -51583,6 +52206,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -52331,7 +52995,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.4, g: 0.9, b: 1, a: 1}
-  m_Intensity: 1.7480152
+  m_Intensity: 0.96991897
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -58038,6 +58702,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -58069,6 +58734,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -58078,7 +58784,7 @@ MonoBehaviour:
   hitZoneWidth: 0.86613524
   hitZoneHeight: 0.24400628
   touchDistance: 0.3
-  hitZoneBottom: {x: 0.0000002682209, y: -0.50000024, z: 0.000000059604645}
+  hitZoneBottom: {x: -0.0000016391277, y: -0.50000024, z: 0.00000029802322}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -58305,6 +59011,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -58336,6 +59043,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -70135,7 +70883,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.55, g: 0.35, b: 1, a: 1}
-  m_Intensity: 0.8330148
+  m_Intensity: 0.8002287
   m_Range: 6
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -70476,6 +71224,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -70507,6 +71256,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -72839,7 +73629,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.3, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -72939,6 +73729,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -72948,7 +73779,7 @@ MonoBehaviour:
   hitZoneWidth: 1
   hitZoneHeight: 1
   touchDistance: 0.3
-  hitZoneBottom: {x: -0.00000047683716, y: -0.5, z: -0.00000071525574}
+  hitZoneBottom: {x: 0.00000032782555, y: -0.5, z: -0.00000017881393}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -76481,7 +77312,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.4, g: 1, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -76581,16 +77412,57 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
   chaseSpeed: 4
   hitZoneShape: 0
   fitHitZoneToModel: 1
-  hitZoneWidth: 1.0000001
+  hitZoneWidth: 1
   hitZoneHeight: 1
   touchDistance: 0.3
-  hitZoneBottom: {x: 0.00000020861626, y: -0.5, z: -0.00000011920929}
+  hitZoneBottom: {x: 0.00000032782555, y: -0.5, z: 0}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -82146,7 +83018,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.4, g: 1, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -82246,6 +83118,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -87215,6 +88128,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -87246,16 +88160,57 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
   chaseSpeed: 4
   hitZoneShape: 0
   fitHitZoneToModel: 1
-  hitZoneWidth: 0.86613536
+  hitZoneWidth: 0.8661353
   hitZoneHeight: 0.24400628
   touchDistance: 0.3
-  hitZoneBottom: {x: 0.0000005364418, y: -0.49999994, z: 0.00000074505806}
+  hitZoneBottom: {x: 0, y: -0.49999994, z: -0.0000011920929}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -89222,7 +90177,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.3, b: 0.4, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -89325,6 +90280,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -94982,6 +95978,7 @@ MonoBehaviour:
   run: {fileID: 5438174844696091, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   jump: {fileID: -8844117769254719942, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   fall: {fileID: 1056361834947429861, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
+  fly: {fileID: 0}
   attack: {fileID: -2321885862696751710, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   hurt: {fileID: -754717251854896129, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   death: {fileID: -8117488893570252154, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
@@ -95013,6 +96010,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 1
   chaseStartDistance: 8
   chaseGiveUpDistance: 15
@@ -95372,6 +96410,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 0}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 1405534378272388581, guid: f2af12a99f5ea8c47a667485d1da7250, type: 3}
   hurt: {fileID: -5193681874456876713, guid: f2af12a99f5ea8c47a667485d1da7250, type: 3}
   death: {fileID: -4669247909627572057, guid: f2af12a99f5ea8c47a667485d1da7250, type: 3}
@@ -95403,6 +96442,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -97588,6 +98668,7 @@ MonoBehaviour:
   run: {fileID: 0}
   jump: {fileID: 7602436819081699039, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   fall: {fileID: 0}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   hurt: {fileID: -5193681874456876713, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
@@ -97619,16 +98700,57 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
   chaseSpeed: 4
   hitZoneShape: 0
   fitHitZoneToModel: 1
-  hitZoneWidth: 0.8661353
+  hitZoneWidth: 0.86613536
   hitZoneHeight: 0.24400628
   touchDistance: 0.3
-  hitZoneBottom: {x: -0.0000004172325, y: -0.4999997, z: 0.0000012516975}
+  hitZoneBottom: {x: 0.00000017881393, y: -0.4999997, z: 0.0000005364418}
   hitZoneMeasured: 1
   showPickupMessage: 1
   pickupMessage: 
@@ -98304,7 +99426,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 0.3, g: 0.8, b: 1, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -98404,6 +99526,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -102923,6 +104086,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -105908,6 +107112,7 @@ MonoBehaviour:
   run: {fileID: 2025402319704000096, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
   jump: {fileID: 7602436819081699039, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
   fall: {fileID: -610593931719907590, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
+  fly: {fileID: 0}
   attack: {fileID: 3513196197318169259, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
   hurt: {fileID: 0}
   death: {fileID: -4669247909627572057, guid: 6e91c3cadd425954f88ec17cecb7007d, type: 3}
@@ -105939,6 +107144,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
@@ -109634,7 +110880,7 @@ Light:
   serializedVersion: 12
   m_Type: 2
   m_Color: {r: 1, g: 0.6, b: 0.2, a: 1}
-  m_Intensity: 1.3110113
+  m_Intensity: 0.7274392
   m_Range: 4
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -109734,6 +110980,47 @@ MonoBehaviour:
   shrinkAwayWhenBeaten: 1
   waitBeforeShrinking: 0.5
   shrinkTime: 1
+  become:
+    look:
+      model: {fileID: 0}
+      animationsFrom: {fileID: 0}
+      size: 1
+      turn: 0
+      raiseLower: 0
+      animationSpeed: 1
+      animationMovesModel: 0
+      idle: {fileID: 0}
+      walk: {fileID: 0}
+      run: {fileID: 0}
+      jump: {fileID: 0}
+      fall: {fileID: 0}
+      attack: {fileID: 0}
+      hurt: {fileID: 0}
+      death: {fileID: 0}
+      fly: {fileID: 0}
+    forever: 0
+    showCountdown: 1
+    changeSpeed: 0
+    moveSpeed: 10
+    changeSprint: 0
+    sprintMultiplier: 1.8
+    changeJump: 0
+    jumpHeight: 10
+    changeAirSteer: 0
+    airSteerSpeed: 15
+    changeStamina: 0
+    maxStamina: 100
+    changeStaminaUse: 0
+    staminaDrainRate: 12.5
+    changeHealth: 0
+    maxHealth: 100
+    invincible: 0
+    noFallDamage: 0
+    canFly: 0
+    flyUpSpeed: 10
+    flyDownSpeed: 10
+    creatureHits: 0
+    creatureHitsAmount: 1
   chasePlayer: 0
   chaseStartDistance: 8
   chaseGiveUpDistance: 20
