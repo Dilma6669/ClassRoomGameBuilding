@@ -54414,6 +54414,7 @@ MonoBehaviour:
       hurt: {fileID: 0}
       death: {fileID: 0}
       fly: {fileID: 0}
+      trims: []
     forever: 0
     showCountdown: 1
     changeSpeed: 0
@@ -54437,6 +54438,31 @@ MonoBehaviour:
     flyDownSpeed: 10
     flyTilt: 20
     flyCameraLift: 3
+    canShoot: 0
+    shootDamage: 10
+    shootEveryMin: 0.3
+    shootEveryMax: 0.3
+    shootSpeed: 30
+    shotsAtOnce: 1
+    shootSpread: 10
+    shootSize: 0.6
+    shootColour: {r: 1, g: 0.85, b: 0.1, a: 1}
+    shootModel: {fileID: 0}
+    shootTrail: 1
+    shootHitEffect: 5
+    shootLasts: 3
+    shootHoming: 0
+    shootDrops: 0
+    shootAimUpDown: 0
+    shootAnimation: {fileID: 0}
+    shootDelay: 0
+    shootFromHeight: 0.6
+    shootUses: 0
+    shootBarSize: 100
+    shootBarPerShot: 10
+    shootBarRefill: 30
+    shootBarWait: 0.5
+    shootBarReadyAt: 30
     transformEffect: 5
     transformCustomColour: 0
     transformColour: {r: 1, g: 0.5, b: 0.9, a: 1}
@@ -82935,7 +82961,7 @@ MonoBehaviour:
   animationsFrom: {fileID: 0}
   idle: {fileID: -7722578621379068242, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   walk: {fileID: 7816058396389811831, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
-  run: {fileID: 1396513020575543376, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
+  run: {fileID: 3179481391351805513, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   jump: {fileID: 4236263215594919904, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   fall: {fileID: 0}
   fly: {fileID: 0}
@@ -82944,6 +82970,10 @@ MonoBehaviour:
   death: {fileID: 3065992380904858723, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   animationSpeed: 1
   animationMovesModel: 0
+  trims:
+  - clip: {fileID: 3179481391351805513, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
+    start: 0
+    end: 0.9668076
   builtFrom: {fileID: 2107409826236812522, guid: 5a1c0ad33ff6cec479565712dc38c35f, type: 3}
   clipsFoundFrom: {fileID: 0}
   attackLookedFor: 1
@@ -108580,6 +108610,7 @@ MonoBehaviour:
       hurt: {fileID: 0}
       death: {fileID: 0}
       fly: {fileID: 0}
+      trims: []
     forever: 0
     showCountdown: 1
     changeSpeed: 0
@@ -108603,6 +108634,31 @@ MonoBehaviour:
     flyDownSpeed: 10
     flyTilt: 20
     flyCameraLift: 3
+    canShoot: 0
+    shootDamage: 10
+    shootEveryMin: 0.3
+    shootEveryMax: 0.3
+    shootSpeed: 30
+    shotsAtOnce: 1
+    shootSpread: 10
+    shootSize: 0.6
+    shootColour: {r: 1, g: 0.85, b: 0.1, a: 1}
+    shootModel: {fileID: 0}
+    shootTrail: 1
+    shootHitEffect: 5
+    shootLasts: 3
+    shootHoming: 0
+    shootDrops: 0
+    shootAimUpDown: 0
+    shootAnimation: {fileID: 0}
+    shootDelay: 0
+    shootFromHeight: 0.6
+    shootUses: 0
+    shootBarSize: 100
+    shootBarPerShot: 10
+    shootBarRefill: 30
+    shootBarWait: 0.5
+    shootBarReadyAt: 30
     transformEffect: 5
     transformCustomColour: 0
     transformColour: {r: 1, g: 0.5, b: 0.9, a: 1}
@@ -123026,6 +123082,7 @@ MonoBehaviour:
   death: {fileID: -8117488893570252154, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   animationSpeed: 1
   animationMovesModel: 0
+  trims: []
   builtFrom: {fileID: -7981514964708312862, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   clipsFoundFrom: {fileID: 0}
   attackLookedFor: 1
@@ -123070,6 +123127,7 @@ MonoBehaviour:
       hurt: {fileID: 0}
       death: {fileID: 0}
       fly: {fileID: 0}
+      trims: []
     forever: 0
     showCountdown: 1
     changeSpeed: 0
@@ -123093,6 +123151,31 @@ MonoBehaviour:
     flyDownSpeed: 10
     flyTilt: 20
     flyCameraLift: 3
+    canShoot: 0
+    shootDamage: 10
+    shootEveryMin: 0.3
+    shootEveryMax: 0.3
+    shootSpeed: 30
+    shotsAtOnce: 1
+    shootSpread: 10
+    shootSize: 0.6
+    shootColour: {r: 1, g: 0.85, b: 0.1, a: 1}
+    shootModel: {fileID: 0}
+    shootTrail: 1
+    shootHitEffect: 5
+    shootLasts: 3
+    shootHoming: 0
+    shootDrops: 0
+    shootAimUpDown: 0
+    shootAnimation: {fileID: 0}
+    shootDelay: 0
+    shootFromHeight: 0.6
+    shootUses: 0
+    shootBarSize: 100
+    shootBarPerShot: 10
+    shootBarRefill: 30
+    shootBarWait: 0.5
+    shootBarReadyAt: 30
     transformEffect: 5
     transformCustomColour: 0
     transformColour: {r: 1, g: 0.5, b: 0.9, a: 1}
@@ -129746,6 +129829,7 @@ MonoBehaviour:
   death: {fileID: -4669247909627572057, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   animationSpeed: 1
   animationMovesModel: 0
+  trims: []
   builtFrom: {fileID: -7981514964708312862, guid: be5b33723a7f1784f95a2735d5a16a1d, type: 3}
   clipsFoundFrom: {fileID: 0}
   attackLookedFor: 1
@@ -129790,6 +129874,7 @@ MonoBehaviour:
       hurt: {fileID: 0}
       death: {fileID: 0}
       fly: {fileID: 0}
+      trims: []
     forever: 0
     showCountdown: 1
     changeSpeed: 0
@@ -129813,6 +129898,31 @@ MonoBehaviour:
     flyDownSpeed: 10
     flyTilt: 20
     flyCameraLift: 3
+    canShoot: 0
+    shootDamage: 10
+    shootEveryMin: 0.3
+    shootEveryMax: 0.3
+    shootSpeed: 30
+    shotsAtOnce: 1
+    shootSpread: 10
+    shootSize: 0.6
+    shootColour: {r: 1, g: 0.85, b: 0.1, a: 1}
+    shootModel: {fileID: 0}
+    shootTrail: 1
+    shootHitEffect: 5
+    shootLasts: 3
+    shootHoming: 0
+    shootDrops: 0
+    shootAimUpDown: 0
+    shootAnimation: {fileID: 0}
+    shootDelay: 0
+    shootFromHeight: 0.6
+    shootUses: 0
+    shootBarSize: 100
+    shootBarPerShot: 10
+    shootBarRefill: 30
+    shootBarWait: 0.5
+    shootBarReadyAt: 30
     transformEffect: 5
     transformCustomColour: 0
     transformColour: {r: 1, g: 0.5, b: 0.9, a: 1}
@@ -134460,6 +134570,7 @@ MonoBehaviour:
   death: {fileID: -8117488893570252154, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   animationSpeed: 1
   animationMovesModel: 0
+  trims: []
   builtFrom: {fileID: -7981514964708312862, guid: 05a87d0e066a4924ab16d574dc4ebbe2, type: 3}
   clipsFoundFrom: {fileID: 0}
   attackLookedFor: 1
@@ -134504,6 +134615,7 @@ MonoBehaviour:
       hurt: {fileID: 0}
       death: {fileID: 0}
       fly: {fileID: 0}
+      trims: []
     forever: 0
     showCountdown: 1
     changeSpeed: 0
@@ -134527,6 +134639,31 @@ MonoBehaviour:
     flyDownSpeed: 10
     flyTilt: 20
     flyCameraLift: 3
+    canShoot: 0
+    shootDamage: 10
+    shootEveryMin: 0.3
+    shootEveryMax: 0.3
+    shootSpeed: 30
+    shotsAtOnce: 1
+    shootSpread: 10
+    shootSize: 0.6
+    shootColour: {r: 1, g: 0.85, b: 0.1, a: 1}
+    shootModel: {fileID: 0}
+    shootTrail: 1
+    shootHitEffect: 5
+    shootLasts: 3
+    shootHoming: 0
+    shootDrops: 0
+    shootAimUpDown: 0
+    shootAnimation: {fileID: 0}
+    shootDelay: 0
+    shootFromHeight: 0.6
+    shootUses: 0
+    shootBarSize: 100
+    shootBarPerShot: 10
+    shootBarRefill: 30
+    shootBarWait: 0.5
+    shootBarReadyAt: 30
     transformEffect: 5
     transformCustomColour: 0
     transformColour: {r: 1, g: 0.5, b: 0.9, a: 1}
