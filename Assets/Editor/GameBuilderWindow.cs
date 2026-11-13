@@ -324,7 +324,16 @@ public partial class GameBuilderWindow : EditorWindow
         }
         EndBox();
 
+        if (terrain != null)
+        {
+            if (Box("🌱 Grass", "Grass types for the Paint Grass brush, and how far away grass shows.")) DrawGrassBox(terrain);
+            EndBox();
+        }
+
         if (Box("☀️ Sun & sky", "Sunlight, the sky picture and fog.")) DrawSunAndSky();
+        EndBox();
+
+        if (Box("✨ Graphics & effects", "Film colours, glow shine, dark edges, corner shadows and how far shadows reach.")) DrawGraphicsBox();
         EndBox();
 
         GameSettings settings = GameSettings.Load();
@@ -395,7 +404,14 @@ public partial class GameBuilderWindow : EditorWindow
     {
         Color? blue = new Color(0.4f, 0.75f, 1f);
         int clicked = ButtonGrid(Columns(3), tools.Select(t => t.label).ToList(), tools.Select(t => blue).ToList());
-        if (clicked >= 0) UseTerrainTool(terrain, tools[clicked].tool);
+        if (clicked < 0) return;
+        // The grass brush needs a grass type first (Unity hides that in the Terrain Inspector): add the cheap one
+        if (tools[clicked].tool == "PaintDetailsTool" && terrain.terrainData.detailPrototypes.Length == 0)
+        {
+            AddSimpleGrass(terrain);
+            Debug.Log("🌱 Added 'Simple Grass' to the ground so the grass brush has something to paint (see the 🌱 Grass box).");
+        }
+        UseTerrainTool(terrain, tools[clicked].tool);
     }
 
     /// <summary>Selects the ground and switches the Scene view to one of Unity's terrain brushes.</summary>

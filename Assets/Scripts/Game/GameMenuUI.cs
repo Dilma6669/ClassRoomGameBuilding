@@ -209,6 +209,16 @@ public class GameMenuUI : MonoBehaviour
         Button sound = UIBuilder.Button(panel.transform, "Sound & Music", bodyFont, 30, UIBuilder.ButtonColor, () => ShowSound());
         UIBuilder.Layout(sound, 64);
 
+        // One button: High -> Low -> Medium (slow computers pick Low)
+        Button graphics = UIBuilder.Button(panel.transform, GraphicsQuality.Label, bodyFont, 30, UIBuilder.ButtonColor, null);
+        TextMeshProUGUI graphicsLabel = graphics.GetComponentInChildren<TextMeshProUGUI>();
+        graphics.onClick.AddListener(() =>
+        {
+            GraphicsQuality.Next();
+            graphicsLabel.text = GraphicsQuality.Label;
+        });
+        UIBuilder.Layout(graphics, 64);
+
         Button quit = UIBuilder.Button(panel.transform, "Quit Game", bodyFont, 30, UIBuilder.DangerColor, () => manager.QuitGame());
         UIBuilder.Layout(quit, 64);
 

@@ -104,6 +104,10 @@ public class GameManager : MonoBehaviour
         if (hasCheckpoint) MovePlayerToCheckpoint();
         KeepPlayerAboveGround();
 
+        // The player's Graphics choice (Esc menu) + this level's shadow distance (✨ Graphics & effects, if it has them)
+        GraphicsQuality.LevelShadowDistance = LevelGraphics.Current != null ? LevelGraphics.Current.shadowsReach : 0f;
+        GraphicsQuality.Apply();
+
         if (Settings.useWorldBorder)
         {
             WorldBorder.CreateFor(scene, Settings);
