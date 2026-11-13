@@ -103,6 +103,7 @@ public static class MegaLevelBuilder
             PlayerController player = Object.FindAnyObjectByType<PlayerController>();
             player.transform.SetPositionAndRotation(G(0f, -205f, 0.2f), Quaternion.identity);
             player.CreateCharacterMesh();
+            TutorialLevelBuilder.SetTutorialPlayer(player);
             Health health = player.GetComponentInChildren<Health>();
             if (health != null)
             {
@@ -130,6 +131,7 @@ public static class MegaLevelBuilder
 
             Selection.activeGameObject = null;
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            TutorialLevelBuilder.SetMoodyLook();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
             TutorialLevelBuilder.AddToBuild(ScenePath, ShowcaseLevelBuilder.ScenePath);
 

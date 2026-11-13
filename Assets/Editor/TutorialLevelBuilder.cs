@@ -149,10 +149,11 @@ public static class TutorialLevelBuilder
         Transform signs = new GameObject("Tutorial Signs").transform;
         Material signMaterial = GetSignMaterial();
 
-        // 3. Player (the default model, the Old Man), facing down the course
+        // 3. Player (the student's character, see SetTutorialPlayer), facing down the course
         PlayerController player = Object.FindAnyObjectByType<PlayerController>();
         player.transform.SetPositionAndRotation(At(0f, -4f, 0.2f), Quaternion.identity);
         player.CreateCharacterMesh();
+        SetTutorialPlayer(player);
 
         // ---- Stations ----------------------------------------------------------------------
         Sign(signs, signMaterial, At(-4f, 0f), At(0f, 0f, 1.5f), "1. Welcome!",
@@ -173,7 +174,7 @@ public static class TutorialLevelBuilder
         video.playOnlyOnce = true;
 
         Sign(signs, signMaterial, At(-4f, 30f), At(0f, 30f, 1.5f), "4. This is you",
-            "You are the Old Man. To change your look: Game Builder > Player > Your character, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), blue bar = stamina (for sprinting).");
+            "You are a character made by a student! To change your look: Game Builder > Player > Your character, drag a model\ninto 'Player Model'. Green bar = health (falls and creatures hurt), blue bar = stamina (for sprinting).");
 
         // Scenery grove around station 5
         SceneryPopulator scenery = BuildScenery(terrain, At);
@@ -260,6 +261,7 @@ public static class TutorialLevelBuilder
 
         // 4. Save and add to the build (after the student's levels)
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        SetMoodyLook();
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         AddToBuild();
 
@@ -623,6 +625,78 @@ public static class TutorialLevelBuilder
         part.transform.localPosition = localPosition;
         part.transform.localScale = localScale;
         part.GetComponent<Renderer>().sharedMaterial = material;
+    }
+
+    // ------------------------------------------------------------------ The tutorials' player + look (all three levels)
+
+    /// <summary>The student's character played in the tutorials (if the file is missing, the default player stays).</summary>
+    internal const string TutorialPlayerModel = "Assets/MyModels/monster girl 3d model - Animated.glb";
+
+    /// <summary>The animations chosen for the tutorial player (by name, in TutorialPlayerModel). Others are found automatically.</summary>
+    private static readonly (string slot, string clip)[] TutorialPlayerClips =
+    {
+        ("idle", "zombie_idle_loop_fit"), ("walk", "zombie_walk_fwd_loop_fit"), ("run", "sprint_loop_fit"), ("jump", "jump_loop_fit"),
+    };
+
+    /// <summary>Gives the player the student's character, with the chosen animations.</summary>
+    public static void SetTutorialPlayer(PlayerController player)
+    {
+        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(TutorialPlayerModel);
+        CustomModel cm = player != null ? player.GetComponentInChildren<CustomModel>(true) : null;
+        if (model == null || cm == null) { Debug.LogWarning("Tutorial player model not found, so the default player is used: " + TutorialPlayerModel); return; }
+
+        cm.model = model;
+        cm.ClearClips();
+        cm.Refresh();
+        cm.AutoFindClips();
+        Dictionary<string, AnimationClip> clips = AssetDatabase.LoadAllAssetsAtPath(TutorialPlayerModel).OfType<AnimationClip>()
+            .GroupBy(c => c.name).ToDictionary(g => g.Key, g => g.First());
+        foreach (var (slot, name) in TutorialPlayerClips)
+        {
+            if (!clips.TryGetValue(name, out AnimationClip clip)) continue;
+            switch (slot)
+            {
+                case "idle": cm.idle = clip; break;
+                case "walk": cm.walk = clip; break;
+                case "run": cm.run = clip; break;
+                case "jump": cm.jump = clip; break;
+            }
+        }
+        cm.Refresh();
+        EditorUtility.SetDirty(cm);
+    }
+
+    /// <summary>A slightly darker, more menacing look: a dimmer, cooler sun, less sky light and a very light fog.</summary>
+    public static void SetMoodyLook()
+    {
+        RenderSettings.fog = true;
+        RenderSettings.fogMode = FogMode.ExponentialSquared;
+        RenderSettings.fogDensity = 0.004f; // very light: about 70% clear at 150 m
+        RenderSettings.fogColor = new Color(0.30f, 0.30f, 0.37f);
+        RenderSettings.ambientIntensity = 0.75f;
+        RenderSettings.reflectionIntensity = 0.75f;
+        foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+        {
+            if (l.type != LightType.Directional) continue;
+            l.intensity = 0.8f;
+            l.color = new Color(0.86f, 0.80f, 0.82f);
+        }
+
+        // A darker, stormier copy of the sky (fog doesn't reach the sky). The other levels keep the normal sky.
+        const string moodyPath = AssetFolder + "/Moody Sky.mat";
+        Material moody = AssetDatabase.LoadAssetAtPath<Material>(moodyPath);
+        if (moody == null && RenderSettings.skybox != null)
+        {
+            moody = new Material(RenderSettings.skybox) { name = "Moody Sky" };
+            if (moody.HasProperty("_Tint")) moody.SetColor("_Tint", new Color(0.40f, 0.38f, 0.46f));
+            if (moody.HasProperty("_Exposure")) moody.SetFloat("_Exposure", 0.75f);
+            AssetDatabase.CreateAsset(moody, moodyPath);
+        }
+        if (moody != null)
+        {
+            RenderSettings.skybox = moody;
+            DynamicGI.UpdateEnvironment();
+        }
     }
 
     internal static Material GetSignMaterial()

@@ -252,6 +252,9 @@ public class SceneryPopulator : MonoBehaviour
             ? (GameObject)PrefabUtility.InstantiatePrefab(model, go.transform)
             : Instantiate(model, go.transform);
         instance.name = model.name;
+        SceneryPiece tag = go.AddComponent<SceneryPiece>(); // shows it in the Game Builder's Scenery List
+        tag.group = group.name;
+        tag.hideFlags = HideFlags.HideInInspector;
 
         Quaternion turn = randomTurn ? Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) : Quaternion.identity;
         Quaternion tilt = group.tiltWithGround ? Quaternion.FromToRotation(Vector3.up, groundNormal) : Quaternion.identity;

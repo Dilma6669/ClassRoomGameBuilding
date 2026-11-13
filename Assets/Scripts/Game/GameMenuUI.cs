@@ -53,7 +53,7 @@ public class GameMenuUI : MonoBehaviour
     private readonly List<Image> listItemImages = new List<Image>();
     private int currentTab; // index into TabNames (0 = Story, opened first)
 
-    private static readonly string[] TabNames = { "Story", "All", "Characters", "Creatures", "Objects", "Scenery" };
+    private static readonly string[] TabNames = { "Story", "All", "Characters", "Creatures", "Objects" };
 
     private static bool TabShows(int tab, LibraryCategory category)
     {
@@ -64,7 +64,6 @@ public class GameMenuUI : MonoBehaviour
             case 2: return category == LibraryCategory.Character;
             case 3: return category == LibraryCategory.Creature;
             case 4: return category == LibraryCategory.Object;
-            case 5: return category == LibraryCategory.Scenery;
             default: return false;
         }
     }
@@ -369,8 +368,6 @@ public class GameMenuUI : MonoBehaviour
             detailPicture.gameObject.SetActive(false);
             detailBackstory.text = currentTab == 0
                 ? "The story hasn't been written yet!\n\nTo add a chapter, open Game > Settings and Library in the Unity menu bar, add a Library Entry, and set its Category to Story. Chapters appear in list order."
-                : currentTab == 5
-                ? "No scenery in the Library yet.\n\nTo add a tree, rock or plant: click it in the Scene, then use Game Builder > Scenery > Library (one piece). It takes a picture for you."
                 : "There are no entries in this section yet.\n\nTo add some, open Game > Settings and Library in the Unity menu bar and add to the Library Entries list.";
         }
         else

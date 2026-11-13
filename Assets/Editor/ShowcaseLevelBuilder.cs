@@ -89,6 +89,7 @@ public static class ShowcaseLevelBuilder
             PlayerController player = Object.FindAnyObjectByType<PlayerController>();
             player.transform.SetPositionAndRotation(At(0f, -6f, 0.2f), Quaternion.identity);
             player.CreateCharacterMesh();
+            TutorialLevelBuilder.SetTutorialPlayer(player);
 
             // Scenery first (round the edges), so everything after it has a clear park
             int sceneryCount = BuildScenery();
@@ -111,6 +112,7 @@ public static class ShowcaseLevelBuilder
             // 4. Save and add to the build, right after Tutorial Island
             Selection.activeGameObject = null;
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            TutorialLevelBuilder.SetMoodyLook();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
             TutorialLevelBuilder.AddToBuild(ScenePath, TutorialLevelBuilder.ScenePath);
 

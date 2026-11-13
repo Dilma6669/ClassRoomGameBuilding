@@ -154,8 +154,7 @@ public enum LibraryCategory
     Character,
     Creature,
     Object,
-    Story,
-    Scenery // trees, rocks, plants (added last so saved entries keep their category)
+    Story
 }
 
 [System.Serializable]

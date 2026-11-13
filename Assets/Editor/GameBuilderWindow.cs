@@ -37,6 +37,7 @@ public partial class GameBuilderWindow : EditorWindow
     private List<TriggerLogic> triggers = new List<TriggerLogic>();
     private List<Checkpoint> checkpoints = new List<Checkpoint>();
     private List<Teleporter> teleporters = new List<Teleporter>();
+    private List<SceneryPiece> sceneryPieces = new List<SceneryPiece>();
     private List<Material> skyMaterials;
 
     [System.NonSerialized] private GUIStyle bigButton, titleStyle, tabStyle, rowStyle, rowSelectedStyle;
@@ -91,6 +92,8 @@ public partial class GameBuilderWindow : EditorWindow
         checkpoints = SortByName(FindAll<Checkpoint>());
         teleporters = SortByName(FindAll<Teleporter>());
         NameUnnamedObstacles();
+        TagOldScenery();
+        sceneryPieces = SortByName(FindAll<SceneryPiece>());
 
         // Forget inspectors for things that were deleted
         foreach (Object key in editors.Keys.ToList())
@@ -927,6 +930,36 @@ public partial class GameBuilderWindow : EditorWindow
         EditorUtility.SetDirty(s);
     }
 
+    private static string SceneryIcon(SceneryPiece s)
+    {
+        string g = (s.group + " " + s.name).ToLowerInvariant();
+        if (g.Contains("rock") || g.Contains("stone") || g.Contains("pebble")) return "🪨";
+        if (g.Contains("plant") || g.Contains("bush") || g.Contains("flower") || g.Contains("grass") || g.Contains("fern") || g.Contains("mushroom")) return "🌿";
+        if (g.Contains("log") || g.Contains("stump")) return "🪵";
+        return "🌲";
+    }
+
+    /// <summary>The folder under 'Scenery (auto)' that holds a scenery group's pieces (made if needed).</summary>
+    private static Transform SceneryFolder(SceneryPopulator scenery, string group)
+    {
+        if (string.IsNullOrEmpty(group)) group = "Moved scenery";
+        Transform root = scenery.transform.Find(SceneryPopulator.ContainerName);
+        if (root == null)
+        {
+            root = new GameObject(SceneryPopulator.ContainerName).transform;
+            root.SetParent(scenery.transform, false);
+            Undo.RegisterCreatedObjectUndo(root.gameObject, "Move scenery");
+        }
+        Transform folder = root.Find(group);
+        if (folder == null)
+        {
+            folder = new GameObject(group).transform;
+            folder.SetParent(root, false);
+            Undo.RegisterCreatedObjectUndo(folder.gameObject, "Move scenery");
+        }
+        return folder;
+    }
+
     /// <summary>The scattered scenery piece (tree, rock...) that's selected, if any.</summary>
     private static Transform SelectedSceneryPiece(SceneryPopulator scenery)
     {
@@ -1077,6 +1110,32 @@ public partial class GameBuilderWindow : EditorWindow
     /// Not recorded for Undo on purpose: an Undo step made while the Hierarchy changes would undo the rename,
     /// which renames it again, so Ctrl+Z would get stuck. The scene is marked as changed instead.
     /// </summary>
+    /// <summary>Scenery placed before the Scenery List existed has no SceneryPiece tag yet: add it (like the names above, not an Undo step).</summary>
+    private void TagOldScenery()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        var pieces = new List<(Transform piece, string group)>();
+        foreach (SceneryPopulator populator in FindAll<SceneryPopulator>())
+        {
+            Transform root = populator.transform.Find(SceneryPopulator.ContainerName);
+            if (root == null) continue;
+            foreach (Transform folder in root)
+                foreach (Transform piece in folder) pieces.Add((piece, folder.name));
+        }
+        foreach (PlatformSceneryHolder holder in FindAll<PlatformSceneryHolder>())
+            foreach (Transform piece in holder.transform) pieces.Add((piece, ""));
+
+        foreach (var (piece, group) in pieces)
+        {
+            if (piece.GetComponent<SceneryPiece>() != null || piece.GetComponent<Teleporter>() != null) continue;
+            if (PrefabUtility.IsPartOfPrefabAsset(piece)) continue;
+            SceneryPiece tag = piece.gameObject.AddComponent<SceneryPiece>();
+            tag.group = group;
+            tag.hideFlags = HideFlags.HideInInspector;
+            EditorSceneManager.MarkSceneDirty(piece.gameObject.scene);
+        }
+    }
+
     private void NameUnnamedObstacles()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
@@ -1130,8 +1189,22 @@ public partial class GameBuilderWindow : EditorWindow
             }
             EndBox();
 
+            // Every tree, rock and plant in the level, like the Platforms List
+            EditorGUILayout.Space(6);
+            if (Box("📋 Scenery List", "Click one to change it. Drag them into folders to keep things tidy.", true))
+                InsetList(() => DrawList("scenery", sceneryPieces, "No scenery yet. Scatter some, or Place One, with the Scenery tools above.",
+                    s => SceneryIcon(s) + " " + s.name));
+            EndBox();
+
+            SceneryPiece selectedPiece = SelectedOf<SceneryPiece>();
+            if (selectedPiece != null)
+            {
+                EditorGUILayout.Space(6);
+                DrawNameAndFolder(selectedPiece, "scenery", sceneryPieces, "✏️ Name");
+            }
+
             // One piece of scenery selected? It can glow on its own
-            Transform piece = SelectedSceneryPiece(scenery);
+            Transform piece = selectedPiece != null ? selectedPiece.transform : SelectedSceneryPiece(scenery);
             if (Box("✨ Glow & sparkles (one piece)", "Make one tree, rock or plant glow, or add sparkles around it."))
             {
                 if (piece != null)
@@ -1150,21 +1223,31 @@ public partial class GameBuilderWindow : EditorWindow
             }
             EndBox();
 
-            // The in-game Library has a Scenery page: add a tree or rock to it, with a picture
-            if (Box("📖 Library (one piece)", "Add a tree, rock or plant to the game's Library (Esc > Library > Scenery)."))
+            if (piece != null)
             {
-                if (piece != null)
+                EditorGUILayout.Space(6);
+                Transform moving = piece;
+                string group = selectedPiece != null ? selectedPiece.group : "";
+                DrawPosition(moving, moving.name, hit =>
                 {
-                    string entryName = ObjectNames.NicifyVariableName(piece.name);
-                    CustomModelEditor.DrawLibrarySection(entryName, piece, () => LibraryCategory.Scenery,
-                        "What is the " + entryName + "? Where does it grow or come from, and is there a story about it?\n\nWrite about it here!");
-                }
-                else
+                    // A new spot: on a platform it rides along, on the ground it goes back in its scenery group
+                    PlatformLogic platform = TeleporterTools.PlatformAt(hit);
+                    Transform parent = platform != null ? PlatformSceneryHolder.For(platform) : SceneryFolder(scenery, group);
+                    Undo.RecordObject(moving, "Move scenery");
+                    if (parent != moving.parent) Undo.SetTransformParent(moving, parent, "Move scenery");
+                    moving.position = hit.point;
+                    // Things on platforms move, so they can't be 'static' (Unity would freeze them in place)
+                    if (platform != null)
+                        foreach (Transform t in moving.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, 0);
+                });
+
+                EditorGUILayout.Space(6);
+                if (BigButton("🗑 Delete " + piece.name, new Color(0.95f, 0.5f, 0.5f)))
                 {
-                    EditorGUILayout.LabelField("Click one tree, rock or plant in the Scene, then add it to the Library with a picture.", EditorStyles.wordWrappedMiniLabel);
+                    Undo.DestroyObjectImmediate(piece.gameObject);
+                    GUIUtility.ExitGUI();
                 }
             }
-            EndBox();
             return;
         }
 
