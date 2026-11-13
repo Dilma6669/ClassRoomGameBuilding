@@ -46,6 +46,50 @@ public class BecomeSettings
     [Tooltip("Flying characters: the camera sits this many metres higher, so the character is lower on the screen and you can see where you're going. 0 = normal.")]
     public float flyCameraLift = 3f;
 
+    // 🏹 Shooting (left click) while you are the character. Shots fly the way the character faces
+    // (a flying character tipping its nose up/down shoots up/down too). 10 damage = one jump on a creature's head.
+    [Tooltip("Hold the left mouse button to shoot.")]
+    public bool canShoot = false;
+    [Range(1, 1000)] public int shootDamage = 10;
+    [Tooltip("Seconds between shots while you hold the button: a random time between the shortest and longest (the same = steady).")]
+    [Range(0.03f, 10f)] public float shootEveryMin = 0.3f;
+    [Range(0.03f, 10f)] public float shootEveryMax = 0.3f;
+    [Range(1f, 300f)] public float shootSpeed = 30f;
+    [Range(1, 12)] public int shotsAtOnce = 1;
+    [Range(0f, 60f)] public float shootSpread = 10f;
+    [Range(0.1f, 20f)] public float shootSize = 0.6f;
+    public Color shootColour = new Color(1f, 0.85f, 0.1f);
+    [Tooltip("Shoot a model instead of a glowing ball. Empty = a glowing ball.")]
+    public GameObject shootModel;
+    public bool shootTrail = true;
+    public Sparkles.Effect shootHitEffect = Sparkles.Effect.Explosion;
+    [Range(0.5f, 30f)] public float shootLasts = 3f;
+    [Tooltip("The shots curve towards the nearest creature in front of you. 0 = straight.")]
+    [Range(0f, 1f)] public float shootHoming = 0f;
+    [Tooltip("The shots fall like a thrown ball.")]
+    public bool shootDrops = false;
+    [Tooltip("Aim up (+) or down (-) a little, in degrees.")]
+    [Range(-45f, 45f)] public float shootAimUpDown = 0f;
+    [Tooltip("The animation when you shoot. Empty = its attack animation (if it has one).")]
+    public AnimationClip shootAnimation;
+    [Range(0f, 3f)] public float shootDelay = 0f;
+    [Tooltip("Where shots come out: 0 = its feet, 1 = the top of its head.")]
+    [Range(0f, 1f)] public float shootFromHeight = 0.6f;
+
+    public enum ShootBarKind { StaminaBar, OwnBar, NoLimit }
+    [Tooltip("Stamina: each shot uses stamina, so you juggle sprinting and shooting. Own bar: a yellow bar at the top fills with each shot; when it's full you must wait for it to go down. No limit: shoot for ever.")]
+    public ShootBarKind shootUses = ShootBarKind.StaminaBar;
+    [Tooltip("How full the shooting bar can get (bigger = more shots before it's full).")]
+    [Range(1f, 1000f)] public float shootBarSize = 100f;
+    [Tooltip("How much each shot fills the bar (or uses stamina).")]
+    [Range(0f, 500f)] public float shootBarPerShot = 10f;
+    [Tooltip("How fast the bar goes back down each second when you're not shooting.")]
+    [Range(1f, 500f)] public float shootBarRefill = 30f;
+    [Tooltip("Seconds after shooting before the bar starts going down.")]
+    [Range(0f, 5f)] public float shootBarWait = 0.5f;
+    [Tooltip("When the bar is full you can shoot again once it's down to this % full.")]
+    [Range(0f, 95f)] public float shootBarReadyAt = 30f;
+
     [Tooltip("The sparkles when you turn into the character. None = no sparkles.")]
     public Sparkles.Effect transformEffect = Sparkles.Effect.Explosion;
     [Tooltip("Pick your own colour for the turning-into sparkles (otherwise pink).")]

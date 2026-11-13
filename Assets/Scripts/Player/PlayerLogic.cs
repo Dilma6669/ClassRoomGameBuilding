@@ -152,6 +152,20 @@ public class PlayerLogic : MonoBehaviour
         }
     }
 
+    /// <summary>Stamina is used up and still refilling (no sprinting, and no shooting for characters that shoot with stamina).</summary>
+    public bool StaminaExhausted => isExhausted;
+
+    /// <summary>Uses some stamina (a shooting character's shot). Returns false (and uses none) while it's run out.</summary>
+    public bool UseStamina(float amount)
+    {
+        if (isExhausted) return false;
+        currentStamina -= Mathf.Max(0f, amount);
+        regenTimer = regenDelay;
+        if (currentStamina <= 0f) { currentStamina = 0f; isExhausted = true; }
+        if (staminaHUD != null) staminaHUD.UpdateStaminaBar(currentStamina, maxStamina, isExhausted);
+        return true;
+    }
+
     /// <summary>While a Super Jump that protects you is on, falling doesn't hurt (FallDamage checks this).</summary>
     public bool NoFallDamageNow { get; private set; }
 

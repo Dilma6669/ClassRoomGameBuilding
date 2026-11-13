@@ -11,7 +11,7 @@ using KinematicCharacterController.Examples;
 /// Touching another one first puts the normal player back, then becomes the new character.
 /// Dying restarts the level, which brings the normal player back anyway.
 /// </summary>
-public class BecomeCharacter : MonoBehaviour
+public partial class BecomeCharacter : MonoBehaviour
 {
     private static BecomeCharacter active;
 
@@ -97,6 +97,7 @@ public class BecomeCharacter : MonoBehaviour
         logic.SettingsChanged();
 
         active = this;
+        StartShooting(s);
         if (s.showCountdown && !s.forever) ShowCountdown();
         else HideCountdown();
         TransformEffect(s);
@@ -123,10 +124,12 @@ public class BecomeCharacter : MonoBehaviour
         if (controller != null) controller.CanFly = false; // in the air? you fall now
 #endif
         HideCountdown();
+        StopShooting();
     }
 
     private void Update()
     {
+        UpdateShooting();
         if (settings == null || settings.forever) return;
         timeLeft -= Time.deltaTime;
         if (countdown != null) UpdateCountdown();
@@ -236,6 +239,7 @@ public class BecomeCharacter : MonoBehaviour
     {
         if (active == this) active = null;
         if (countdown != null) Destroy(countdown.transform.parent.gameObject);
+        if (barRoot != null) Destroy(barRoot);
     }
 
     // ------------------------------------------------------------------ Countdown on the screen
@@ -287,8 +291,8 @@ public class BecomeCharacter : MonoBehaviour
         if (gs != null && gs.bodyFont != null) tmp.font = gs.bodyFont;
 
         RectTransform rect = tmp.rectTransform;
-        rect.anchorMin = new Vector2(0.25f, 0.88f);
-        rect.anchorMax = new Vector2(0.75f, 0.97f);
+        rect.anchorMin = new Vector2(0.25f, 0.86f);
+        rect.anchorMax = new Vector2(0.75f, 0.955f);
         rect.offsetMin = Vector2.zero;
         rect.offsetMax = Vector2.zero;
         return tmp;

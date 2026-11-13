@@ -43,6 +43,7 @@ public static class BecomeEditor
         Clip(look, "jump", "Jump");
         Clip(look, "fall", "Fall");
         if (o.become.canFly) Clip(look, "fly", "Fly (while flying)");
+        if (o.become.canShoot) Clip(look, "attack", "Attack (when shooting)");
         Clip(look, "hurt", "Hurt (when you get hurt)");
         if (GUILayout.Button(new GUIContent("🔍 Find its animations again", "Looks in the model file for idle, walk, run, jump... (replaces the ones above).")))
         {
@@ -105,6 +106,54 @@ public static class BecomeEditor
             Slider(become, "flyCameraLift", "📷 Camera higher (metres)", "The camera sits higher while you're this character, so it's lower on the screen and you can see ahead. 0 = normal.", 0f, 30f);
             EditorGUI.indentLevel--;
             if (o.become.look.fly == null) EditorGUILayout.HelpBox("This model has no Fly animation, so it uses standing / walking / running in the air. Drag one into 'Fly' above, or press 🔍 Find its animations again.", MessageType.None);
+        }
+
+        // 🏹 Shooting
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("🏹 Shooting (left click)", EditorStyles.boldLabel);
+        Toggle(become, "canShoot", "Can shoot", "Hold the left mouse button to shoot the way the character faces. A flying character tipped up or down shoots up or down.");
+        if (o.become.canShoot)
+        {
+            EditorGUI.indentLevel++;
+            SerializedProperty dmg = become.FindPropertyRelative("shootDamage");
+            dmg.intValue = EditorGUILayout.IntSlider(new GUIContent("Damage", "How much each shot hurts a creature. 10 damage = one jump on its head (a creature that needs 3 jumps is beaten by 30)."), dmg.intValue, 1, 1000);
+            Slider(become, "shootEveryMin", "Seconds between shots (shortest)", "While you hold the button, the next shot comes after a random time between the shortest and longest. Make them the same for steady shooting.", 0.03f, 10f);
+            Slider(become, "shootEveryMax", "Seconds between shots (longest)", "Make it the same as the shortest for steady shooting.", 0.03f, 10f);
+            Slider(become, "shootSpeed", "Shot speed", "How fast the shots fly (metres per second).", 1f, 300f);
+            SerializedProperty many = become.FindPropertyRelative("shotsAtOnce");
+            many.intValue = EditorGUILayout.IntSlider(new GUIContent("Shots at once", "Several shots spread out like a fan."), many.intValue, 1, 12);
+            if (o.become.shotsAtOnce > 1) Slider(become, "shootSpread", "Fan width (degrees between shots)", "How spread out the shots are.", 0f, 60f);
+            Slider(become, "shootSize", "Shot size (metres)", "How big each shot is.", 0.1f, 20f);
+            EditorGUILayout.PropertyField(become.FindPropertyRelative("shootColour"), new GUIContent("Colour", "The glowing ball, its trail and the burst when it hits."));
+            EditorGUILayout.PropertyField(become.FindPropertyRelative("shootModel"), new GUIContent("Shoot a model", "Drag in a model (e.g. a rock) to shoot instead of a glowing ball. Empty = a glowing ball."));
+            Toggle(become, "shootTrail", "Glowing trail", "A glowing trail behind each shot.");
+            EditorGUILayout.PropertyField(become.FindPropertyRelative("shootHitEffect"), new GUIContent("Sparkles when it hits"));
+            Slider(become, "shootLasts", "A miss disappears after (seconds)", "How long a shot flies before it vanishes.", 0.5f, 30f);
+            Slider(become, "shootHoming", "Homing (curves to creatures)", "The shots curve towards the nearest creature in front of you. 0 = straight, 1 = turns very hard.", 0f, 1f);
+            Toggle(become, "shootDrops", "Drops like a thrown ball", "The shots fall as they fly.");
+            Slider(become, "shootAimUpDown", "Aim up / down (degrees)", "Shoots a little higher (+) or lower (-) than straight ahead.", -45f, 45f);
+            Slider(become, "shootFromHeight", "Shoots from (0 feet, 1 head)", "Where the shots come out of the character.", 0f, 1f);
+            EditorGUILayout.PropertyField(become.FindPropertyRelative("shootAnimation"), new GUIContent("Shooting animation", "Plays when you shoot. Empty = its attack animation (if it has one)."));
+            Slider(become, "shootDelay", "Shot leaves after (seconds)", "Wait this long after the animation starts, so the shot matches it. 0 = straight away.", 0f, 3f);
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.PropertyField(become.FindPropertyRelative("shootUses"), new GUIContent("Each shot uses", "Stamina Bar: shots use stamina, so you juggle sprinting and shooting. Own Bar: a yellow bar at the top fills up with each shot; when full, wait for it to go down. No Limit: shoot for ever."));
+            switch (o.become.shootUses)
+            {
+                case BecomeSettings.ShootBarKind.StaminaBar:
+                    Slider(become, "shootBarPerShot", "Stamina per shot", "How much stamina each shot uses. Normal most stamina: 100 (change it above with 'Most stamina').", 0f, 500f);
+                    break;
+                case BecomeSettings.ShootBarKind.OwnBar:
+                    Slider(become, "shootBarSize", "Bar size", "How full the yellow bar can get. Bigger = more shots before it's full.", 1f, 1000f);
+                    Slider(become, "shootBarPerShot", "Each shot fills", "How much each shot fills the bar.", 0f, 500f);
+                    Slider(become, "shootBarRefill", "Goes down per second", "How fast the bar empties again when you stop shooting.", 1f, 500f);
+                    Slider(become, "shootBarWait", "Wait before going down (seconds)", "After a shot, the bar waits this long before it starts emptying.", 0f, 5f);
+                    Slider(become, "shootBarReadyAt", "Full? Shoot again at (%)", "When the bar gets full, you can shoot again once it's down to this % full.", 0f, 95f);
+                    int shots = o.become.shootBarPerShot > 0f ? Mathf.CeilToInt(o.become.shootBarSize / o.become.shootBarPerShot) : 0;
+                    EditorGUILayout.LabelField(shots > 0 ? "About " + shots + " shots in a row before it's full." : "Shots don't fill it: no limit.", EditorStyles.miniLabel);
+                    break;
+            }
+            EditorGUI.indentLevel--;
         }
 
         // ⚔ Beating creatures

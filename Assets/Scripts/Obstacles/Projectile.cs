@@ -25,6 +25,8 @@ public class Projectile : MonoBehaviour
     private Transform target;
     private bool spin;
     private Transform visual;
+    private bool fromPlayer;       // the player's shot (a shooting character): hurts creatures, never the player
+    private Collider targetBody;    // homing onto a creature: its body
 
     private static readonly RaycastHit[] hits = new RaycastHit[16];
     private static MaterialPropertyBlock block;
@@ -51,6 +53,17 @@ public class Projectile : MonoBehaviour
         p.spin = model != null;
         p.MakeLook(size, colour, model, trail);
         if (velocity.sqrMagnitude > 0.0001f) go.transform.rotation = Quaternion.LookRotation(velocity);
+        return p;
+    }
+
+    /// <summary>The player's shot (a 'become a character' that shoots): hurts creatures it hits; 'target' = a creature to home in on (or none).</summary>
+    public static Projectile FireFromPlayer(Transform player, Vector3 position, Vector3 velocity, ObstacleBase target, int damage, float homing,
+        bool drops, float lasts, float size, Color colour, GameObject model, bool trail, Sparkles.Effect hitEffect)
+    {
+        Projectile p = Fire(null, position, velocity, target != null ? target.transform : null, damage, homing, drops, lasts, 0f, size, colour, model, trail, hitEffect);
+        p.shooter = player;
+        p.fromPlayer = true;
+        p.targetBody = target != null ? target.HitZoneBody : null;
         return p;
     }
 
@@ -117,6 +130,7 @@ public class Projectile : MonoBehaviour
 
     private Vector3 TargetMiddle()
     {
+        if (targetBody != null) return targetBody.bounds.center;
 #if HAS_KINEMATIC_CC
         KinematicCharacterMotor m = target != null ? target.GetComponent<KinematicCharacterMotor>() : null;
         if (m != null) return m.TransientPosition + m.CharacterUp * (m.Capsule != null ? m.Capsule.height * 0.5f : 1f);
@@ -153,6 +167,7 @@ public class Projectile : MonoBehaviour
                 if (col == null) continue;
                 if (shooter != null && col.transform.IsChildOf(shooter)) continue; // not its own body
                 if (col.GetComponentInParent<Projectile>() != null) continue;
+                if (fromPlayer && FliesThrough(col)) continue;
                 float d = hits[i].distance;
                 if (d <= 0f && hits[i].point == Vector3.zero) d = 0f; // started inside it
                 if (d < nearest) { nearest = d; best = i; }
@@ -173,8 +188,22 @@ public class Projectile : MonoBehaviour
         if (spin && visual != null) visual.Rotate(0f, 0f, 540f * dt, Space.Self); // models spin as they fly
     }
 
+    /// <summary>The player's shots fly through pickups and bounce balls (they hit creatures and solid things).</summary>
+    private static bool FliesThrough(Collider col)
+    {
+        ObstacleBase o = col.GetComponentInParent<ObstacleBase>();
+        return o != null && (o.payloadType != ObstacleBase.PayloadType.Damage || o.isBouncy);
+    }
+
     private void Hit(Collider col)
     {
+        if (fromPlayer)
+        {
+            ObstacleBase o = col.GetComponentInParent<ObstacleBase>();
+            if (o != null) o.TakeShot(damage);
+            Pop();
+            return;
+        }
 #if HAS_KINEMATIC_CC
         KinematicCharacterMotor motor = col.GetComponentInParent<KinematicCharacterMotor>();
         if (motor != null)

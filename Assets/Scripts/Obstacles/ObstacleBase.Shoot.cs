@@ -62,6 +62,36 @@ public abstract partial class ObstacleBase
 
     private float shootTimer = -1f;
     private float fireIn = -1f;
+    private float shotDamageTaken; // from the player's shots: 10 damage = one jump on its head
+
+    /// <summary>How much shot damage counts as one jump on a creature's head.</summary>
+    public const float ShotDamagePerJump = 10f;
+
+    /// <summary>
+    /// The player (as a shooting character) hit this creature with a shot. Every 10 damage counts as one jump on its head,
+    /// so a creature that needs 3 jumps is beaten by 30 damage. Creatures that can't be beaten (0 jumps) just flash.
+    /// Returns true if it was a creature (the shot stops there).
+    /// </summary>
+    public bool TakeShot(float damage)
+    {
+        if (payloadType != PayloadType.Damage || isBouncy) return false;
+        if (defeated) return true;
+        int needed = BecomeCharacter.JumpsNeeded(jumpsToDefeat);
+        if (needed <= 0)
+        {
+            if (sparkles) BurstSparkles(Sparkles.Style.Sparks); // can't be beaten
+            return true;
+        }
+        shotDamageTaken += Mathf.Max(0f, damage);
+        float hits = jumpsTaken + shotDamageTaken / ShotDamagePerJump;
+        if (hits >= needed - 0.0001f) Defeat();
+        else
+        {
+            if (!PlayOwnMoment(AnimationMoment.GetsHit, out _)) SoundManager.Play(SoundEvent.EnemyDamage, transform.position, gameObject);
+            StartCoroutine(Squash(false));
+        }
+        return true;
+    }
 
     /// <summary>Counts down to the next shot; plays the animation, then lets the shot go.</summary>
     private void UpdateShooting()

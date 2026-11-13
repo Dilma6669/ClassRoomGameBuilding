@@ -699,7 +699,7 @@ public static class MegaLevelBuilder
         const string folder = "Become a character";
         Sign(G(-1f, -191f), "12. Become a character",
             "Touch the FOX to turn into Roses Fox (a student's model!): super fast for 30 seconds.\n" +
-            "Touch the DRAGON to become a dragon that FLIES: jump, then hold Space to go up and Ctrl to come down. Creatures need half the jumps!\n" +
+            DragonSignLine +
             "Make one: Creatures & Pickups > Become a Character (or Become a Flyer), then pick any model.");
 
         BecomePickup(G(-10f, -196f), "Roses Fox - Rigged & Animated (C)", false, folder, "Become Roses Fox", 1.8f, s =>
@@ -715,7 +715,30 @@ public static class MegaLevelBuilder
             s.flyUpSpeed = 15f; s.flyDownSpeed = 15f;
             s.noFallDamage = true;
             s.creatureHits = CreatureHitsChange.DivideBy; s.creatureHitsAmount = 2;
+            DragonShoots(s);
         });
+    }
+
+    private const string OldDragonSignLine = "Touch the DRAGON to become a dragon that FLIES: jump, then hold Space to go up and Ctrl to come down. Creatures need half the jumps!\n";
+    private const string DragonSignLine = "Touch the DRAGON to become a dragon that FLIES and SHOOTS FIREBALLS: jump, hold Space to go up, Ctrl to come down, LEFT CLICK to shoot (it uses stamina!). Creatures need half the jumps!\n";
+
+    /// <summary>The dragon shoots fireballs with the left mouse button (they use stamina, so sprinting and shooting share it). The fox doesn't shoot.</summary>
+    private static void DragonShoots(BecomeSettings s)
+    {
+        s.canShoot = true;
+        s.shootDamage = 10;                 // one jump's worth per fireball
+        s.shootEveryMin = 0.25f; s.shootEveryMax = 0.4f;
+        s.shootSpeed = 45f;
+        s.shootSize = 1.2f;
+        s.shootColour = new Color(1f, 0.45f, 0.1f);
+        s.shootTrail = true;
+        s.shootHitEffect = Sparkles.Effect.Explosion;
+        s.shootLasts = 3f;
+        s.shootHoming = 0.25f;              // a little help hitting small creatures
+        s.shootAimUpDown = -4f;             // a touch downwards, from a big dragon's mouth
+        s.shootFromHeight = 0.55f;
+        s.shootUses = BecomeSettings.ShootBarKind.StaminaBar;
+        s.shootBarPerShot = 8f;             // about 12 fireballs from full stamina
     }
 
     private static void BecomePickup(Vector3 at, string modelName, bool canFly, string folder, string name, float scale, System.Action<BecomeSettings> settings)
@@ -905,9 +928,17 @@ public static class MegaLevelBuilder
                 if (o.payloadType != ObstacleBase.PayloadType.BecomeCharacter) continue;
                 if (o.become.canFly) { o.transform.position = DragonSpot + Vector3.up * (o.transform.position.y - G(o.transform.position.x, o.transform.position.z).y); }
                 MakeObvious(o);
+                if (o.become.canFly && !o.become.canShoot) { DragonShoots(o.become); result += "The dragon shoots fireballs. "; }
                 n++;
             }
             result += n + " character pickups made obvious. ";
+            foreach (TriggerLogic t in roots.SelectMany(g => g.GetComponentsInChildren<TriggerLogic>(true)))
+            {
+                if (t.message == null || !t.message.Contains(OldDragonSignLine)) continue;
+                t.message = t.message.Replace(OldDragonSignLine, DragonSignLine);
+                EditorUtility.SetDirty(t);
+                result += "Sign 12 mentions shooting. ";
+            }
 
             bool hasShooters = roots.SelectMany(g => g.GetComponentsInChildren<ListFolder>(true)).Any(f => f.folder == ShooterFolder);
             if (!hasShooters)
@@ -922,6 +953,31 @@ public static class MegaLevelBuilder
         finally { Random.state = old; }
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
         return result;
+    }
+
+    /// <summary>Only gives Tutorial 3's dragon pickup its fireballs and updates sign 12 (nothing else changes). The scene must be loaded.</summary>
+    public static string DragonShootingInPlace(UnityEngine.SceneManagement.Scene scene)
+    {
+        string result = "";
+        GameObject[] roots = scene.GetRootGameObjects();
+        foreach (ObstacleBase o in roots.SelectMany(g => g.GetComponentsInChildren<ObstacleBase>(true)))
+        {
+            if (o.payloadType != ObstacleBase.PayloadType.BecomeCharacter || !o.become.canFly) continue;
+            Undo.RecordObject(o, "Dragon shoots");
+            DragonShoots(o.become);
+            EditorUtility.SetDirty(o);
+            result += o.name + " shoots fireballs. ";
+        }
+        foreach (TriggerLogic t in roots.SelectMany(g => g.GetComponentsInChildren<TriggerLogic>(true)))
+        {
+            if (t.message == null || !t.message.Contains(OldDragonSignLine)) continue;
+            Undo.RecordObject(t, "Dragon sign");
+            t.message = t.message.Replace(OldDragonSignLine, DragonSignLine);
+            EditorUtility.SetDirty(t);
+            result += "Sign 12 mentions shooting. ";
+        }
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        return result == "" ? "No dragon pickup found." : result;
     }
 
     /// <summary>The boost tower: big trees and rocks stay out of it.</summary>

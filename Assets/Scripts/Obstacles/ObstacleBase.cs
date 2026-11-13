@@ -401,7 +401,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
 
         jumpsTaken++;
         SoundManager.Play(SoundEvent.Attack, transform.position, gameObject);
-        if (jumpsTaken >= BecomeCharacter.JumpsNeeded(jumpsToDefeat)) Defeat(); // a character pickup can make it take fewer
+        if (jumpsTaken + shotDamageTaken / ShotDamagePerJump >= BecomeCharacter.JumpsNeeded(jumpsToDefeat) - 0.0001f) Defeat(); // a character pickup can make it take fewer; shots count too
         else
         {
             if (!PlayOwnMoment(AnimationMoment.GetsHit, out _)) SoundManager.Play(SoundEvent.EnemyDamage, transform.position, gameObject);

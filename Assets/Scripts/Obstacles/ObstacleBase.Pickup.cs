@@ -37,6 +37,7 @@ public abstract partial class ObstacleBase
                 string who = become != null ? become.CharacterName : "someone else";
                 string becomeMessage = become != null && become.forever ? "You are " + who + "!" : "You are " + who + " for " + seconds + "!";
                 if (become != null && become.canFly) becomeMessage += "\nJump, then hold Space to fly up, Ctrl to come down!";
+                if (become != null && become.canShoot) becomeMessage += "\nLeft click to shoot!";
                 return becomeMessage;
         }
         return "";
