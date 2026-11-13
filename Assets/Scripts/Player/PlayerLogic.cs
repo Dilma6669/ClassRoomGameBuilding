@@ -126,6 +126,9 @@ public class PlayerLogic : MonoBehaviour
         ApplyMovementSettings();
     }
 
+    /// <summary>Call after changing jumpHeight / sprintMultiplier from code (power-ups that are on keep going).</summary>
+    public void SettingsChanged() => ResetBuffValues();
+
     private void ResetBuffValues()
     {
         if (sprintBuffCoroutine == null) activeSprintMultiplier = sprintMultiplier;

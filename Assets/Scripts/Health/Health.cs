@@ -10,6 +10,16 @@ public class Health : MonoBehaviour, IDamagable
     private bool isInvincible = false;
     private bool isDead = false;
     public bool IsDead => isDead;
+    public int MaxHealth => maxHealth;
+    public int CurrentHealth => currentHealth;
+
+    /// <summary>Changes the most health you can have (fill = fill it right up). Used by 'become a character' pickups.</summary>
+    public void SetMaxHealth(int newMax, bool fill)
+    {
+        maxHealth = Mathf.Max(1, newMax);
+        currentHealth = fill ? maxHealth : Mathf.Min(currentHealth, maxHealth);
+        if (healthHUD != null) healthHUD.UpdateHealthBar(currentHealth, maxHealth);
+    }
     private Coroutine invincibilityCoroutine;
 
     [FormerlySerializedAs("healthUI")] [SerializeField, HideInInspector] private HealthHUD healthHUD;
@@ -56,7 +66,7 @@ public class Health : MonoBehaviour, IDamagable
     /// <summary>fromFall: landed too hard (plays the Fall damage sound instead of Damage, if there is one).</summary>
     public void TakeDamage(int amount, bool fromFall)
     {
-        if (isInvincible || isDead) return;
+        if (isInvincible || isDead || BecomeCharacter.InvincibleNow) return;
 
         currentHealth = Mathf.Max(0, currentHealth - amount);
 

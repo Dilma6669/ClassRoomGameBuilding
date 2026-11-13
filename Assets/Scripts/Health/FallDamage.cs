@@ -63,7 +63,7 @@ public class FallDamage : MonoBehaviour
             {
                 currentFallTimer += Time.deltaTime;
             }
-            if (playerLogic != null && playerLogic.NoFallDamageNow) protectedFall = true;
+            if ((playerLogic != null && playerLogic.NoFallDamageNow) || BecomeCharacter.NoFallDamageNow) protectedFall = true;
         }
         else if (!wasGrounded && isGrounded)
         {

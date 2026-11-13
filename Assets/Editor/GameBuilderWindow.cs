@@ -700,7 +700,8 @@ public partial class GameBuilderWindow : EditorWindow
             ("🛡 Shield\ncan't be hurt", () => Spawn(ObstacleBase.PayloadType.InvincibilityBuff, ObstacleSpawnType.Static, 1, 8f, true, false)),
             ("🦘 Super Jump\njump higher", () => Spawn(ObstacleBase.PayloadType.JumpBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
             ("💨 Speed Boost\nrun faster", () => Spawn(ObstacleBase.PayloadType.SprintBuff, ObstacleSpawnType.Static, 2, 8f, true, false)),
-            ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)));
+            ("🏀 Bounce Ball\nlaunches you up", () => Spawn(ObstacleBase.PayloadType.None, ObstacleSpawnType.Static, 10, 5f, false, true)),
+            ("🦊 Become a Character\nturn into someone", () => SpawnBecome()));
 
         EditorGUILayout.Space(6); // the same gap as between the boxes below
         if (ObstacleBaseEditor.BeginBox("📋 Creatures and Pickups List", "Click one to change it. Drag them into folders to keep things tidy.", green: true))
@@ -1021,7 +1022,19 @@ public partial class GameBuilderWindow : EditorWindow
         return "🪨";
     }
 
-    private void Spawn(ObstacleBase.PayloadType payload, ObstacleSpawnType movement, int amount, float duration, bool usedUp, bool bouncy)
+    /// <summary>A 'Become a character' pickup: Roses Fox (if it's in MyModels) with its animations, for 20 seconds.</summary>
+    private void SpawnBecome()
+    {
+        ObstacleBase created = Spawn(ObstacleBase.PayloadType.BecomeCharacter, ObstacleSpawnType.Static, 1, 20f, true, false);
+        if (created == null) return;
+        string guid = AssetDatabase.FindAssets("Roses Fox t:GameObject", new[] { "Assets/MyModels" }).FirstOrDefault();
+        if (guid == null) return;
+        Undo.RecordObject(created, "Become a character");
+        created.become.look.model = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+        BecomeEditor.FindAnimations(created);
+    }
+
+    private ObstacleBase Spawn(ObstacleBase.PayloadType payload, ObstacleSpawnType movement, int amount, float duration, bool usedUp, bool bouncy)
     {
         HashSet<ObstacleBase> before = new HashSet<ObstacleBase>(FindAll<ObstacleBase>());
         // Clicked in the Scene? Then the click decides: on the platform that was clicked, or on the ground
@@ -1045,7 +1058,7 @@ public partial class GameBuilderWindow : EditorWindow
         else
         {
             TerrainPopulator ground = Find<TerrainPopulator>();
-            if (ground == null) return;
+            if (ground == null) return null;
 
             string saved = JsonUtility.ToJson(ground);
             ground.scatterObstacleType = movement;
@@ -1061,7 +1074,7 @@ public partial class GameBuilderWindow : EditorWindow
         }
 
         ObstacleBase created = FindAll<ObstacleBase>().FirstOrDefault(o => !before.Contains(o));
-        if (created == null) return;
+        if (created == null) return null;
 
         created.name = UniqueName(NiceName(created), created); // Wanderer, Wanderer 2, Wanderer 3...
         if (bouncy) created.upwardBias = 0.25f; // a round bounce ball: you fly off at different angles depending on where you hit it
@@ -1075,6 +1088,7 @@ public partial class GameBuilderWindow : EditorWindow
         RefreshSceneLists();
         if (placeHit.HasValue) Selection.activeGameObject = created.gameObject; // already looking there
         else SelectAndFrame(created.gameObject);
+        return created;
     }
 
     /// <summary>Moves a creature made on a platform from the platform's middle to the clicked spot on it.</summary>
@@ -1180,6 +1194,7 @@ public partial class GameBuilderWindow : EditorWindow
             case ObstacleBase.PayloadType.InvincibilityBuff: return "🛡";
             case ObstacleBase.PayloadType.JumpBuff: return "🦘";
             case ObstacleBase.PayloadType.SprintBuff: return "💨";
+            case ObstacleBase.PayloadType.BecomeCharacter: return "🦊";
         }
         return "⚪";
     }

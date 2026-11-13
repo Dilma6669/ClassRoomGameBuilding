@@ -30,6 +30,9 @@ public abstract partial class ObstacleBase
             case PayloadType.InvincibilityBuff: return "Shield! Nothing can hurt you for " + seconds;
             case PayloadType.JumpBuff: return "Super Jump for " + seconds + "!";
             case PayloadType.SprintBuff: return "Speed Boost for " + seconds + "!";
+            case PayloadType.BecomeCharacter:
+                string who = become != null ? become.CharacterName : "someone else";
+                return become != null && become.forever ? "You are " + who + "!" : "You are " + who + " for " + seconds + "!";
         }
         return "";
     }

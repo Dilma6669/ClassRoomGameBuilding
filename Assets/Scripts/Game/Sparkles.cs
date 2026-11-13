@@ -224,6 +224,7 @@ public static class Sparkles
             case ObstacleBase.PayloadType.JumpBuff: return new Color(0.4f, 1f, 0.4f);
             case ObstacleBase.PayloadType.SprintBuff: return new Color(1f, 0.6f, 0.2f);
             case ObstacleBase.PayloadType.Damage: return new Color(0.75f, 0.45f, 1f);
+            case ObstacleBase.PayloadType.BecomeCharacter: return new Color(1f, 0.45f, 0.85f);
         }
         return Color.white;
     }

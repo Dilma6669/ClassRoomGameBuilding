@@ -188,6 +188,39 @@ public class CustomModel : MonoBehaviour
         }
     }
 
+    /// <summary>Everything about what a character looks like: its model, placement and animations.</summary>
+    [System.Serializable]
+    public class Look
+    {
+        public GameObject model;
+        public GameObject animationsFrom;
+        public float size = 1f, turn, raiseLower, animationSpeed = 1f;
+        public bool animationMovesModel;
+        public AnimationClip idle, walk, run, jump, fall, attack, hurt, death;
+    }
+
+    public Look GetLook() => new Look
+    {
+        model = model, animationsFrom = animationsFrom, size = size, turn = turn, raiseLower = raiseLower,
+        animationSpeed = animationSpeed, animationMovesModel = animationMovesModel,
+        idle = idle, walk = walk, run = run, jump = jump, fall = fall, attack = attack, hurt = hurt, death = death,
+    };
+
+    /// <summary>Changes to another look while playing (a 'become a character' pickup) and starts its animations.</summary>
+    public void SetLook(Look look)
+    {
+        model = look.model; animationsFrom = look.animationsFrom;
+        size = look.size; turn = look.turn; raiseLower = look.raiseLower;
+        animationSpeed = look.animationSpeed; animationMovesModel = look.animationMovesModel;
+        idle = look.idle; walk = look.walk; run = look.run; jump = look.jump; fall = look.fall;
+        attack = look.attack; hurt = look.hurt; death = look.death;
+        Rebuild();
+        if (!Application.isPlaying) return;
+        CacheMovementSources();
+        lastPosition = transform.position;
+        BuildAnimationGraph();
+    }
+
     public void Rebuild()
     {
         DestroyModelInstances();

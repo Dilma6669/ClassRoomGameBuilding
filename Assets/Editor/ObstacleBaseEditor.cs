@@ -23,6 +23,7 @@ public class ObstacleBaseEditor : Editor
         "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
         "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "showPickupMessage", "pickupMessage", "speedBoostFreeSprint", "superJumpNoFallDamage", // ✋ When you touch it box
         "isBouncy", "launchForce", "upwardBias", "momentumTransfer", "safeLanding", // 🏀 Bounce settings box
+        "become", // 🦊 Become a character box
     };
 
     [System.NonSerialized] private static GUIStyle boxTitle;
@@ -108,12 +109,16 @@ public class ObstacleBaseEditor : Editor
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("payloadType"), new GUIContent("What it does",
                 "Damage hurts you. Health / Stamina boosters fill your bars. Invincibility, Jump and Sprint buffs are power-ups for a while. None does nothing (e.g. a bounce ball)."));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("payloadAmount"), new GUIContent("How much",
-                "How much damage it does, or how much health / stamina it gives (power-ups: how strong)."));
+            bool becomes = o.payloadType == ObstacleBase.PayloadType.BecomeCharacter;
+            if (many || !becomes)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("payloadAmount"), new GUIContent("How much",
+                    "How much damage it does, or how much health / stamina it gives (power-ups: how strong)."));
             bool powerUp = o.payloadType == ObstacleBase.PayloadType.InvincibilityBuff || o.payloadType == ObstacleBase.PayloadType.JumpBuff
                            || o.payloadType == ObstacleBase.PayloadType.SprintBuff;
             if (many || powerUp)
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("buffDuration"), new GUIContent("Power-up lasts (seconds)", "How long the power-up lasts."));
+            if (!many && becomes && !o.become.forever)
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("buffDuration"), new GUIContent("⏱ You stay the character for (seconds)", "How long the countdown lasts. Then you're back to normal."));
             if (many || o.payloadType == ObstacleBase.PayloadType.SprintBuff)
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("speedBoostFreeSprint"), new GUIContent("Free sprinting", "Sprinting doesn't use up stamina while the Speed Boost lasts."));
             if (many || o.payloadType == ObstacleBase.PayloadType.JumpBuff)
@@ -151,6 +156,14 @@ public class ObstacleBaseEditor : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("safeLanding"), new GUIContent("🪂 Landing on it never hurts", "Falling onto it never gives fall damage, however far you fell."));
         }
         EndBox();
+
+        // 🦊 Become a character pickups: who you turn into, and what changes
+        if (!many && o.payloadType == ObstacleBase.PayloadType.BecomeCharacter)
+        {
+            if (BeginBox("🦊 Become a character", "Who you turn into when you touch it, and what changes while you are them.", green: false))
+                BecomeEditor.Draw(serializedObject, o);
+            EndBox();
+        }
 
         // 🚶 How it moves (+ Chase)
         bool creature = many || o.payloadType == ObstacleBase.PayloadType.Damage;

@@ -16,7 +16,8 @@ public abstract partial class ObstacleBase : MonoBehaviour
         StaminaBooster,
         InvincibilityBuff,
         JumpBuff,
-        SprintBuff
+        SprintBuff,
+        BecomeCharacter // touching it turns the player into another character for a while (ObstacleBase.Become.cs)
     }
 
     /// <summary>What kind of thing this is, in the same words as the Game Builder's buttons ('Wanderer', 'Health Pickup'...).</summary>
@@ -30,6 +31,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
             case PayloadType.InvincibilityBuff: return "Shield Pickup";
             case PayloadType.JumpBuff: return "Super Jump Pickup";
             case PayloadType.SprintBuff: return "Speed Boost Pickup";
+            case PayloadType.BecomeCharacter: return "Become a Character";
             case PayloadType.None: return "Harmless Thing";
         }
 
@@ -334,6 +336,10 @@ public abstract partial class ObstacleBase : MonoBehaviour
                 case PayloadType.SprintBuff:
                     if (playerLogic != null) playerLogic.ApplySprintBuff(payloadAmount, buffDuration, speedBoostFreeSprint);
                     break;
+
+                case PayloadType.BecomeCharacter:
+                    if (playerLogic != null) BecomeCharacter.Begin(playerLogic, become, buffDuration);
+                    break;
             }
 
             bool isPickup = payloadType != PayloadType.None && payloadType != PayloadType.Damage;
@@ -393,7 +399,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
 
         jumpsTaken++;
         SoundManager.Play(SoundEvent.Attack, transform.position, gameObject);
-        if (jumpsTaken >= jumpsToDefeat) Defeat();
+        if (jumpsTaken >= BecomeCharacter.JumpsNeeded(jumpsToDefeat)) Defeat(); // a character pickup can make it take fewer
         else
         {
             if (!PlayOwnMoment(AnimationMoment.GetsHit, out _)) SoundManager.Play(SoundEvent.EnemyDamage, transform.position, gameObject);
