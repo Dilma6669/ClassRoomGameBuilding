@@ -636,7 +636,13 @@ public static class TutorialLevelBuilder
     /// <summary>The animations chosen for the tutorial player (by name, in TutorialPlayerModel). Others are found automatically.</summary>
     private static readonly (string slot, string clip)[] TutorialPlayerClips =
     {
-        ("idle", "zombie_idle_loop_fit"), ("walk", "zombie_walk_fwd_loop_fit"), ("run", "jog_fwd_loop_fit"), ("jump", "ninjajump_idle_loop_fit"),
+        ("idle", "zombie_idle_loop_fit"), ("walk", "zombie_walk_fwd_loop_fit"), ("run", "roll_fit"), ("jump", "ninjajump_idle_loop_fit"),
+    };
+
+    /// <summary>Trimmed tutorial player animations (clip name, start, end seconds), as the teacher set them in Tutorial 2.</summary>
+    private static readonly (string clip, float start, float end)[] TutorialPlayerTrims =
+    {
+        ("roll_fit", 0f, 0.9668076f),
     };
 
     /// <summary>Gives the player the student's character, with the chosen animations.</summary>
@@ -663,6 +669,9 @@ public static class TutorialLevelBuilder
                 case "jump": cm.jump = clip; break;
             }
         }
+        cm.trims = new List<CustomModel.ClipTrim>();
+        foreach (var (name, start, end) in TutorialPlayerTrims)
+            if (clips.TryGetValue(name, out AnimationClip clip)) cm.trims.Add(new CustomModel.ClipTrim { clip = clip, start = start, end = end });
         cm.Refresh();
         EditorUtility.SetDirty(cm);
     }
