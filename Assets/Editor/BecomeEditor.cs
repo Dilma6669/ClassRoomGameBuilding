@@ -37,14 +37,16 @@ public static class BecomeEditor
 
         EditorGUILayout.Space(4);
         EditorGUILayout.LabelField("🏃 Its animations (drag in any animation to change one)", EditorStyles.boldLabel);
-        Clip(look, "idle", "Idle (standing still)");
-        Clip(look, "walk", "Walk");
-        Clip(look, "run", "Run (sprinting)");
-        Clip(look, "jump", "Jump");
-        Clip(look, "fall", "Fall");
-        if (o.become.canFly) Clip(look, "fly", "Fly (while flying)");
-        if (o.become.canShoot) Clip(look, "attack", "Attack (when shooting)");
-        Clip(look, "hurt", "Hurt (when you get hurt)");
+        AnimationTrimEditor.ShowTrimsToggle();
+        CustomModel.Look l = o.become.look;
+        Clip(look, "idle", "Idle (standing still)"); Trim(o, l.idle);
+        Clip(look, "walk", "Walk"); Trim(o, l.walk);
+        Clip(look, "run", "Run (sprinting)"); Trim(o, l.run);
+        Clip(look, "jump", "Jump"); Trim(o, l.jump);
+        Clip(look, "fall", "Fall"); Trim(o, l.fall);
+        if (o.become.canFly) { Clip(look, "fly", "Fly (while flying)"); Trim(o, l.fly); }
+        if (o.become.canShoot) { Clip(look, "attack", "Attack (when shooting)"); Trim(o, l.attack); }
+        Clip(look, "hurt", "Hurt (when you get hurt)"); Trim(o, l.hurt);
         if (GUILayout.Button(new GUIContent("🔍 Find its animations again", "Looks in the model file for idle, walk, run, jump... (replaces the ones above).")))
         {
             so.ApplyModifiedProperties();
@@ -134,6 +136,7 @@ public static class BecomeEditor
             Slider(become, "shootAimUpDown", "Aim up / down (degrees)", "Shoots a little higher (+) or lower (-) than straight ahead.", -45f, 45f);
             Slider(become, "shootFromHeight", "Shoots from (0 feet, 1 head)", "Where the shots come out of the character.", 0f, 1f);
             EditorGUILayout.PropertyField(become.FindPropertyRelative("shootAnimation"), new GUIContent("Shooting animation", "Plays when you shoot. Empty = its attack animation (if it has one)."));
+            if (o.become.shootAnimation != null) Trim(o, o.become.shootAnimation);
             Slider(become, "shootDelay", "Shot leaves after (seconds)", "Wait this long after the animation starts, so the shot matches it. 0 = straight away.", 0f, 3f);
 
             EditorGUILayout.Space(2);
@@ -181,6 +184,17 @@ public static class BecomeEditor
     private static void Clip(SerializedProperty parent, string name, string label)
     {
         EditorGUILayout.PropertyField(parent.FindPropertyRelative(name), new GUIContent(label));
+    }
+
+    /// <summary>✂ Trim slider for one of the character's animations (saved on the pickup). ▶ plays it on the pickup if it shows the same model.</summary>
+    private static void Trim(ObstacleBase o, AnimationClip clip)
+    {
+        if (clip == null) return;
+        CustomModel.Look look = o.become.look;
+        if (look.trims == null) look.trims = new System.Collections.Generic.List<CustomModel.ClipTrim>();
+        CustomModel shown = o.GetComponentInChildren<CustomModel>();
+        if (shown != null && shown.model != look.model) shown = null;
+        AnimationTrimEditor.TrimRow(o, look.trims, clip, shown, look.animationSpeed);
     }
 
     private static void Toggle(SerializedProperty parent, string name, string label, string tip)

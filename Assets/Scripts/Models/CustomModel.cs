@@ -66,6 +66,53 @@ public class CustomModel : MonoBehaviour
     [Tooltip("Off (normal): the model stays where it is while it animates, even if an animation walks it forwards. On: animations that walk or jump the model away move it (it snaps back when the animation loops).")]
     public bool animationMovesModel = false;
 
+    /// <summary>A trimmed animation: only the part from start to end (seconds) plays. end 0 = to the end.</summary>
+    [System.Serializable]
+    public class ClipTrim
+    {
+        public AnimationClip clip;
+        public float start;
+        public float end;
+    }
+
+    [Tooltip("Trimmed animations (✂ in the 🏃 Animations box): only part of each one plays. Saved on this model only.")]
+    public List<ClipTrim> trims = new List<ClipTrim>();
+
+    /// <summary>The part of the clip that plays (start/end in seconds). False = the whole clip plays.</summary>
+    public static bool GetTrim(List<ClipTrim> trims, AnimationClip clip, out float start, out float end)
+    {
+        start = 0f; end = clip != null ? clip.length : 0f;
+        if (trims == null || clip == null || clip.length <= 0f) return false;
+        foreach (ClipTrim t in trims)
+        {
+            if (t == null || t.clip != clip) continue;
+            float len = clip.length;
+            start = Mathf.Clamp(t.start, 0f, Mathf.Max(0f, len - 0.05f));
+            end = t.end <= 0f ? len : Mathf.Clamp(t.end, start + 0.05f, len);
+            return start > 0.001f || end < len - 0.001f;
+        }
+        return false;
+    }
+
+    public bool GetTrim(AnimationClip clip, out float start, out float end) => GetTrim(trims, clip, out start, out end);
+
+    /// <summary>Copies a list of trims (so two models never share the same list).</summary>
+    public static List<ClipTrim> CopyTrims(List<ClipTrim> from)
+    {
+        List<ClipTrim> list = new List<ClipTrim>();
+        if (from != null) foreach (ClipTrim t in from) if (t != null && t.clip != null) list.Add(new ClipTrim { clip = t.clip, start = t.start, end = t.end });
+        return list;
+    }
+
+    /// <summary>The object the animations move (the same one the game plays them on).</summary>
+    public GameObject AnimationRoot()
+    {
+        if (modelInstance == null) return null;
+        Animator animator = modelInstance.GetComponentInChildren<Animator>();
+        if (animator != null) return animator.gameObject;
+        return modelInstance.childCount > 0 ? modelInstance.GetChild(0).gameObject : modelInstance.gameObject;
+    }
+
     // Saved results of fitting the model (so we don't re-measure every frame)
     [SerializeField, HideInInspector] private GameObject builtFrom;
     [SerializeField, HideInInspector] private GameObject clipsFoundFrom;
@@ -85,6 +132,7 @@ public class CustomModel : MonoBehaviour
     private readonly AnimationClipPlayable[] clipPlayables = new AnimationClipPlayable[SlotCount];
     private readonly int[] mixerInput = { -1, -1, -1, -1, -1, -1 };
     private readonly float[] weights = new float[SlotCount];
+    private readonly double[] slotTime = new double[SlotCount]; // trimmed animations: time since they started
     private AnimSlot currentSlot = AnimSlot.Idle;
     private Vector3 lastPosition;
     private bool isStaticObstacle;
@@ -200,6 +248,7 @@ public class CustomModel : MonoBehaviour
         public float size = 1f, turn, raiseLower, animationSpeed = 1f;
         public bool animationMovesModel;
         public AnimationClip idle, walk, run, jump, fall, attack, hurt, death, fly;
+        public List<ClipTrim> trims = new List<ClipTrim>();
     }
 
     public Look GetLook() => new Look
@@ -207,6 +256,7 @@ public class CustomModel : MonoBehaviour
         model = model, animationsFrom = animationsFrom, size = size, turn = turn, raiseLower = raiseLower,
         animationSpeed = animationSpeed, animationMovesModel = animationMovesModel,
         idle = idle, walk = walk, run = run, jump = jump, fall = fall, attack = attack, hurt = hurt, death = death, fly = fly,
+        trims = CopyTrims(trims),
     };
 
     /// <summary>Changes to another look while playing (a 'become a character' pickup) and starts its animations.</summary>
@@ -217,6 +267,7 @@ public class CustomModel : MonoBehaviour
         animationSpeed = look.animationSpeed; animationMovesModel = look.animationMovesModel;
         idle = look.idle; walk = look.walk; run = look.run; jump = look.jump; fall = look.fall;
         attack = look.attack; hurt = look.hurt; death = look.death; fly = look.fly;
+        trims = CopyTrims(look.trims);
         Rebuild();
         if (!Application.isPlaying) return;
         CacheMovementSources();
@@ -512,6 +563,8 @@ public class CustomModel : MonoBehaviour
             if (clip == null) continue;
 
             clipPlayables[i] = AnimationClipPlayable.Create(graph, clip);
+            slotTime[i] = 0.0;
+            if (GetTrim(clip, out float trimStart, out _)) clipPlayables[i].SetTime(trimStart);
             graph.Connect(clipPlayables[i], 0, mixer, input);
             mixerInput[i] = input;
             input++;
@@ -579,7 +632,8 @@ public class CustomModel : MonoBehaviour
             // Start jumps from the beginning
             if (target == AnimSlot.Jump && clipPlayables[(int)AnimSlot.Jump].IsValid())
             {
-                clipPlayables[(int)AnimSlot.Jump].SetTime(0);
+                clipPlayables[(int)AnimSlot.Jump].SetTime(GetTrim(jump, out float jumpStart, out _) ? jumpStart : 0f);
+                slotTime[(int)AnimSlot.Jump] = 0.0;
             }
             currentSlot = target;
             PlayAnimationSound(true);
@@ -597,6 +651,7 @@ public class CustomModel : MonoBehaviour
             total += weights[i];
         }
         if (total > 0f) for (int i = 0; i < SlotCount; i++) weights[i] /= total;
+        DriveTrimmedSlots(dt);
         UpdateAction(dt);
         ApplyWeights();
     }
@@ -621,7 +676,9 @@ public class CustomModel : MonoBehaviour
         AnimationClip clip = GetClip(currentSlot);
         if (!playable.IsValid() || clip == null || clip.length <= 0f) return;
 
-        int loop = Mathf.FloorToInt((float)(playable.GetTime() / clip.length));
+        int loop = GetTrim(clip, out float trimS, out float trimE)
+            ? Mathf.FloorToInt((float)(slotTime[(int)currentSlot] / (trimE - trimS)))
+            : Mathf.FloorToInt((float)(playable.GetTime() / clip.length));
         bool looped = loop != lastLoop;
         lastLoop = loop;
         if (!justStarted && !looped) return;
@@ -654,9 +711,24 @@ public class CustomModel : MonoBehaviour
         {
             if (mixerInput[i] < 0) continue;
             mixer.SetInputWeight(mixerInput[i], weights[i] * (1f - actionWeight));
-            clipPlayables[i].SetSpeed(animationSpeed);
+            clipPlayables[i].SetSpeed(GetTrim(clipPlayables[i].GetAnimationClip(), out _, out _) ? 0.0 : animationSpeed); // trimmed: time set by DriveTrimmedSlots
         }
         if (actionInput >= 0 && actionInput < mixer.GetInputCount()) mixer.SetInputWeight(actionInput, actionWeight);
+    }
+
+    /// <summary>Trimmed animations: steps their time by hand so only the trimmed part plays (looping ones loop just that part).</summary>
+    private void DriveTrimmedSlots(float dt)
+    {
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (mixerInput[i] < 0 || !clipPlayables[i].IsValid()) continue;
+            AnimationClip clip = clipPlayables[i].GetAnimationClip();
+            if (!GetTrim(clip, out float s, out float e)) continue;
+            slotTime[i] += dt * animationSpeed;
+            double len = e - s;
+            double t = clip.isLooping ? slotTime[i] % len : System.Math.Min(slotTime[i], len);
+            clipPlayables[i].SetTime(s + t);
+        }
     }
 
     // ------------------------------------------------------------------ Extra animations (bark, bite, death...)
@@ -668,6 +740,9 @@ public class CustomModel : MonoBehaviour
     private float actionTimeLeft;
     private bool isHumanoidRig;
     private float nowAndThenTimer = -1f;
+    private bool actionTrimmed;
+    private float actionTrimStart, actionTrimEnd;
+    private double actionTime;
 
     /// <summary>
     /// Plays the model's extra animation chosen for this moment (Game Builder > Sounds > one model), with its sound.
@@ -743,9 +818,12 @@ public class CustomModel : MonoBehaviour
             actionPlayable.Destroy();
         }
         actionPlayable = AnimationClipPlayable.Create(graph, clip);
-        actionPlayable.SetSpeed(animationSpeed);
+        actionTrimmed = GetTrim(clip, out actionTrimStart, out actionTrimEnd);
+        actionTime = 0.0;
+        if (actionTrimmed) actionPlayable.SetTime(actionTrimStart);
+        actionPlayable.SetSpeed(actionTrimmed ? 0.0 : animationSpeed); // trimmed: time set in UpdateAction
         graph.Connect(actionPlayable, 0, mixer, actionInput);
-        float length = clip.length / Mathf.Max(0.1f, animationSpeed);
+        float length = (actionTrimmed ? actionTrimEnd - actionTrimStart : clip.length) / Mathf.Max(0.1f, animationSpeed);
         actionTimeLeft = length;
         actionHold = holdLastFrame;
         return length;
@@ -754,11 +832,17 @@ public class CustomModel : MonoBehaviour
     private void UpdateAction(float dt)
     {
         actionTimeLeft -= dt;
+        if (actionTrimmed && actionPlayable.IsValid())
+        {
+            // Only the trimmed part: it stops (and a death pose stays) at the trim's end
+            actionTime += dt * animationSpeed;
+            actionPlayable.SetTime(actionTrimStart + System.Math.Min(actionTime, actionTrimEnd - actionTrimStart));
+        }
         if (actionHold)
         {
             // A death animation: blend in and stay in its last pose (no blending back to standing)
             actionWeight = Mathf.MoveTowards(actionWeight, 1f, dt * 8f);
-            if (actionTimeLeft <= 0f && actionPlayable.IsValid() && actionPlayable.GetSpeed() != 0.0)
+            if (!actionTrimmed && actionTimeLeft <= 0f && actionPlayable.IsValid() && actionPlayable.GetSpeed() != 0.0)
             {
                 AnimationClip clip = actionPlayable.GetAnimationClip();
                 if (clip != null) actionPlayable.SetTime(Mathf.Max(0f, clip.length - 0.02f));

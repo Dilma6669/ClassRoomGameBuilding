@@ -318,6 +318,7 @@ public class ObstacleBaseEditor : Editor
 
         CustomModelEditor.AnimationSlot(cm, new GUIContent("Attack animation",
             "Plays when it hurts you. Drag in any animation, e.g. a Jump if it has no attack animation."), cm.attack, c => cm.attack = c);
+        if (cm.attack != null) { AnimationTrimEditor.ShowTrimsToggle(); CustomModelEditor.Trim(cm, cm.attack); }
         if (cm.attack == null)
             EditorGUILayout.LabelField("No attack animation: drag any animation into the box above (a Jump works well).", EditorStyles.wordWrappedMiniLabel);
 
@@ -343,6 +344,7 @@ public class ObstacleBaseEditor : Editor
         {
             CustomModelEditor.AnimationSlot(cm, new GUIContent("Death animation",
                 "Plays when it's beaten; it stays in the last pose. Drag in any animation. Empty = it gets squashed flat instead."), cm.death, c => cm.death = c);
+            if (cm.death != null) CustomModelEditor.Trim(cm, cm.death);
             if (cm.death == null)
                 EditorGUILayout.LabelField("No death animation: it gets squashed flat and disappears.", EditorStyles.wordWrappedMiniLabel);
         }
@@ -418,6 +420,11 @@ public class ObstacleBaseEditor : Editor
             CustomModel cm = o.GetComponentInChildren<CustomModel>();
             string uses = cm != null && cm.attack != null ? "its attack animation (" + cm.attack.name + ")" : "nothing (it has no attack animation)";
             EditorGUILayout.LabelField("Empty: it plays " + uses + ". Drag in any animation.", EditorStyles.wordWrappedMiniLabel);
+        }
+        else if (!many)
+        {
+            CustomModel cm = o.GetComponentInChildren<CustomModel>();
+            if (cm != null) { AnimationTrimEditor.ShowTrimsToggle(); CustomModelEditor.Trim(cm, o.shootAnimation); }
         }
         Prop("shootDelay", "Shot leaves after (seconds)");
         Prop("shootFromHeight", "Shoots from (0 feet, 1 top)");

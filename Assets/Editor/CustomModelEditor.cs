@@ -24,6 +24,14 @@ public class CustomModelEditor : Editor
         }
     }
 
+    /// <summary>The ✂ trim slider for one of this model's animations (see AnimationTrimEditor).</summary>
+    public static void Trim(CustomModel cm, AnimationClip clip)
+    {
+        if (cm == null) return;
+        if (cm.trims == null) cm.trims = new System.Collections.Generic.List<CustomModel.ClipTrim>();
+        AnimationTrimEditor.TrimRow(cm, cm.trims, clip, cm, cm.animationSpeed);
+    }
+
     private bool showAnimations = true;
 
     /// <summary>
@@ -64,19 +72,33 @@ public class CustomModelEditor : Editor
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animationsFrom"), new GUIContent("Animations From (optional)"));
             EditorGUILayout.Space(2);
+            bool one = targets.Length == 1;
+            if (one) AnimationTrimEditor.ShowTrimsToggle();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("idle"), new GUIContent("Idle (standing)"));
+            if (one) Trim(cm, cm.idle);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("walk"), new GUIContent("Walk"));
+            if (one) Trim(cm, cm.walk);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("run"), new GUIContent("Run (sprinting)"));
+            if (one) Trim(cm, cm.run);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("jump"), new GUIContent("Jump (going up)"));
+            if (one) Trim(cm, cm.jump);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fall"), new GUIContent("Fall (coming down)"));
+            if (one) Trim(cm, cm.fall);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("fly"), new GUIContent("Fly (flying characters)", "Only plays for a player that can fly (a 'become a character' pickup with Can fly)."));
-            if (targets.Length == 1 && cm.GetComponentInParent<ObstacleBase>() != null)
+            if (one) Trim(cm, cm.fly);
+            if (one && cm.GetComponentInParent<ObstacleBase>() != null)
             {
                 AnimationSlot(cm, new GUIContent("Attack (when it hurts you)", "Drag in any animation, e.g. a Jump if it has no attack one."), cm.attack, c => cm.attack = c);
+                Trim(cm, cm.attack);
                 AnimationSlot(cm, new GUIContent("Death (when it's beaten)", "Plays when it's beaten; it stays in the last pose, then shrinks away."), cm.death, c => cm.death = c);
+                Trim(cm, cm.death);
             }
-            else if (targets.Length == 1 && cm.GetComponentInParent<Health>() != null)
+            else if (one && cm.GetComponentInParent<Health>() != null)
+            {
                 AnimationSlot(cm, new GUIContent("Hurt (when you get hurt)", "Plays when something hurts you. Drag in any animation."), cm.hurt, c => cm.hurt = c);
+                Trim(cm, cm.hurt);
+            }
+            if (one) AnimationTrimEditor.CopyButton(cm);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animationSpeed"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("animationMovesModel"), new GUIContent("Animation can move it", "Off (normal): the model stays in its spot. On: an animation that walks the model forwards moves it away, then it snaps back when the animation starts again."));
             EditorGUI.indentLevel--;
