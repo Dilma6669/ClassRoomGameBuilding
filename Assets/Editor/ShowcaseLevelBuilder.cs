@@ -112,6 +112,7 @@ public static class ShowcaseLevelBuilder
             // 4. Save and add to the build, right after Tutorial Island
             Selection.activeGameObject = null;
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            LevelDecorator.Decorate(EditorSceneManager.GetActiveScene(), ParkArea, 1f, 2026); // grass, flowers, shrubs, more trees and rocks
             TutorialLevelBuilder.SetMoodyLook();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
             TutorialLevelBuilder.AddToBuild(ScenePath, TutorialLevelBuilder.ScenePath);
@@ -505,6 +506,9 @@ public static class ShowcaseLevelBuilder
     // ------------------------------------------------------------------ Scenery
 
     /// <summary>Trees, rocks and plants round the park (none inside it), plus a row of trees along each side.</summary>
+    /// <summary>The park itself: big trees and rocks stay outside it.</summary>
+    public static Rect ParkArea => new Rect(Start.x - 46f, Start.z - 18f, 92f, 273f);
+
     private static int BuildScenery()
     {
         TerrainPopulator populator = Object.FindAnyObjectByType<TerrainPopulator>();

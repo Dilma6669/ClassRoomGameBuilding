@@ -41,6 +41,32 @@ public class BecomeSettings
     public bool canFly;
     public float flyUpSpeed = 10f;
     public float flyDownSpeed = 10f;
+    [Tooltip("Flying: the character tips its nose up when going up (Space) and down when coming down (Ctrl), by this many degrees. 0 = stays level.")]
+    public float flyTilt = 20f;
+    [Tooltip("Flying characters: the camera sits this many metres higher, so the character is lower on the screen and you can see where you're going. 0 = normal.")]
+    public float flyCameraLift = 3f;
+
+    [Tooltip("The sparkles when you turn into the character. None = no sparkles.")]
+    public Sparkles.Effect transformEffect = Sparkles.Effect.Explosion;
+    [Tooltip("Pick your own colour for the turning-into sparkles (otherwise pink).")]
+    public bool transformCustomColour = false;
+    public Color transformColour = new Color(1f, 0.5f, 0.9f);
+    [Range(0.2f, 20f)] public float transformAmount = 3f;
+    [Range(0.3f, 10f)] public float transformSize = 2f;
+    [Tooltip("The new character pops in: it grows from tiny to full size.")]
+    public bool transformGrow = true;
+    [Tooltip("The new character spins round once as it appears.")]
+    public bool transformSpin = true;
+    [Tooltip("How long the pop-in and spin take (seconds).")]
+    [Range(0.1f, 3f)] public float transformTime = 0.6f;
+    [Tooltip("The same effect when you turn back to normal.")]
+    public bool transformEffectWhenBack = true;
+
+    /// <summary>The turning-into sparkle colour.</summary>
+    public Color TransformColour => transformCustomColour ? transformColour : Sparkles.ColourFor(ObstacleBase.PayloadType.BecomeCharacter);
+
+    [Tooltip("The pickup is made the same size as the character you turn into (so you can see how big you'll be).")]
+    public bool pickupSameSize = false;
 
     [Tooltip("Creatures need fewer jumps on the head to be beaten while you are the character.")]
     public CreatureHitsChange creatureHits = CreatureHitsChange.NoChange;

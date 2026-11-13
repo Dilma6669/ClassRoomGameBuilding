@@ -1035,6 +1035,16 @@ public partial class GameBuilderWindow : EditorWindow
         if (guid == null) return;
         created.become.look.model = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
         BecomeEditor.FindAnimations(created);
+        // The pickup looks like who you become, just as big, and vanishes when you take it (back after a while)
+        created.become.pickupSameSize = true;
+        created.destroyOnTrigger = true;
+        created.comeBackAfter = 30f;
+        CustomModel cm = created.GetComponent<CustomModel>();
+        if (cm == null) cm = Undo.AddComponent<CustomModel>(created.gameObject);
+        Undo.RecordObject(cm, "Become a character");
+        cm.model = created.become.look.model;
+        cm.Refresh();
+        EditorUtility.SetDirty(created);
     }
 
     private ObstacleBase Spawn(ObstacleBase.PayloadType payload, ObstacleSpawnType movement, int amount, float duration, bool usedUp, bool bouncy)

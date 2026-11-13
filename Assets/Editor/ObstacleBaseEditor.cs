@@ -14,14 +14,17 @@ public class ObstacleBaseEditor : Editor
     private static readonly HashSet<string> DrawnLater = new HashSet<string>
     {
         "hitZoneShape", "fitHitZoneToModel", "hitZoneWidth", "hitZoneHeight", "touchDistance",
-        "chasePlayer", "chaseStartDistance", "chaseGiveUpDistance", "chaseSpeed",
+        "chasePlayer", "chaseStartDistance", "chaseGiveUpDistance", "chaseSpeed", "chaseFollowsHeight",
+        "shoots", "shootEvery", "shootDamage", "shootSpeed", "shootRange", "shootMinRange", "shootOnlyWhenChasing", "shootAimAtYou", "shootAimAhead", "shootHoming", "shootDrops",
+        "shotsAtOnce", "shootSpread", "shootSize", "shootColour", "shootModel", "shootTrail", "shootHitEffect", "shootLasts", "shootKnockback", "shootFaceYou",
+        "shootAnimation", "shootDelay", "shootFromHeight", // 🏹 Shooting (Battle settings box)
         "triggerRadius", // not used: the hit zone is what touches the player
         "faceYouWhenAttacking",
         "shrinkAwayWhenBeaten", "waitBeforeShrinking", "shrinkTime", "deathSparkleWhen",
         "heightOffset", // drawn in the 📐 Transform settings box
         "jumpsToDefeat", "stompBounce", // drawn in the ⚔️ Battle settings box
         "objectScale", "sitOnGround", "initialYRotation", // drawn in the 📐 Transform settings box
-        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "showPickupMessage", "pickupMessage", "speedBoostFreeSprint", "superJumpNoFallDamage", // ✋ When you touch it box
+        "payloadType", "payloadAmount", "buffDuration", "destroyOnTrigger", "comeBackAfter", "showPickupMessage", "pickupMessage", "speedBoostFreeSprint", "superJumpNoFallDamage", // ✋ When you touch it box
         "isBouncy", "launchForce", "upwardBias", "momentumTransfer", "safeLanding", // 🏀 Bounce settings box
         "become", // 🦊 Become a character box
     };
@@ -124,6 +127,14 @@ public class ObstacleBaseEditor : Editor
             if (many || o.payloadType == ObstacleBase.PayloadType.JumpBuff)
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("superJumpNoFallDamage"), new GUIContent("No fall damage", "Falling doesn't hurt while the Super Jump lasts (a fall that starts during it is safe too)."));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("destroyOnTrigger"), Labels["destroyOnTrigger"]);
+            if (many || o.destroyOnTrigger)
+            {
+                EditorGUI.indentLevel++;
+                SerializedProperty back = serializedObject.FindProperty("comeBackAfter");
+                EditorGUILayout.PropertyField(back, new GUIContent("Comes back after (seconds)", back.tooltip));
+                if (!many && back.floatValue <= 0f) EditorGUILayout.LabelField("0 = gone for good.", EditorStyles.miniLabel);
+                EditorGUI.indentLevel--;
+            }
 
             // 💬 Pickups: a message on the screen saying what you picked up
             bool isPickup = o.payloadType != ObstacleBase.PayloadType.Damage && o.payloadType != ObstacleBase.PayloadType.None;
@@ -210,6 +221,7 @@ public class ObstacleBaseEditor : Editor
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("stompBounce"));
                 DrawHitZone(o, many);
                 DrawAttack(o, many);
+                DrawShooting(o, many);
                 if (many || o.jumpsToDefeat > 0) DrawBeaten(o, many);
             }
             EndBox();
@@ -358,6 +370,66 @@ public class ObstacleBaseEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("sparkleSize"), new GUIContent("Sparkle size"));
     }
 
+    /// <summary>🏹 Shoots at you: how often, how hard, how fast, what it shoots, and its shooting animation.</summary>
+    private void DrawShooting(ObstacleBase o, bool many)
+    {
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("🏹 Shoots at you", EditorStyles.boldLabel);
+        SerializedProperty shoots = serializedObject.FindProperty("shoots");
+        EditorGUILayout.PropertyField(shoots, new GUIContent("Shoots at you", shoots.tooltip));
+        if (!shoots.boolValue && !many) return;
+
+        EditorGUI.indentLevel++;
+        Prop("shootEvery", "Shoots every (seconds)");
+        Prop("shootDamage", "Damage");
+        Prop("shootSpeed", "Shot speed");
+        Prop("shootRange", "Shoots when you're within (m)");
+        Prop("shootMinRange", "...but not closer than (m)");
+        if (!many && o.shootMinRange >= o.shootRange) EditorGUILayout.HelpBox("'Not closer than' is bigger than 'within', so it never shoots.", MessageType.Warning);
+        Prop("shotsAtOnce", "Shots at once");
+        if (many || o.shotsAtOnce > 1) Prop("shootSpread", "Fan width (degrees)");
+
+        EditorGUILayout.Space(3);
+        EditorGUILayout.LabelField("🎯 Aiming", EditorStyles.miniBoldLabel);
+        Prop("shootAimAtYou", "Aims at your height");
+        Prop("shootAimAhead", "Aims where you're going");
+        Prop("shootHoming", "Follows you (homing)");
+        Prop("shootDrops", "Falls like a thrown ball");
+        Prop("shootOnlyWhenChasing", "Only while chasing you");
+        if (!many && o.shootOnlyWhenChasing && !o.chasePlayer)
+            EditorGUILayout.HelpBox("Tick 'Chase the player' (🚶 Movement settings) too, or it never shoots.", MessageType.Warning);
+
+        EditorGUILayout.Space(3);
+        EditorGUILayout.LabelField("🎨 What it shoots", EditorStyles.miniBoldLabel);
+        Prop("shootModel", "Model (empty = glowing ball)");
+        Prop("shootSize", "Size (metres)");
+        Prop("shootColour", "Colour");
+        Prop("shootTrail", "Glowing trail");
+        Prop("shootHitEffect", "Sparkles when it hits");
+        Prop("shootLasts", "Disappears after (seconds)");
+        Prop("shootKnockback", "Pushes you back");
+
+        EditorGUILayout.Space(3);
+        EditorGUILayout.LabelField("🏃 Shooting animation", EditorStyles.miniBoldLabel);
+        Prop("shootFaceYou", "Turns to face you");
+        Prop("shootAnimation", "Shooting animation");
+        if (!many && o.shootAnimation == null)
+        {
+            CustomModel cm = o.GetComponentInChildren<CustomModel>();
+            string uses = cm != null && cm.attack != null ? "its attack animation (" + cm.attack.name + ")" : "nothing (it has no attack animation)";
+            EditorGUILayout.LabelField("Empty: it plays " + uses + ". Drag in any animation.", EditorStyles.wordWrappedMiniLabel);
+        }
+        Prop("shootDelay", "Shot leaves after (seconds)");
+        Prop("shootFromHeight", "Shoots from (0 feet, 1 top)");
+        EditorGUI.indentLevel--;
+    }
+
+    private void Prop(string name, string label)
+    {
+        SerializedProperty p = serializedObject.FindProperty(name);
+        if (p != null) EditorGUILayout.PropertyField(p, new GUIContent(label, p.tooltip));
+    }
+
     private void DrawChase(ObstacleBase o, bool many)
     {
         EditorGUILayout.Space(8);
@@ -372,6 +444,8 @@ public class ObstacleBaseEditor : Editor
         EditorGUILayout.PropertyField(start, new GUIContent("Starts chasing within", start.tooltip));
         EditorGUILayout.PropertyField(giveUp, new GUIContent("Gives up past (from home)", giveUp.tooltip));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("chaseSpeed"), new GUIContent("Chase speed", "How fast it runs while chasing."));
+        SerializedProperty follow = serializedObject.FindProperty("chaseFollowsHeight");
+        EditorGUILayout.PropertyField(follow, new GUIContent("🐉 Follows your height", follow.tooltip));
         if (giveUp.floatValue < start.floatValue)
             EditorGUILayout.HelpBox("'Gives up past' is smaller than 'Starts chasing within', so it may give up straight away.", MessageType.Warning);
         EditorGUILayout.LabelField("Orange circle: starts chasing. Red circle: gives up and walks home.", EditorStyles.miniLabel);

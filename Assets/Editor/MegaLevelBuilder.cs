@@ -129,6 +129,8 @@ public static class MegaLevelBuilder
             Creatures();
             PlatformCrowds();
             BecomeCharacters();
+            Shooters();
+            LevelDecorator.Decorate(EditorSceneManager.GetActiveScene(), TowerArea, 1.5f, 3013);
 
             Selection.activeGameObject = null;
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
@@ -706,9 +708,10 @@ public static class MegaLevelBuilder
             s.changeJump = true; s.jumpHeight = 16f;
             s.noFallDamage = true;
         });
-        BecomePickup(G(10f, -196f), "Dragon-model", true, folder, "Become a Dragon", 2.5f, s =>
+        BecomePickup(DragonSpot, "Dragon-model", true, folder, "Become a Dragon", 2.5f, s =>
         {
-            s.look.size = 2f;
+            s.look.size = DragonSize;
+            s.flyCameraLift = 4f;     // the camera sits higher so the dragon is lower on the screen
             s.flyUpSpeed = 15f; s.flyDownSpeed = 15f;
             s.noFallDamage = true;
             s.creatureHits = CreatureHitsChange.DivideBy; s.creatureHitsAmount = 2;
@@ -723,20 +726,206 @@ public static class MegaLevelBuilder
         o.payloadType = ObstacleBase.PayloadType.BecomeCharacter;
         o.payloadAmount = 1;
         o.buffDuration = 30f;
-        o.destroyOnTrigger = false; // touch it again any time
+        o.destroyOnTrigger = true; // it disappears when you take it...
+        o.comeBackAfter = 35f;    // ...and comes back after the countdown
         o.showPickupMessage = true; o.pickupMessage = ""; // the automatic message says who you are (and how to fly)
         o.become = new BecomeSettings { canFly = canFly };
         o.become.look.model = model;
         BecomeEditor.FindAnimations(o);
         settings(o.become);
         Turn(o, 180f); // facing the start
-        Glow glow = ScatterTools.AddGlow(o.gameObject, Sparkles.ColourFor(o.payloadType));
-        glow.colour = Sparkles.ColourFor(o.payloadType);
-        glow.strength = 2f;
-        AddSparkles(o.gameObject, AmbientSparkles.Style.Fireflies, Sparkles.ColourFor(o.payloadType), 20f);
+        MakeObvious(o);
         EditorUtility.SetDirty(o);
         Folder(o, folder, name);
     }
+
+    private const float DragonSize = 2f; // the dragon you become is twice as tall as the player (the pickup is made just as big)
+    private static Vector3 DragonSpot => G(30f, -190f); // room for the big dragon pickup, clear of the gifts and teleporter
+
+    /// <summary>
+    /// A 'become a character' pickup that's impossible to miss: as big as the character you become, glowing strongly,
+    /// with big sparkle fountains and fireflies, a big turning-into effect, and it disappears when taken (back after 35 s).
+    /// </summary>
+    public static void MakeObvious(ObstacleBase o)
+    {
+        if (o == null) return;
+        Color pink = Sparkles.ColourFor(ObstacleBase.PayloadType.BecomeCharacter);
+        o.become.pickupSameSize = true;
+        o.become.transformEffect = Sparkles.Effect.Explosion;
+        o.become.transformAmount = 4f;
+        o.become.transformSize = 2.5f;
+        o.become.transformGrow = true;
+        o.become.transformSpin = true;
+        o.destroyOnTrigger = true;
+        o.comeBackAfter = 35f;
+        o.sparkles = true;
+        o.sparkleAmount = 4f;
+        o.sparkleSize = 2.5f;
+        if (o.become.canFly) { o.become.look.size = DragonSize; o.become.flyCameraLift = 4f; }
+
+        Glow glow = ScatterTools.AddGlow(o.gameObject, pink);
+        glow.colour = pink;
+        glow.strength = 5f;
+        glow.lightRange = 30f;
+        glow.pulse = true;
+        // One sparkle effect per object: a big fountain on the pickup, fireflies and a tornado on two little helpers inside it
+        foreach (AmbientSparkles old in o.GetComponentsInChildren<AmbientSparkles>(true))
+            if (old.gameObject == o.gameObject) Object.DestroyImmediate(old); else Object.DestroyImmediate(old.gameObject);
+        float across = 2f * Mathf.Max(1f, o.become.look.size);
+        AmbientSparkles fountain = o.gameObject.AddComponent<AmbientSparkles>();
+        fountain.style = AmbientSparkles.Style.Fountain; fountain.colour = pink; fountain.secondColour = new Color(1f, 0.9f, 1f);
+        fountain.fromTop = true; fountain.fromSides = false; fountain.amount = 80f; fountain.size = 3f;
+        AmbientSparkles flies = EffectHelper(o, "Fireflies", across);
+        flies.style = AmbientSparkles.Style.Fireflies; flies.colour = pink; flies.secondColour = Color.white;
+        flies.fromTop = true; flies.fromSides = true; flies.amount = 60f; flies.size = 2f;
+        AmbientSparkles twinkle = EffectHelper(o, "Tornado", across);
+        twinkle.style = AmbientSparkles.Style.Tornado; twinkle.colour = Color.white; twinkle.secondColour = pink;
+        twinkle.fromTop = false; twinkle.fromSides = true; twinkle.amount = 50f; twinkle.size = 1.5f;
+        o.FitToCharacterSize();
+        EditorUtility.SetDirty(o);
+    }
+
+    private static AmbientSparkles EffectHelper(ObstacleBase o, string name, float across)
+    {
+        GameObject go = new GameObject("✨ " + name + " (effect)");
+        go.transform.SetParent(o.transform, false);
+        AmbientSparkles s = go.AddComponent<AmbientSparkles>();
+        s.fitToObject = false;
+        s.areaSize = across;
+        return s;
+    }
+
+    // ------------------------------------------------------------------ Shooting creatures
+
+    private const string ShooterFolder = "Creatures that shoot";
+
+    /// <summary>Four creatures showing off the shooting options, south-west of the start.</summary>
+    private static void Shooters()
+    {
+        Sign(G(-22f, -214f), "13. Creatures that SHOOT",
+            "These creatures shoot at you! Battle settings > 'Shoots at you': how often, damage, speed, how close you must be,\n" +
+            "aim at your height, homing, falling like a thrown rock, several at once, ANY model as the shot, and its animation.\n" +
+            "The flying dragon CHASES you and follows your height. Become a Dragon and fly away from it!");
+
+        // 1. A spider that spits glowing fireballs at your height
+        ObstacleBase spider = Spawn(G(-38f, -222f), CreatureScatter.Kind.Guard, ObstacleSpawnType.Static, Model("Spider"), 3f);
+        Shooter(spider, every: 1.5f, damage: 10, speed: 22f, range: 35f, colour: new Color(1f, 0.45f, 0.1f));
+        Folder(spider, ShooterFolder, "Fireball Spider");
+
+        // 2. A dinosaur that throws rocks (a model) that fall like a thrown ball and knock you back
+        ObstacleBase dino = Spawn(G(-55f, -232f), CreatureScatter.Kind.Guard, ObstacleSpawnType.Static, Model("Dinosaur"), 8f);
+        Shooter(dino, every: 3f, damage: 25, speed: 28f, range: 60f, colour: new Color(0.6f, 0.5f, 0.4f));
+        if (dino != null)
+        {
+            dino.shootModel = Nature("Rock_Moss_1");
+            dino.shootSize = 1.8f;
+            dino.shootDrops = true;
+            dino.shootKnockback = 15f;
+            dino.shootHitEffect = Sparkles.Effect.Spray;
+            dino.shootTrail = false;
+            dino.shootMinRange = 6f; // too close: it just bites
+            dino.jumpsToDefeat = 4;
+        }
+        Folder(dino, ShooterFolder, "Rock Throwing Dinosaur");
+
+        // 3. A patrolling zombie that shoots three slow purple homing orbs at once
+        ObstacleBase zombie = Spawn(G(-30f, -238f), CreatureScatter.Kind.Patroller, ObstacleSpawnType.Patrol, Model("Zombie"), 2f, speed: new Vector2(2f, 3f), roam: 12f);
+        Shooter(zombie, every: 4f, damage: 8, speed: 9f, range: 30f, colour: new Color(0.7f, 0.3f, 1f));
+        if (zombie != null)
+        {
+            zombie.shotsAtOnce = 3;
+            zombie.shootSpread = 20f;
+            zombie.shootHoming = 0.5f;
+            zombie.shootLasts = 6f;
+            zombie.shootHitEffect = Sparkles.Effect.Twinkle;
+        }
+        Folder(zombie, ShooterFolder, "Homing Ghost Zombie");
+
+        // 4. A flying dragon that chases you, follows your height, and shoots fire only while chasing
+        ObstacleBase dragon = Spawn(G(-50f, -205f), CreatureScatter.Kind.Wanderer, ObstacleSpawnType.Wander, Model("Dragon"), 6f, speed: new Vector2(3f, 6f), roam: 15f);
+        Shooter(dragon, every: 1f, damage: 5, speed: 35f, range: 45f, colour: new Color(1f, 0.25f, 0.05f));
+        if (dragon != null)
+        {
+            if (dragon is TerrainObstacle flyer) ScatterTools.SetFlyHeight(flyer, 8f);
+            dragon.chasePlayer = true;
+            dragon.chaseStartDistance = 40f;
+            dragon.chaseGiveUpDistance = 120f;
+            dragon.chaseSpeed = 14f;
+            dragon.chaseFollowsHeight = true;
+            dragon.shootOnlyWhenChasing = true;
+            dragon.shootMinRange = 3f;
+            dragon.shootAimAhead = true;
+            dragon.shootSize = 0.8f;
+            dragon.jumpsToDefeat = 3;
+        }
+        Folder(dragon, ShooterFolder, "Fire Breathing Dragon");
+        KeepClear(G(-42f, -225f), 25f);
+    }
+
+    private static void Shooter(ObstacleBase o, float every, int damage, float speed, float range, Color colour)
+    {
+        if (o == null) return;
+        o.shoots = true;
+        o.shootEvery = every;
+        o.shootDamage = damage;
+        o.shootSpeed = speed;
+        o.shootRange = range;
+        o.shootColour = colour;
+        o.shootAimAtYou = true;
+        EditorUtility.SetDirty(o);
+    }
+
+    // ------------------------------------------------------------------ Updating the saved level without rebuilding it
+
+    /// <summary>
+    /// Brings an existing Tutorial 3 up to date without rebuilding it (so nothing else changes): makes the Fox and Dragon
+    /// pickups obvious, adds the shooting creatures (once), and grass + more scenery. The scene must be loaded.
+    /// </summary>
+    public static string UpdateInPlace(UnityEngine.SceneManagement.Scene scene)
+    {
+        GameObject[] roots = scene.GetRootGameObjects();
+        terrain = roots.SelectMany(g => g.GetComponentsInChildren<Terrain>(true)).FirstOrDefault();
+        Transform signRoot = roots.Select(g => g.transform).FirstOrDefault(t => t.name == "Madness Signs");
+        signs = signRoot;
+        signMaterial = TutorialLevelBuilder.GetSignMaterial();
+        platforms = roots.SelectMany(g => g.GetComponentsInChildren<PlatformController>(true)).FirstOrDefault();
+        TerrainPopulator populator = roots.SelectMany(g => g.GetComponentsInChildren<TerrainPopulator>(true)).FirstOrDefault();
+        if (terrain == null || signs == null || populator == null) return "This doesn't look like Tutorial 3.";
+        scenery = populator.GetComponent<SceneryPopulator>();
+        folderOrder.Clear();
+        keepClear.Clear();
+        Random.State old = Random.state;
+        Random.InitState(3013);
+        string result = "";
+        try
+        {
+            int n = 0;
+            foreach (ObstacleBase o in roots.SelectMany(g => g.GetComponentsInChildren<ObstacleBase>(true)))
+            {
+                if (o.payloadType != ObstacleBase.PayloadType.BecomeCharacter) continue;
+                if (o.become.canFly) { o.transform.position = DragonSpot + Vector3.up * (o.transform.position.y - G(o.transform.position.x, o.transform.position.z).y); }
+                MakeObvious(o);
+                n++;
+            }
+            result += n + " character pickups made obvious. ";
+
+            bool hasShooters = roots.SelectMany(g => g.GetComponentsInChildren<ListFolder>(true)).Any(f => f.folder == ShooterFolder);
+            if (!hasShooters)
+            {
+                float oldSize = ScatterTools.NewCreatureSize;
+                ScatterTools.NewCreatureSize = 1f;
+                try { Shooters(); } finally { ScatterTools.NewCreatureSize = oldSize; }
+                result += "Shooting creatures added. ";
+            }
+            result += LevelDecorator.Decorate(scene, TowerArea, 1.5f, 3013);
+        }
+        finally { Random.state = old; }
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+        return result;
+    }
+
+    /// <summary>The boost tower: big trees and rocks stay out of it.</summary>
+    private static Rect TowerArea => Rect.MinMaxRect(-30f, -240f, 30f, -40f);
 
     /// <summary>Creatures and pickups ON the platforms: spiders, dinosaurs on sky islands, pickups riding spinners.</summary>
     private static void PlatformCrowds()

@@ -152,6 +152,8 @@ public abstract partial class ObstacleBase : MonoBehaviour
         }
 #endif
 
+        if (Application.isPlaying) UpdateShooting();
+
         if (Application.isPlaying && UpdateAttack())
         {
             // attacking: it turns to face the player and doesn't walk
@@ -349,7 +351,7 @@ public abstract partial class ObstacleBase : MonoBehaviour
 
             if (destroyOnTrigger && payloadType != PayloadType.None)
             {
-                Destroy(gameObject);
+                UseUp();
             }
         }
     }

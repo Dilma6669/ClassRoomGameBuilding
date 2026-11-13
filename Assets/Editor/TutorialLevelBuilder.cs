@@ -261,6 +261,7 @@ public static class TutorialLevelBuilder
 
         // 4. Save and add to the build (after the student's levels)
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        LevelDecorator.Decorate(EditorSceneManager.GetActiveScene(), null, 1f, 1001); // grass, flowers, shrubs, more trees and rocks
         SetMoodyLook();
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         AddToBuild();

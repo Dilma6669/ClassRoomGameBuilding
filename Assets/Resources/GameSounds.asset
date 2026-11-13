@@ -119,8 +119,10 @@ MonoBehaviour:
     repeatEvery: 0.5
   modelSounds: []
   soundtrack:
-  - {fileID: 8300000, guid: 8ff3faa70376bc54ba441170976a31e7, type: 3}
+  - {fileID: 8300000, guid: 16563cc340b453641926dde052dbc3b8, type: 3}
   - {fileID: 8300000, guid: 770c9251589679d4bb273bbd546319e7, type: 3}
+  - {fileID: 8300000, guid: 952aa3d161f41ea45af92663c86b2542, type: 3}
+  - {fileID: 8300000, guid: fcb96ae34852d4048889b27beed8e84c, type: 3}
   playMusic: 1
   musicOrder: 2
   musicInMenus: 1

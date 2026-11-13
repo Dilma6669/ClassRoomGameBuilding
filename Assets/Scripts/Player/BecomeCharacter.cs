@@ -99,6 +99,7 @@ public class BecomeCharacter : MonoBehaviour
         active = this;
         if (s.showCountdown && !s.forever) ShowCountdown();
         else HideCountdown();
+        TransformEffect(s);
     }
 
     /// <summary>Back to the normal player.</summary>
@@ -135,7 +136,100 @@ public class BecomeCharacter : MonoBehaviour
         PutBack();
         PickupMessage.Show("You're back to normal!", Color.white);
         SoundManager.Play(SoundEvent.PickUp, transform.position, gameObject);
-        if (model != null) Sparkles.Burst(model.transform.position + Vector3.up, Sparkles.ColourFor(ObstacleBase.PayloadType.BecomeCharacter), Sparkles.Style.Poof, 1f, 1f);
+        BecomeSettings was = lastSettings;
+        if (was != null && was.transformEffectWhenBack) TransformEffect(was);
+        else if (model != null) Sparkles.Burst(model.transform.position + Vector3.up, Sparkles.ColourFor(ObstacleBase.PayloadType.BecomeCharacter), Sparkles.Style.Poof, 1f, 1f);
+    }
+
+    // ------------------------------------------------------------------ Turning-into effect: sparkles, pop in, spin
+
+    private BecomeSettings lastSettings; // the last character's settings (for the effect when you turn back)
+    private float popLeft, popTime;
+    private bool popGrow, popSpin;
+
+    private void TransformEffect(BecomeSettings s)
+    {
+        lastSettings = s;
+        float size = s.look != null ? Mathf.Max(1f, s.look.size) : 1f;
+        Vector3 middle = transform.position + Vector3.up * size;
+#if HAS_KINEMATIC_CC
+        if (controller != null) middle = controller.Motor.TransientPosition + controller.Motor.CharacterUp * size;
+#endif
+        if (s.transformEffect != Sparkles.Effect.None)
+            Sparkles.Play(s.transformEffect, middle, s.TransformColour, s.transformAmount, s.transformSize * Mathf.Sqrt(size));
+        popGrow = s.transformGrow;
+        popSpin = s.transformSpin;
+        popTime = Mathf.Max(0.1f, s.transformTime);
+        popLeft = popGrow || popSpin ? popTime : 0f;
+    }
+
+    // ------------------------------------------------------------------ Flying: tilt up/down, camera higher
+
+    private float pitch;          // degrees the model is tipped (nose up = positive)
+    private float cameraLift;     // metres the camera is raised right now
+    private float baseFramingY;
+    private bool framingRemembered;
+#if HAS_KINEMATIC_CC
+    private ExampleCharacterCamera characterCamera;
+#endif
+
+    private void LateUpdate()
+    {
+#if HAS_KINEMATIC_CC
+        if (controller == null) return;
+        float dt = Time.deltaTime;
+        bool flyer = settings != null && settings.canFly;
+
+        // Nose up while going up (Space), nose down while coming down (Ctrl), level when hovering or on the ground
+        float wantPitch = 0f;
+        if (flyer && controller.IsFlying && settings.flyTilt > 0f)
+        {
+            float vy = Vector3.Dot(controller.Motor.Velocity, controller.Motor.CharacterUp);
+            float rate = vy >= 0f ? Mathf.Max(0.1f, settings.flyUpSpeed) : Mathf.Max(0.1f, settings.flyDownSpeed);
+            wantPitch = Mathf.Clamp(vy / rate, -1f, 1f) * settings.flyTilt;
+        }
+        pitch = Mathf.Lerp(pitch, wantPitch, 1f - Mathf.Exp(-6f * dt));
+        if (Mathf.Abs(pitch) < 0.01f && wantPitch == 0f) pitch = 0f;
+        Transform root = controller.MeshRoot;
+        if (root != null)
+        {
+            // Tip round the middle of the body, not the feet
+            float middle = controller.Motor.Capsule != null ? controller.Motor.Capsule.center.y : 1f;
+            Vector3 pivot = Vector3.up * middle;
+            Quaternion tip = Quaternion.Euler(-pitch, 0f, 0f);
+            float grow = 1f, spin = 0f;
+            if (popLeft > 0f)
+            {
+                popLeft -= dt;
+                float t = 1f - Mathf.Clamp01(popLeft / Mathf.Max(0.05f, popTime));
+                if (popGrow) grow = Mathf.Lerp(0.15f, 1f, 1f - (1f - t) * (1f - t)) * (1f + 0.15f * Mathf.Sin(t * Mathf.PI)); // grows with a little overshoot
+                if (popSpin) spin = 360f * (1f - (1f - t) * (1f - t));
+                if (popLeft <= 0f) { grow = 1f; spin = 0f; }
+                root.localScale = Vector3.one * grow;
+            }
+            tip = Quaternion.Euler(0f, spin, 0f) * tip;
+            root.localRotation = tip;
+            root.localPosition = pivot - tip * pivot;
+        }
+
+        // Camera higher for flying characters, so the character sits lower on the screen
+        if (characterCamera == null)
+        {
+            ExamplePlayer p = GetComponentInChildren<ExamplePlayer>();
+            if (p == null) p = FindAnyObjectByType<ExamplePlayer>();
+            if (p != null) characterCamera = p.CharacterCamera;
+        }
+        if (characterCamera != null)
+        {
+            if (!framingRemembered) { baseFramingY = characterCamera.FollowPointFraming.y; framingRemembered = true; }
+            float wantLift = flyer ? settings.flyCameraLift : 0f;
+            cameraLift = Mathf.Lerp(cameraLift, wantLift, 1f - Mathf.Exp(-3f * dt));
+            if (Mathf.Abs(cameraLift - wantLift) < 0.01f) cameraLift = wantLift;
+            Vector2 f = characterCamera.FollowPointFraming;
+            f.y = baseFramingY + cameraLift;
+            characterCamera.FollowPointFraming = f;
+        }
+#endif
     }
 
     private void OnDestroy()

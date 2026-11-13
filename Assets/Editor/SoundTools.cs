@@ -113,7 +113,7 @@ public static class SoundTools
         if (music && sounds.soundtrack.TrueForAll(c => c == null))
         {
             sounds.soundtrack.Clear();
-            foreach (string song in new[] { "Sunny Hills", "Cave Echoes" })
+            foreach (string song in new[] { "Cave Echoes", "Shadow March", "Haunted Hollow", "Creeping Dread" })
             {
                 AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(StarterMusicFolder + "/" + song + ".wav");
                 if (clip != null) { sounds.soundtrack.Add(clip); filled++; }
@@ -192,6 +192,11 @@ public static class SoundTools
             new[] { 0, 3, 7, 3, 8, 7, 3, 2, 0, 3, 7, 10, 8, 7, 5, 3, 5, 8, 12, 8, 7, 3, 2, -2, 0, -99, 0, 3, 2, -2, 0, -99 },
             new[] { -12, -12, -16, -16, -19, -19, -17, -17 }));
 
+        // Three darker songs (teacher, 2026-11-14: "the current ones are too happy"); minor keys, slow, deep drums, echoing bells
+        Make(StarterMusicFolder, "Shadow March", 32f, ShadowMarch);
+        Make(StarterMusicFolder, "Haunted Hollow", 38.4f, HauntedHollow);
+        Make(StarterMusicFolder, "Creeping Dread", 25.6f, CreepingDread);
+
         foreach (string path in made) AssetDatabase.ImportAsset(path);
         foreach (string path in made)
         {
@@ -220,6 +225,128 @@ public static class SoundTools
         float hat = step % 2 == 1 && inNote < 0.15f ? Noise() * 0.05f * (1f - inNote / 0.15f) : 0f;
         float kick = step % 4 == 0 && inNote < 0.25f ? Sine(Mathf.Lerp(120f, 50f, inNote * 4f) * t) * 0.3f * (1f - inNote * 4f) : 0f;
         return lead + bassWave + hat + kick;
+    }
+
+    // ------------------------------------------------------------------ Dark songs
+
+    /// <summary>A soft pad: each note is two slightly out-of-tune sines (a slow, wobbly shimmer).</summary>
+    private static float Pad(float t, int[] notes, float volume)
+    {
+        float v = 0f;
+        foreach (int n in notes)
+        {
+            float f = Freq(n);
+            v += Sine(f * t) * 0.6f + Sine(f * 1.004f * t) * 0.4f + Triangle(f * 0.5f * t) * 0.15f;
+        }
+        return v * volume / notes.Length;
+    }
+
+    /// <summary>A music-box / bell note that rings and fades (tn = seconds since it was struck).</summary>
+    private static float Bell(float f, float tn)
+    {
+        if (tn < 0f) return 0f;
+        return (Sine(f * tn) * Mathf.Exp(-2.5f * tn) + Sine(f * 2.76f * tn) * 0.3f * Mathf.Exp(-6f * tn)) * Mathf.Clamp01(tn * 300f);
+    }
+
+    /// <summary>The tune: a bell on each note (-99 = rest), plus a quieter echo of it 3 beats later.</summary>
+    private static float BellTune(float t, float beat, int[] melody, int octave, float volume)
+    {
+        float v = 0f;
+        for (int echo = 0; echo < 2; echo++)
+        {
+            float te = t - echo * beat * 0.75f;
+            if (te < 0f) te += melody.Length * beat; // the echo of the end wraps round, so the loop is seamless
+            int step = (int)(te / beat);
+            float tn = te - step * beat;
+            // let the previous note ring on too
+            for (int back = 0; back < 3; back++)
+            {
+                int s = step - back;
+                if (s < 0) s += melody.Length;
+                int note = melody[s % melody.Length];
+                if (note != -99) v += Bell(Freq(note + octave), tn + back * beat) * (echo == 0 ? 1f : 0.35f);
+            }
+        }
+        return v * volume;
+    }
+
+    /// <summary>A deep drum: a falling sine thump (tn = seconds since it was hit).</summary>
+    private static float Boom(float tn, float volume)
+    {
+        if (tn < 0f || tn > 0.6f) return 0f;
+        return Sine(Mathf.Lerp(90f, 38f, Mathf.Clamp01(tn * 3f)) * tn) * Mathf.Exp(-6f * tn) * volume;
+    }
+
+    private static int[] Chord(params int[] n) => n;
+
+    // D minor march: Dm Bb Gm A (harmonic minor), kick on 1 and 3, a soft snare on 4, pulsing low bass.
+    private static float ShadowMarch(float t)
+    {
+        const float beat = 0.5f;
+        int[][] chords = { Chord(-7, -4, 0), Chord(-11, -7, -4), Chord(-14, -11, -7), Chord(-12, -8, -5) };
+        int bar = (int)(t / (beat * 4));
+        int[] chord = chords[(bar / 2) % chords.Length];
+        float inBar = t - bar * beat * 4;
+        int beatInBar = (int)(inBar / beat);
+        float inBeat = inBar - beatInBar * beat;
+
+        float pad = Pad(t, chord, 0.09f);
+        // bass: the chord's root two octaves down, pulsing in eighths
+        float eighth = inBeat % (beat * 0.5f);
+        float bass = (Triangle(Freq(chord[0] - 12) * t) * 0.8f + Square(Freq(chord[0] - 12) * t) * 0.08f) * Mathf.Exp(-4f * eighth) * 0.3f;
+        float kick = beatInBar % 2 == 0 ? Boom(inBeat, 0.55f) : 0f;
+        float snare = beatInBar == 3 && inBeat < 0.18f ? Noise() * 0.07f * (1f - inBeat / 0.18f) : 0f;
+        int[] tune = { 12, -99, 10, 8, 7, -99, 5, -99, 3, 5, 7, -99, 8, 7, 5, 4,
+                       5, -99, 3, 2, 0, -99, 2, 3, 5, -99, 4, -99, 0, -99, -99, -99,
+                       12, -99, 13, 12, 10, -99, 8, 7, 5, -99, 7, 8, 7, -99, 4, -99,
+                       5, 3, 2, -99, 0, 2, 3, -99, 2, -99, 1, -99, 2, -99, -99, -99 };
+        float bells = BellTune(t, beat, tune, 0, 0.12f);
+        return pad + bass + kick + snare + bells;
+    }
+
+    // A minor, slow and spooky: Am F Dm E pads, a music box with echoes, a heartbeat every bar, a low rumble.
+    private static float HauntedHollow(float t)
+    {
+        const float beat = 0.6f;
+        int[][] chords = { Chord(0, 3, 7), Chord(-4, 0, 3), Chord(-7, -4, 0), Chord(-5, -1, 2) };
+        int bar = (int)(t / (beat * 4));
+        int[] chord = chords[(bar / 2) % chords.Length];
+        float inBar = t - bar * beat * 4;
+        float swell = 0.75f + 0.25f * Mathf.Sin(t * 0.8f);
+        float pad = Pad(t, chord, 0.1f) * swell;
+        // heartbeat: two thumps at the start of each bar
+        float heart = Boom(inBar, 0.4f) + Boom(inBar - 0.28f, 0.28f);
+        float rumble = Sine(Freq(chord[0] - 24) * t) * 0.07f;
+        int[] tune = { 12, -99, 15, -99, 14, 12, -99, 11, 12, -99, -99, -99, 7, -99, 8, -99,
+                       8, -99, 12, -99, 15, 14, -99, 12, 10, -99, -99, -99, 8, 7, -99, 5,
+                       5, -99, 8, -99, 12, -99, 10, 8, 7, -99, -99, -99, 3, -99, 5, -99,
+                       7, -99, 11, -99, 14, -99, 12, 11, 7, -99, -99, -99, -99, -99, -99, -99 };
+        float bells = BellTune(t, beat, tune, 12, 0.09f);
+        return (pad + heart + rumble + bells) * 1.45f;
+    }
+
+    // E Phrygian creeping: a low E-F-E-F crawl, a tritone drone, a ticking clock, and eerie gliding whistles.
+    private static float CreepingDread(float t)
+    {
+        const float beat = 0.4f;
+        int step = (int)(t / beat);
+        float inBeat = t - step * beat;
+        int[] crawl = { -29, -28, -29, -28, -29, -28, -26, -28 };
+        int bassNote = crawl[step % crawl.Length];
+        float bass = (Triangle(Freq(bassNote) * t) + Sine(Freq(bassNote + 12) * t) * 0.3f) * Mathf.Exp(-2.5f * inBeat) * 0.33f;
+        float drone = Pad(t, new[] { -5, 1 }, 0.06f) * (0.6f + 0.4f * Mathf.Sin(t * 0.5f)); // E and Bb: the 'devil's interval'
+        float tick = inBeat < 0.012f ? Noise() * 0.12f : 0f;
+        float tock = step % 4 == 0 ? Boom(inBeat, 0.35f) : 0f;
+        // a whistle that slides down, once every 8 beats
+        float whistleT = t % (beat * 8f);
+        float whistle = whistleT > beat * 4f ? Sine((1320f - 180f * (whistleT - beat * 4f)) * (whistleT - beat * 4f)) * 0.035f
+                                              * Mathf.Sin(Mathf.PI * (whistleT - beat * 4f) / (beat * 4f)) : 0f;
+        int[] tune = { 7, -99, -99, 8, -99, -99, 7, -99, 5, -99, -99, 4, -99, -99, 2, -99,
+                       7, -99, -99, 8, -99, -99, 11, -99, 10, -99, -99, 8, -99, 7, -99, -99,
+                       4, -99, -99, 5, -99, -99, 4, -99, 1, -99, -99, 2, -99, -99, -1, -99,
+                       -5, -99, -99, -4, -99, -99, -1, -99, -5, -99, -99, -99, -99, -99, -99, -99 };
+        float bells = BellTune(t, beat, tune, 12, 0.07f);
+        return bass + drone + tick + tock + whistle + bells;
     }
 
     private static float Freq(int semitonesFromA3) => 220f * Mathf.Pow(2f, semitonesFromA3 / 12f);

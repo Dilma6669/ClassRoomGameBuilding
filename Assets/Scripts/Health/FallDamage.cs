@@ -9,7 +9,18 @@ using KinematicCharacterController;
 #endif
 public class FallDamage : MonoBehaviour
 {
-    [Header("Fall Time Settings")]
+    public enum FallMeasure { Time, Height }
+
+    [ShowAs("Measure falls by"), Tooltip("Time: how many seconds you fall. Height: how many metres you drop (the further you fall, the more it hurts).")]
+    public FallMeasure measureBy = FallMeasure.Time;
+
+    [Header("If measuring by Height (metres)")]
+    [ShowAs("Safe drop (m)"), Tooltip("You can drop this many metres without getting hurt at all.")]
+    [Range(1f, 200f)] public float safeFallHeight = 8f;
+    [ShowAs("Deadliest drop (m)"), Tooltip("Dropping this many metres (or more) gives the Biggest hurt.")]
+    [Range(2f, 2000f)] public float deadliestFallHeight = 100f;
+
+    [Header("If measuring by Time (seconds)")]
     [ShowAs("Safe fall time"), Tooltip("Seconds you can fall without getting hurt at all.")]
     [Range(0.2f, 5f)] public float minFallTime = 1.0f;
 
@@ -34,6 +45,7 @@ public class FallDamage : MonoBehaviour
 #endif
 
     private float currentFallTimer = 0f;
+    private float fallTopY = float.NegativeInfinity; // the highest point since you left the ground
     private bool wasGrounded = true;
 
     // A Super Jump that protects you: a fall that happens (or starts) while it's on doesn't hurt
@@ -62,17 +74,20 @@ public class FallDamage : MonoBehaviour
         if (!isGrounded)
         {
             // Flying: coming down on purpose never counts as falling (if the flying ends in the air, the fall counts from then)
-            if (flyer != null && flyer.IsFlying) currentFallTimer = 0f;
-            else if (motor.BaseVelocity.y < 0f)
+            if (flyer != null && flyer.IsFlying) { currentFallTimer = 0f; fallTopY = motor.TransientPosition.y; }
+            else
             {
-                currentFallTimer += Time.deltaTime;
+                fallTopY = Mathf.Max(fallTopY, motor.TransientPosition.y);
+                if (motor.BaseVelocity.y < 0f) currentFallTimer += Time.deltaTime;
             }
             if ((playerLogic != null && playerLogic.NoFallDamageNow) || BecomeCharacter.NoFallDamageNow) protectedFall = true;
         }
         else if (!wasGrounded && isGrounded)
         {
-            if (!protectedFall && !LandedSafely()) ProcessLandingDamage(currentFallTimer);
+            float drop = float.IsNegativeInfinity(fallTopY) ? 0f : fallTopY - motor.TransientPosition.y;
+            if (!protectedFall && !LandedSafely()) ProcessLandingDamage(currentFallTimer, drop);
             currentFallTimer = 0f;
+            fallTopY = float.NegativeInfinity;
             protectedFall = false;
         }
 
@@ -88,11 +103,20 @@ public class FallDamage : MonoBehaviour
     }
 #endif
 
-    private void ProcessLandingDamage(float fallDuration)
+    private void ProcessLandingDamage(float fallDuration, float dropMetres)
     {
-        if (fallDuration < minFallTime || playerHealth == null) return;
-
-        float timePercent = Mathf.InverseLerp(minFallTime, maxFallTime, fallDuration);
+        if (playerHealth == null) return;
+        float timePercent;
+        if (measureBy == FallMeasure.Height)
+        {
+            if (dropMetres < safeFallHeight) return;
+            timePercent = Mathf.InverseLerp(safeFallHeight, Mathf.Max(safeFallHeight + 0.1f, deadliestFallHeight), dropMetres);
+        }
+        else
+        {
+            if (fallDuration < minFallTime) return;
+            timePercent = Mathf.InverseLerp(minFallTime, maxFallTime, fallDuration);
+        }
         float calculatedDamage = Mathf.Lerp(minDamage, maxDamage, timePercent);
 
         playerHealth.TakeDamage(Mathf.RoundToInt(calculatedDamage) * damageMultiplier, true);

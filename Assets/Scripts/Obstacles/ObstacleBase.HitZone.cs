@@ -226,6 +226,9 @@ public abstract partial class ObstacleBase
     {
         if (Time.realtimeSinceStartup < nextEditorFit) return;
         nextEditorFit = Time.realtimeSinceStartup + 0.5f;
+#if UNITY_EDITOR
+        KeepSameSizeAsCharacter();
+#endif
         RefitAndMarkChanged();
     }
 

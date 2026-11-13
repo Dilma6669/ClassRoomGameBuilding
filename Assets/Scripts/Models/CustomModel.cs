@@ -725,6 +725,13 @@ public class CustomModel : MonoBehaviour
         return PlayAction(hurt);
     }
 
+    /// <summary>Plays any animation once (e.g. a creature's shooting animation). Returns how long it lasts (0 = it couldn't).</summary>
+    public float PlayClip(AnimationClip clip)
+    {
+        if (!Application.isPlaying) return 0f;
+        return PlayAction(clip);
+    }
+
     private float PlayAction(AnimationClip clip, bool holdLastFrame = false)
     {
         if (!graph.IsValid() || actionInput < 0 || clip == null || clip.length <= 0f) return 0f;

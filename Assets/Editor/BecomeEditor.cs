@@ -30,6 +30,7 @@ public static class BecomeEditor
         }
 
         Slider(look, "size", "Size", "Make the character bigger or smaller (1 = as tall as the normal player).", 0.1f, 50f);
+        Toggle(become, "pickupSameSize", "📏 Pickup is as big as the character", "The pickup itself is made the same size as the character you turn into, so you can see how big you'll be.");
         Slider(look, "turn", "Turn", "Turn the model if it faces the wrong way.", -180f, 180f);
         Slider(look, "raiseLower", "Raise / lower", "Move the model up or down if it floats or sinks into the ground.", -50f, 50f);
         Slider(look, "animationSpeed", "Animation speed", "Speed up or slow down its animations.", 0.1f, 10f);
@@ -49,6 +50,24 @@ public static class BecomeEditor
             FindAnimations(o);
             so.Update();
         }
+
+        // ✨ Turning-into effect
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("✨ Turning-into effect", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(become.FindPropertyRelative("transformEffect"), new GUIContent("Sparkles", "The sparkles when you turn into the character. None = no sparkles."));
+        if (o.become.transformEffect != Sparkles.Effect.None)
+        {
+            EditorGUI.indentLevel++;
+            Toggle(become, "transformCustomColour", "Pick my own colour", "Otherwise the sparkles are pink.");
+            if (o.become.transformCustomColour) EditorGUILayout.PropertyField(become.FindPropertyRelative("transformColour"), new GUIContent("Colour"));
+            Slider(become, "transformAmount", "How many sparkles", "1 = normal.", 0.2f, 20f);
+            Slider(become, "transformSize", "Sparkle size", "1 = normal (bigger characters get bigger sparkles too).", 0.3f, 10f);
+            EditorGUI.indentLevel--;
+        }
+        Toggle(become, "transformGrow", "Pops in (grows from tiny)", "The new character grows from tiny to full size.");
+        Toggle(become, "transformSpin", "Spins round once", "The new character spins round once as it appears.");
+        if (o.become.transformGrow || o.become.transformSpin) Slider(become, "transformTime", "Pop / spin time (seconds)", "How long the pop-in and spin take.", 0.1f, 3f);
+        Toggle(become, "transformEffectWhenBack", "Same effect when you turn back", "The same sparkles, pop and spin when you go back to normal.");
 
         // ⏱ Countdown
         EditorGUILayout.Space(6);
@@ -82,6 +101,8 @@ public static class BecomeEditor
             EditorGUI.indentLevel++;
             Slider(become, "flyUpSpeed", "Going up speed", "How fast Space takes you up. Normal: 10.", 1f, 200f);
             Slider(become, "flyDownSpeed", "Coming down speed", "How fast Ctrl takes you down. Normal: 10.", 1f, 200f);
+            Slider(become, "flyTilt", "Tilts up / down (degrees)", "It tips its nose up when going up and down when coming down. 0 = stays level.", 0f, 60f);
+            Slider(become, "flyCameraLift", "📷 Camera higher (metres)", "The camera sits higher while you're this character, so it's lower on the screen and you can see ahead. 0 = normal.", 0f, 30f);
             EditorGUI.indentLevel--;
             if (o.become.look.fly == null) EditorGUILayout.HelpBox("This model has no Fly animation, so it uses standing / walking / running in the air. Drag one into 'Fly' above, or press 🔍 Find its animations again.", MessageType.None);
         }

@@ -15,6 +15,13 @@ public abstract partial class ObstacleBase
     [Range(2f, 1000f)] public float chaseGiveUpDistance = 20f;
     [Tooltip("How fast it runs while chasing.")]
     [Range(0.5f, 500f)] public float chaseSpeed = 4f;
+    [Tooltip("While chasing, it flies up and down to your height (great for dragons chasing a flying player). Then it goes back down on its way home.")]
+    public bool chaseFollowsHeight = false;
+
+    private float heightAbove; // metres it has risen (or sunk) to follow your height
+
+    /// <summary>How high its body floats above its spot (flying creatures). Ground creatures override this.</summary>
+    protected virtual float FlyHeight => 0f;
 
     private enum ChaseState { Off, Chasing, GoingHome }
     private ChaseState chaseState;
@@ -66,7 +73,7 @@ public abstract partial class ObstacleBase
             case ChaseState.GoingHome:
                 // Turn round and chase again if the player comes back
                 if (playerFromMe <= chaseStartDistance && playerFromHome <= chaseGiveUpDistance) chaseState = ChaseState.Chasing;
-                else if (Flat(home - transform.position).magnitude < 0.5f) chaseState = ChaseState.Off;
+                else if (Flat(home - transform.position).magnitude < 0.5f && Mathf.Abs(heightAbove) < 0.05f) { heightAbove = 0f; chaseState = ChaseState.Off; }
                 break;
         }
 
@@ -75,11 +82,13 @@ public abstract partial class ObstacleBase
             // Stop just short of the player, so it doesn't jitter on top of them
             if (playerFromMe > 0.6f) StepTowards(playerPos, chaseSpeed);
             else FaceTowards(playerPos);
+            FollowHeight(playerPos.y, chaseSpeed);
             return true;
         }
         if (chaseState == ChaseState.GoingHome)
         {
             StepTowards(home, Mathf.Max(1f, chaseSpeed * 0.6f));
+            FollowHeight(float.NaN, Mathf.Max(1f, chaseSpeed * 0.6f));
             return true;
         }
         return false;
@@ -105,8 +114,31 @@ public abstract partial class ObstacleBase
         float y = transform.position.y;
         Terrain terrain = Terrain.activeTerrain;
         if (terrain != null) y = terrain.SampleHeight(next) + terrain.transform.position.y;
+        if (terrain != null) y += heightAbove;
         Rigidbody body = GetComponent<Rigidbody>();
         if (body != null && !body.isKinematic) { body.isKinematic = true; body.useGravity = false; }
         transform.position = new Vector3(next.x, y, next.z);
+    }
+}
+
+public abstract partial class ObstacleBase
+{
+    /// <summary>
+    /// 'Follows your height': rises or sinks towards the player's feet (NaN = back to normal), never into the ground.
+    /// Ground and flying creatures only (platform creatures stay on their platform).
+    /// </summary>
+    private void FollowHeight(float playerFeetY, float speed)
+    {
+        if (HomeSurface != null) return;
+        if (!chaseFollowsHeight && heightAbove == 0f) return;
+        Terrain terrain = Terrain.activeTerrain;
+        float ground = terrain != null ? terrain.SampleHeight(transform.position) + terrain.transform.position.y : transform.position.y - heightAbove;
+        float want = 0f;
+        if (chaseFollowsHeight && !float.IsNaN(playerFeetY)) want = Mathf.Max(-FlyHeight, playerFeetY - ground - FlyHeight);
+        float before = heightAbove;
+        heightAbove = Mathf.MoveTowards(heightAbove, want, Mathf.Max(2f, speed) * Time.deltaTime);
+        Vector3 p = transform.position;
+        p.y += heightAbove - before;
+        transform.position = p;
     }
 }

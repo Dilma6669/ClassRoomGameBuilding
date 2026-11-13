@@ -20,7 +20,7 @@ public class PlayerLogic : MonoBehaviour
     [ShowAs("Stamina used per second"), Tooltip("How much stamina sprinting uses up each second.")]
     [Range(1f, 100f)] public float staminaDrainRate = 12.5f; // 100 stamina lasts 8 seconds of sprinting
     [ShowAs("Stamina refill speed"), Tooltip("How much stamina comes back each second after you stop sprinting.")]
-    [Range(5f, 100f)] public float staminaRegenRate = 15f;
+    [Range(5f, 100f)] public float staminaRegenRate = 30f;
     [ShowAs("Wait before refilling"), Tooltip("Seconds to wait after sprinting before stamina starts coming back.")]
     [Range(0f, 5f)] public float regenDelay = 1f;
 
@@ -31,9 +31,11 @@ public class PlayerLogic : MonoBehaviour
 
     private void UpgradeOldSettings()
     {
-        if (settingsVersion >= 1) return;
-        if (Mathf.Approximately(staminaDrainRate, 25f)) staminaDrainRate = 12.5f;
-        settingsVersion = 1;
+        if (settingsVersion >= 2) return;
+        if (settingsVersion < 1 && Mathf.Approximately(staminaDrainRate, 25f)) staminaDrainRate = 12.5f;
+        // 2026-11-14: stamina refills twice as fast (15 -> 30 per second)
+        if (Mathf.Approximately(staminaRegenRate, 15f)) staminaRegenRate = 30f;
+        settingsVersion = 2;
     }
 
 #if UNITY_EDITOR

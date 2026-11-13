@@ -6,6 +6,8 @@ public class TerrainObstacle : ObstacleBase
     [Tooltip("Adjusts vertical offset of the visual model and colliders above the terrain ground surface.")]
     [Range(-2f, 300f)] public float heightOffset = 0f;
 
+    protected override float FlyHeight => heightOffset;
+
     public Vector3 SpawnCenterPosition { get; private set; }
     public bool IsFalling { get; set; }
 
