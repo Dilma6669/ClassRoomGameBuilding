@@ -630,12 +630,12 @@ public static class TutorialLevelBuilder
     // ------------------------------------------------------------------ The tutorials' player + look (all three levels)
 
     /// <summary>The student's character played in the tutorials (if the file is missing, the default player stays).</summary>
-    internal const string TutorialPlayerModel = "Assets/MyModels/monster girl 3d model - Animated.glb";
+    internal const string TutorialPlayerModel = "Assets/MyModels/Leane' Scary Monster Girl - Rigged & Animated (C).glb";
 
     /// <summary>The animations chosen for the tutorial player (by name, in TutorialPlayerModel). Others are found automatically.</summary>
     private static readonly (string slot, string clip)[] TutorialPlayerClips =
     {
-        ("idle", "zombie_idle_loop_fit"), ("walk", "zombie_walk_fwd_loop_fit"), ("run", "sprint_loop_fit"), ("jump", "jump_loop_fit"),
+        ("idle", "zombie_idle_loop_fit"), ("walk", "zombie_walk_fwd_loop_fit"), ("run", "jog_fwd_loop_fit"), ("jump", "ninjajump_idle_loop_fit"),
     };
 
     /// <summary>Gives the player the student's character, with the chosen animations.</summary>
