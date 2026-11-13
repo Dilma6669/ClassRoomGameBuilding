@@ -1,6 +1,6 @@
 # Handover Notes: Class Game Builder
 
-_Last updated: 2026-11-14, session 14 (grass + scenery, flying tilt/camera, shooting creatures, transform effect, dark music, fall by height). Next: whatever the teacher reports (platforms), class builds. Read START HERE first._
+_Last updated: 2026-11-14, session 15 (shooting characters: left click, stamina or own bar, Tutorial 3 dragon fireballs). Next: the teacher has ONE MORE REQUEST tonight (ask), then class builds when they say. Read START HERE first._
 
 ## ▶ START HERE (state at 2026-11-14)
 ### 📍 SESSION 15 (2026-11-14): shooting characters (left click)
@@ -8,6 +8,7 @@ _Last updated: 2026-11-14, session 14 (grass + scenery, flying tilt/camera, shoo
 - **"Each shot uses"** (`shootUses`): **Stamina Bar (default, teacher liked juggling sprint vs shooting; `PlayerLogic.UseStamina`/`StaminaExhausted`)**, Own Bar (yellow bar top middle, fills per shot, red + flashing when full, goes down per second after a wait, shoot again at X %), No Limit. Countdown text moved down a little (0.86-0.955) to make room.
 - Code: `Scripts/Player/BecomeCharacter.Shoot.cs` (BecomeCharacter is now partial). Direction = `MeshRoot.forward` (so flying tilt aims up/down). Shots = `Projectile.FireFromPlayer` (ignore the player, fly through pickups/bounce balls, `ObstacleBase.TakeShot`: **10 damage = one jump on the head**, shared with stomps, respects BecomeCharacter.JumpsNeeded; 0-jump creatures just spark). The click that locks the mouse doesn't shoot; no shooting unless GameState Playing. Pickup message adds "Left click to shoot!".
 - **Tutorial 3:** dragon pickup shoots fireballs (`MegaLevelBuilder.DragonShoots`: 10 dmg, 0.25-0.4 s, speed 45, size 1.2, orange, homing 0.25, aim -4°, 8 stamina per shot), fox doesn't. Sign 12 text updated. Applied with `MegaLevelBuilder.DragonShootingInPlace(scene)` (Tutorial 3 opened ADDITIVELY beside the teacher's dirty Tutorial 2, saved, closed; T2 untouched). The builder does it too.
+- Teacher happy with it ("The choice?! Amazing."); asked if curving shots is an option: yes, "Homing (curves to creatures)" 0 = straight (default), T3 dragon 0.25.
 - Verified in Play (Tutorial 2, by code): 3 shots beat the 3-jump Giant Dinosaur; screenshot of the bar at 60% and a 3-shot fan. Not tested: a person holding the real mouse button, the stamina mode in hand (code simple), shooting while tilted in flight.
 
 ### 📍 SESSION 14 (2026-11-14): grass/scenery, flying polish, shooting creatures, music, fall by height
