@@ -18,13 +18,27 @@ public class PlayerLogic : MonoBehaviour
     [Header("Stamina Settings")]
     [Range(10f, 10000f)] public float maxStamina = 100f;
     [ShowAs("Stamina used per second"), Tooltip("How much stamina sprinting uses up each second.")]
-    [Range(5f, 100f)] public float staminaDrainRate = 25f;
+    [Range(1f, 100f)] public float staminaDrainRate = 12.5f; // 100 stamina lasts 8 seconds of sprinting
     [ShowAs("Stamina refill speed"), Tooltip("How much stamina comes back each second after you stop sprinting.")]
     [Range(5f, 100f)] public float staminaRegenRate = 15f;
     [ShowAs("Wait before refilling"), Tooltip("Seconds to wait after sprinting before stamina starts coming back.")]
     [Range(0f, 5f)] public float regenDelay = 1f;
 
     [HideInInspector] public StaminaHUD staminaHUD;
+
+    // Levels saved before 2026-11-13 used 25 stamina per second (4 s of sprinting): upgraded once to the new default
+    [SerializeField, HideInInspector] private int settingsVersion;
+
+    private void UpgradeOldSettings()
+    {
+        if (settingsVersion >= 1) return;
+        if (Mathf.Approximately(staminaDrainRate, 25f)) staminaDrainRate = 12.5f;
+        settingsVersion = 1;
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate() => UpgradeOldSettings();
+#endif
 
     [Header("Jump Controls")]
     [Range(1f, 1000f)] public float jumpHeight = 10f;
@@ -56,6 +70,7 @@ public class PlayerLogic : MonoBehaviour
 
     private void Awake()
     {
+        UpgradeOldSettings();
         FindCharacterController();
         FindStaminaHUD();
         currentStamina = maxStamina;
