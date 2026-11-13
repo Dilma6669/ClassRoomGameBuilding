@@ -215,6 +215,7 @@ public static class AnimationTrimPreview
         }
         float size = Mathf.Max(0.1f, b2.extents.magnitude);
         lookAt = b2.center;
+        FindTravellingBone(size);
         distance = size * 3.6f;
         stage.camera.nearClipPlane = distance * 0.01f;
         stage.camera.farClipPlane = distance * 10f;
@@ -229,6 +230,55 @@ public static class AnimationTrimPreview
             if (n == "InspectorWindow" || n == "GameBuilderWindow") windows.Add(w);
         }
         EditorApplication.update += RepaintWindows;
+    }
+
+    private const string KeepKey = "GameBuilder.TrimPreviewKeepInMiddle";
+    /// <summary>"📌 Keep it in the middle": an animation that runs / rolls away plays on the spot in the picture.</summary>
+    public static bool KeepInMiddle
+    {
+        get => EditorPrefs.GetBool(KeepKey, true);
+        set => EditorPrefs.SetBool(KeepKey, value);
+    }
+
+    private static Transform travelBone;  // the part of the skeleton that moves across the ground (usually the hips)
+    private static Vector3 travelRest;    // where it is at the start of the animation
+
+    /// <summary>Finds the bone closest to the top of the skeleton that moves sideways during the animation.</summary>
+    private static void FindTravellingBone(float size)
+    {
+        travelBone = null;
+        List<Transform> order = new List<Transform>();
+        Queue<Transform> queue = new Queue<Transform>();
+        queue.Enqueue(animRoot.transform);
+        while (queue.Count > 0)
+        {
+            Transform t = queue.Dequeue();
+            order.Add(t);
+            foreach (Transform child in t) queue.Enqueue(child);
+        }
+        order.Remove(animRoot.transform);
+
+        clip.SampleAnimation(animRoot, 0f);
+        Vector3[] start = new Vector3[order.Count];
+        for (int i = 0; i < order.Count; i++) start[i] = order[i].position;
+        float[] moved = new float[order.Count];
+        for (int k = 1; k <= 8; k++)
+        {
+            clip.SampleAnimation(animRoot, clip.length * k / 8f);
+            for (int i = 0; i < order.Count; i++)
+            {
+                Vector3 d = order[i].position - start[i];
+                moved[i] = Mathf.Max(moved[i], new Vector2(d.x, d.z).magnitude);
+            }
+        }
+        // Only a bone that carries most of the body (root / hips), never a foot or hand swinging about
+        int total = order.Count;
+        for (int i = 0; i < order.Count; i++)
+        {
+            if (order[i].GetComponentsInChildren<Transform>(true).Length < total * 0.4f) continue;
+            if (moved[i] > size * 0.1f) { travelBone = order[i]; travelRest = start[i]; break; }
+        }
+        clip.SampleAnimation(animRoot, 0f);
     }
 
     /// <summary>Show this moment for a little while (while a trim end is dragged), then carry on playing.</summary>
@@ -267,10 +317,20 @@ public static class AnimationTrimPreview
 
         Rect area = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(10f, Height, GUILayout.ExpandWidth(true)));
         Rect bar = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(10f, 14f, GUILayout.ExpandWidth(true)));
+        bool keep = EditorGUILayout.ToggleLeft(new GUIContent("📌 Keep it in the middle (so it can't run or roll out of the picture)",
+            "Ticked: an animation that runs, rolls or walks away plays on the spot in this picture. Only the picture: in the game, 'Animation can move it' decides that."), KeepInMiddle);
+        if (keep != KeepInMiddle) KeepInMiddle = keep;
         EditorGUILayout.Space(4);
         if (Event.current.type != EventType.Repaint) return;
 
+        copy.transform.position = Vector3.zero;
         clip.SampleAnimation(animRoot, at);
+        if (KeepInMiddle && travelBone != null)
+        {
+            // Slide the whole copy back so the travelling bone stays over its starting spot (up / down still moves)
+            Vector3 p = travelBone.position;
+            copy.transform.position = new Vector3(travelRest.x - p.x, 0f, travelRest.z - p.z);
+        }
 
         // Slowly turn round it so you can see it from the side and the front
         float angle = 30f + Mathf.Sin((float)now * 0.4f) * 25f;
